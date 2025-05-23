@@ -73,3 +73,23 @@ TEST(PDDLParserTestCase, pddl_parser)
   ASSERT_TRUE(okparse);
   ASSERT_TRUE(okprint);
 }
+
+TEST(PDDLParserTestCase, from_string_hyphen)
+{
+  auto predicate_hyphen = parser::pddl::fromStringPredicate("(predicate-hyphen ?x ?y)");
+  auto expression_sub = parser::pddl::fromString("( - 3 4)");
+
+  ASSERT_EQ(predicate_hyphen.node_type, plansys2_msgs::msg::Node::PREDICATE);
+  ASSERT_EQ(predicate_hyphen.name, "predicate-hyphen");
+  ASSERT_EQ(predicate_hyphen.parameters.size(), 2);
+  ASSERT_EQ(predicate_hyphen.parameters[0].name, "?x");
+  ASSERT_EQ(predicate_hyphen.parameters[1].name, "?y");
+  
+  ASSERT_EQ(expression_sub.nodes[0].node_type, plansys2_msgs::msg::Node::EXPRESSION);
+  ASSERT_EQ(expression_sub.nodes[0].expression_type, plansys2_msgs::msg::Node::ARITH_SUB);
+  ASSERT_EQ(expression_sub.nodes[0].children.size(), 2);
+  ASSERT_EQ(expression_sub.nodes[1].node_type, plansys2_msgs::msg::Node::NUMBER);
+  ASSERT_EQ(expression_sub.nodes[1].value, 3.0);
+  ASSERT_EQ(expression_sub.nodes[2].node_type, plansys2_msgs::msg::Node::NUMBER);
+  ASSERT_EQ(expression_sub.nodes[2].value, 4.0);
+}
