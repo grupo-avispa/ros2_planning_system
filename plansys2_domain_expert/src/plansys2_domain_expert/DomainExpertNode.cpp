@@ -91,11 +91,25 @@ DomainExpertNode::DomainExpertNode()
       &DomainExpertNode::get_domain_function_details_service_callback,
       this, std::placeholders::_1, std::placeholders::_2,
       std::placeholders::_3));
+  get_domain_derived_predicates_service_ = create_service<plansys2_msgs::srv::GetStates>(
+    "domain_expert/get_domain_derived_predicates", std::bind(
+      &DomainExpertNode::get_domain_derived_predicates_service_callback,
+      this, std::placeholders::_1, std::placeholders::_2,
+      std::placeholders::_3));
+  get_domain_derived_predicate_details_service_ =
+    create_service<plansys2_msgs::srv::GetDomainDerivedPredicateDetails>(
+    "domain_expert/get_domain_derived_predicate_details", std::bind(
+      &DomainExpertNode::get_domain_derived_predicate_details_service_callback,
+      this, std::placeholders::_1, std::placeholders::_2,
+      std::placeholders::_3));
   get_domain_service_ = create_service<plansys2_msgs::srv::GetDomain>(
     "domain_expert/get_domain", std::bind(
       &DomainExpertNode::get_domain_service_callback,
       this, std::placeholders::_1, std::placeholders::_2,
       std::placeholders::_3));
+  domain_pub_ = create_publisher<std_msgs::msg::String>(
+    "domain_expert/domain",
+    rclcpp::QoS(100).transient_local());
 }
 
 
@@ -114,7 +128,7 @@ DomainExpertNode::on_configure(const rclcpp_lifecycle::State & state)
 
   if (validate_using_planner_node) {
     validate_domain_client_ = create_client<plansys2_msgs::srv::ValidateDomain>(
-      "planner/validate_domain", rmw_qos_profile_services_default, validate_domain_callback_group_);
+      "planner/validate_domain", rclcpp::ServicesQoS(), validate_domain_callback_group_);
     while (!validate_domain_client_->wait_for_service(std::chrono::seconds(3))) {
       RCLCPP_INFO_STREAM(
         get_logger(),
@@ -170,6 +184,12 @@ DomainExpertNode::on_activate(const rclcpp_lifecycle::State & state)
   RCLCPP_INFO(get_logger(), "[%s] Activating...", get_name());
   RCLCPP_INFO(get_logger(), "[%s] Activated", get_name());
 
+  domain_pub_->on_activate();
+
+  std_msgs::msg::String domain_msg;
+  domain_msg.data = domain_expert_->getDomain();
+  domain_pub_->publish(domain_msg);
+
   return CallbackReturnT::SUCCESS;
 }
 
@@ -179,6 +199,8 @@ DomainExpertNode::on_deactivate(const rclcpp_lifecycle::State & state)
   RCLCPP_INFO(get_logger(), "[%s] Deactivating...", get_name());
   RCLCPP_INFO(get_logger(), "[%s] Deactivated", get_name());
 
+  domain_pub_->on_deactivate();
+
   return CallbackReturnT::SUCCESS;
 }
 
@@ -187,6 +209,8 @@ DomainExpertNode::on_cleanup(const rclcpp_lifecycle::State & state)
 {
   RCLCPP_INFO(get_logger(), "[%s] Cleaning up...", get_name());
   RCLCPP_INFO(get_logger(), "[%s] Cleaned up", get_name());
+
+  domain_pub_->on_deactivate();
 
   return CallbackReturnT::SUCCESS;
 }
@@ -408,6 +432,51 @@ DomainExpertNode::get_domain_function_details_service_callback(
         request->expression.c_str());
       response->success = false;
       response->error_info = "Function not found";
+    }
+  }
+}
+
+void
+DomainExpertNode::get_domain_derived_predicates_service_callback(
+  const std::shared_ptr<rmw_request_id_t> request_header,
+  const std::shared_ptr<plansys2_msgs::srv::GetStates::Request> request,
+  const std::shared_ptr<plansys2_msgs::srv::GetStates::Response> response)
+{
+  if (domain_expert_ == nullptr) {
+    response->success = false;
+    response->error_info = "Requesting service in non-active state";
+    RCLCPP_WARN(get_logger(), "Requesting service in non-active state");
+  } else {
+    response->success = true;
+    response->states = plansys2::convertVector<plansys2_msgs::msg::Node, plansys2::Predicate>(
+      domain_expert_->getDerivedPredicates());
+  }
+}
+
+void
+DomainExpertNode::get_domain_derived_predicate_details_service_callback(
+  const std::shared_ptr<rmw_request_id_t> request_header,
+  const std::shared_ptr<plansys2_msgs::srv::GetDomainDerivedPredicateDetails::Request> request,
+  const std::shared_ptr<plansys2_msgs::srv::GetDomainDerivedPredicateDetails::Response> response)
+{
+  if (domain_expert_ == nullptr) {
+    response->success = false;
+    response->error_info = "Requesting service in non-active state";
+
+    RCLCPP_WARN(get_logger(), "Requesting service in non-active state");
+  } else {
+    auto predicates = domain_expert_->getDerivedPredicate(request->predicate);
+
+    if (predicates.size() > 0) {
+      response->predicates = predicates;
+      response->success = true;
+    } else {
+      RCLCPP_WARN(
+        get_logger(),
+        "Requesting a non-existing derived predicate [%s]",
+        request->predicate.c_str());
+      response->success = false;
+      response->error_info = "Derived predicate not found";
     }
   }
 }

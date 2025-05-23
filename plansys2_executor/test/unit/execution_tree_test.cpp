@@ -51,7 +51,7 @@ TEST(executiotest_noden_tree, bt_builder_factory)
   domain_node->set_parameter({"model_file", pkgpath + "/pddl/factory.pddl"});
   problem_node->set_parameter({"model_file", pkgpath + "/pddl/factory.pddl"});
 
-  rclcpp::executors::MultiThreadedExecutor exe(rclcpp::ExecutorOptions(), 8);
+  rclcpp::experimental::executors::EventsExecutor exe;
 
   exe.add_node(domain_node->get_node_base_interface());
   exe.add_node(problem_node->get_node_base_interface());
@@ -156,7 +156,8 @@ TEST(executiotest_noden_tree, bt_builder_factory)
       plansys2::Goal(
         "(and (car_assembled car_1) (car_assembled car_2) (car_assembled car_3))")));
 
-  auto plan = planner_client->getPlan(domain_client->getDomain(), problem_client->getProblem());
+  auto plan = planner_client->getPlan(
+    domain_client->getDomain(true), problem_client->getProblem(true));
   ASSERT_TRUE(plan);
 
   std::shared_ptr<plansys2::BTBuilder> bt_builder;
@@ -192,7 +193,7 @@ TEST(executiotest_noden_tree, bt_builder_factory_2)
   domain_node->set_parameter({"model_file", pkgpath + "/pddl/factory.pddl"});
   problem_node->set_parameter({"model_file", pkgpath + "/pddl/factory.pddl"});
 
-  rclcpp::executors::MultiThreadedExecutor exe(rclcpp::ExecutorOptions(), 8);
+  rclcpp::experimental::executors::EventsExecutor exe;
 
   exe.add_node(domain_node->get_node_base_interface());
   exe.add_node(problem_node->get_node_base_interface());
@@ -298,7 +299,8 @@ TEST(executiotest_noden_tree, bt_builder_factory_2)
         std::string("(and (car_assembled car_1) (piece_at body_car_2 assembly_zone)") +
         std::string("(piece_at body_car_3 assembly_zone))"))));
 
-  auto plan = planner_client->getPlan(domain_client->getDomain(), problem_client->getProblem());
+  auto plan = planner_client->getPlan(
+    domain_client->getDomain(true), problem_client->getProblem(true));
   ASSERT_TRUE(plan);
 
   std::shared_ptr<plansys2::BTBuilder> bt_builder;
@@ -332,7 +334,7 @@ TEST(executiotest_noden_tree, bt_builder_factory_3)
   domain_node->set_parameter({"model_file", pkgpath + "/pddl/domain_charging.pddl"});
   problem_node->set_parameter({"model_file", pkgpath + "/pddl/domain_charging.pddl"});
 
-  rclcpp::executors::MultiThreadedExecutor exe(rclcpp::ExecutorOptions(), 8);
+  rclcpp::experimental::executors::EventsExecutor exe;
 
   exe.add_node(domain_node->get_node_base_interface());
   exe.add_node(problem_node->get_node_base_interface());
@@ -429,7 +431,8 @@ TEST(executiotest_noden_tree, bt_builder_factory_3)
       plansys2::Goal(
         "(and (patrolled wp1) (patrolled wp2) (patrolled wp3) (patrolled wp4))")));
 
-  auto plan = planner_client->getPlan(domain_client->getDomain(), problem_client->getProblem());
+  auto plan = planner_client->getPlan(
+    domain_client->getDomain(true), problem_client->getProblem(true));
   ASSERT_TRUE(plan);
 
   std::shared_ptr<plansys2::BTBuilder> bt_builder;

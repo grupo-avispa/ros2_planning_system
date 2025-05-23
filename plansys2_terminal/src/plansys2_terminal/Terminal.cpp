@@ -34,7 +34,7 @@
 #include "plansys2_planner/PlannerClient.hpp"
 #include "plansys2_executor/ExecutorClient.hpp"
 #include "plansys2_executor/ActionExecutor.hpp"
-#include "plansys2_pddl_parser/Utils.h"
+#include "plansys2_pddl_parser/Utils.hpp"
 
 #include "plansys2_msgs/msg/action_performer_status.hpp"
 #include "plansys2_msgs/msg/action_execution.hpp"
@@ -95,7 +95,7 @@ char * completion_generator(const char * text, int state)
   std::vector<std::string> vocabulary_run{"action", "num_actions", "plan-file"};
   std::vector<std::string> vocabulary_get_problem{"instances", "predicates", "functions", "goal"};
   std::vector<std::string> vocabulary_get_model{"types", "predicates", "functions", "actions",
-    "predicate", "function", "action"};
+    "predicate", "function", "action", "derived", "deriveds"};
   // The help is initialized with all possible commands in the vocabulary
   std::vector<std::string> vocabulary_help(vocabulary);
 
@@ -342,6 +342,30 @@ Terminal::process_get_model_predicate(std::vector<std::string> & command, std::o
 }
 
 void
+Terminal::process_get_model_derived_predicate(
+  std::vector<std::string> & command, std::ostringstream & os)
+{
+  if (command.size() == 1) {
+    auto deriveds = domain_client_->getDerivedPredicate(command[0]);
+    if (deriveds.size() > 0) {
+      for (auto derived : deriveds) {
+        os << "Parameters: " << derived.predicate.parameters.size() << std::endl;
+        for (size_t i = 0; i < derived.predicate.parameters.size(); i++) {
+          os << "\t" << derived.predicate.parameters[i].type << " - " <<
+            derived.predicate.parameters[i].name << std::endl;
+        }
+        os << "Preconditions: " << parser::pddl::toString(derived.preconditions) << std::endl;
+        os << "\n";
+      }
+    } else {
+      os << "Error when looking for params of " << command[0] << std::endl;
+    }
+  } else {
+    os << "\tUsage: \n\t\tget model predicate [predicate_name]" << std::endl;
+  }
+}
+
+void
 Terminal::process_get_model_function(std::vector<std::string> & command, std::ostringstream & os)
 {
   if (command.size() == 1) {
@@ -418,6 +442,13 @@ Terminal::process_get_model(std::vector<std::string> & command, std::ostringstre
       for (const auto & predicate : predicates) {
         os << "\t" << predicate.name << std::endl;
       }
+    } else if (command[0] == "deriveds") {
+      auto predicates = domain_client_->getDerivedPredicates();
+
+      os << "Derived predicates: " << predicates.size() << std::endl;
+      for (const auto & predicate : predicates) {
+        os << "\t" << predicate.name << std::endl;
+      }
     } else if (command[0] == "functions") {
       auto functions = domain_client_->getFunctions();
 
@@ -439,6 +470,9 @@ Terminal::process_get_model(std::vector<std::string> & command, std::ostringstre
     } else if (command[0] == "predicate") {
       pop_front(command);
       process_get_model_predicate(command, os);
+    } else if (command[0] == "derived") {
+      pop_front(command);
+      process_get_model_derived_predicate(command, os);
     } else if (command[0] == "function") {
       pop_front(command);
       process_get_model_function(command, os);
@@ -447,13 +481,15 @@ Terminal::process_get_model(std::vector<std::string> & command, std::ostringstre
       process_get_model_action(command, os);
     } else {
       os <<
-        "\tUsage: \n\t\tget model [types|predicates|functions|actions|predicate|function|action]..."
+        "\tUsage: \n\t\tget model "
+        "[types|predicates|functions|actions|predicate|function|action|derived|deriveds]..."
          <<
         std::endl;
     }
   } else {
     os <<
-      "\tUsage: \n\t\tget model [types|predicates|functions|actions|predicate|function|action]..."
+      "\tUsage: \n\t\tget model "
+      "[types|predicates|functions|actions|predicate|function|action|derived|deriveds]..."
        <<
       std::endl;
   }
@@ -762,7 +798,7 @@ Terminal::process_remove(std::vector<std::string> & command, std::ostringstream 
     } else if (command[0] == "function") {
       pop_front(command);
       process_remove_function(command, os);
-    } else if (command[0] == "goal", os) {
+    } else if (command[0] == "goal") {
       problem_client_->clearGoal();
     } else {
       os << "\tUsage: \n\t\tremove [instance|predicate|function|goal]..." <<
@@ -781,6 +817,9 @@ Terminal::execute_plan(int items)
 
   if (!plan.has_value()) {
     std::cout << "Plan could not be computed " << std::endl;
+    return;
+  } else if (plan.value().items.size() == 0) {
+    std::cout << "Planning succeeded, but there are no actions to execute " << std::endl;
     return;
   }
 
@@ -845,10 +884,16 @@ Terminal::execute_plan(const plansys2_msgs::msg::Plan & plan)
 
   std::cout << std::endl;
 
-  if (executor_client_->getResult().value().success) {
-    std::cout << "Successful finished " << std::endl;
-  } else {
-    std::cout << "Finished with error(s) " << std::endl;
+  switch (executor_client_->getResult().value().result) {
+    case plansys2_msgs::action::ExecutePlan::Result::SUCCESS:
+      std::cout << "Successful finished " << std::endl;
+      break;
+    case plansys2_msgs::action::ExecutePlan::Result::PREEMPT:
+      std::cout << "Preempted " << std::endl;
+      break;
+    case plansys2_msgs::action::ExecutePlan::Result::FAILURE:
+      std::cout << "Finished with error(s) " << std::endl;
+      break;
   }
 }
 
@@ -862,7 +907,6 @@ Terminal::execute_action(std::vector<std::string> & command)
 
   complete_action.pop_back();
 
-  std::cerr << "<[" << complete_action << "]" << std::endl;
   plansys2_msgs::msg::PlanItem action;
   action.time = 0.0;
   action.action = complete_action;

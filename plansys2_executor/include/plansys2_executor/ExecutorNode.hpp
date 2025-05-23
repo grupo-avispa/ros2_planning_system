@@ -19,6 +19,8 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <tuple>
+#include <list>
 
 #include "plansys2_domain_expert/DomainExpertClient.hpp"
 #include "plansys2_problem_expert/ProblemExpertClient.hpp"
@@ -28,6 +30,9 @@
 
 #include "lifecycle_msgs/msg/state.hpp"
 #include "lifecycle_msgs/msg/transition.hpp"
+
+#include "behaviortree_cpp/bt_factory.h"
+#include "behaviortree_cpp/blackboard.h"
 
 #include "plansys2_msgs/action/execute_plan.hpp"
 #include "plansys2_msgs/msg/action_execution_info.hpp"
@@ -45,6 +50,23 @@
 
 namespace plansys2
 {
+
+struct TreeInfo
+{
+  using Ptr = std::shared_ptr<TreeInfo>;
+  BT::Tree tree;
+  BT::Blackboard::Ptr blackboard;
+  std::shared_ptr<plansys2::BTBuilder> bt_builder;
+};
+
+struct PlanRuntineInfo
+{
+  plansys2_msgs::msg::Plan remaining_plan;
+  plansys2_msgs::msg::Plan complete_plan;
+  std::vector<plansys2_msgs::msg::Tree> ordered_sub_goals;
+  std::shared_ptr<std::map<std::string, ActionExecutionInfo>> action_map;
+  TreeInfo::Ptr current_tree;
+};
 
 class ExecutorNode : public rclcpp_lifecycle::LifecycleNode
 {
@@ -73,10 +95,14 @@ public:
     const std::shared_ptr<plansys2_msgs::srv::GetPlan::Request> request,
     const std::shared_ptr<plansys2_msgs::srv::GetPlan::Response> response);
 
+  void get_remaining_plan_service_callback(
+    const std::shared_ptr<rmw_request_id_t> request_header,
+    const std::shared_ptr<plansys2_msgs::srv::GetPlan::Request> request,
+    const std::shared_ptr<plansys2_msgs::srv::GetPlan::Response> response);
+
 protected:
   bool cancel_plan_requested_;
-  std::optional<plansys2_msgs::msg::Plan> current_plan_;
-  std::optional<std::vector<plansys2_msgs::msg::Tree>> ordered_sub_goals_;
+  bool replan_requested_;
 
   std::string action_bt_xml_;
   std::string start_action_bt_xml_;
@@ -90,15 +116,23 @@ protected:
   rclcpp_lifecycle::LifecyclePublisher<plansys2_msgs::msg::ActionExecutionInfo>::SharedPtr
     execution_info_pub_;
   rclcpp_lifecycle::LifecyclePublisher<plansys2_msgs::msg::Plan>::SharedPtr executing_plan_pub_;
+  rclcpp_lifecycle::LifecyclePublisher<plansys2_msgs::msg::Plan>::SharedPtr remaining_plan_pub_;
 
   rclcpp_action::Server<ExecutePlan>::SharedPtr execute_plan_action_server_;
   rclcpp::Service<plansys2_msgs::srv::GetOrderedSubGoals>::SharedPtr
     get_ordered_sub_goals_service_;
   rclcpp_lifecycle::LifecyclePublisher<std_msgs::msg::String>::SharedPtr dotgraph_pub_;
 
-  std::optional<std::vector<plansys2_msgs::msg::Tree>> getOrderedSubGoals();
+  void get_ordered_subgoals(PlanRuntineInfo & runtime_info);
 
   rclcpp::Service<plansys2_msgs::srv::GetPlan>::SharedPtr get_plan_service_;
+  rclcpp::Service<plansys2_msgs::srv::GetPlan>::SharedPtr get_remaining_plan_service_;
+
+  std::vector<plansys2_msgs::msg::ActionExecutionInfo> get_feedback_info(
+    std::shared_ptr<std::map<std::string, ActionExecutionInfo>> action_map);
+
+  void print_execution_info(
+    std::shared_ptr<std::map<std::string, ActionExecutionInfo>> exec_info);
 
   rclcpp_action::GoalResponse handle_goal(
     const rclcpp_action::GoalUUID & uuid,
@@ -106,16 +140,42 @@ protected:
 
   rclcpp_action::CancelResponse handle_cancel(
     const std::shared_ptr<GoalHandleExecutePlan> goal_handle);
-
-  void execute(const std::shared_ptr<GoalHandleExecutePlan> goal_handle);
-
   void handle_accepted(const std::shared_ptr<GoalHandleExecutePlan> goal_handle);
 
-  std::vector<plansys2_msgs::msg::ActionExecutionInfo> get_feedback_info(
-    std::shared_ptr<std::map<std::string, ActionExecutionInfo>> action_map);
+  std::list<std::shared_ptr<GoalHandleExecutePlan>> goal_handlers_;
+  void purge_handlers_list();
 
-  void print_execution_info(
-    std::shared_ptr<std::map<std::string, ActionExecutionInfo>> exec_info);
+  void execution_cycle();
+  rclcpp::TimerBase::SharedPtr execution_timer_;
+
+
+  void update_plan(PlanRuntineInfo & runtime_info);
+  bool init_plan_for_execution(PlanRuntineInfo & runtime_info);
+  bool replan_for_execution(PlanRuntineInfo & runtime_info);
+
+  void execute_plan();
+  bool get_tree_from_plan(PlanRuntineInfo & runtime_info);
+  void create_plan_runtime_info(PlanRuntineInfo & runtime_info);
+  void cancel_all_running_actions(PlanRuntineInfo & runtime_info);
+
+  bool new_plan_received_ {false};
+  bool cancel_requested_ {false};
+
+  std::shared_ptr<GoalHandleExecutePlan> current_goal_handle_;
+  std::shared_ptr<GoalHandleExecutePlan> new_goal_handle_;
+  std::shared_ptr<GoalHandleExecutePlan> cancel_goal_handle_;
+
+  static const int STATE_IDLE = 0;
+  static const int STATE_EXECUTING = 1;
+  static const int STATE_REPLANNING = 2;
+  static const int STATE_ABORTING = 3;
+  static const int STATE_CANCELLED = 4;
+  static const int STATE_FAILED = 5;
+  static const int STATE_SUCCEDED = 6;
+  static const int STATE_ERROR = 7;
+  int executor_state_;
+
+  PlanRuntineInfo runtime_info_;
 };
 
 }  // namespace plansys2

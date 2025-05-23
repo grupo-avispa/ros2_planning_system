@@ -23,7 +23,10 @@
 #include "plansys2_core/Types.hpp"
 #include "plansys2_domain_expert/DomainExpertInterface.hpp"
 
+#include "std_msgs/msg/string.hpp"
+
 #include "plansys2_msgs/msg/action.hpp"
+#include "plansys2_msgs/msg/derived.hpp"
 #include "plansys2_msgs/msg/durative_action.hpp"
 #include "plansys2_msgs/msg/node.hpp"
 
@@ -33,6 +36,7 @@
 #include "plansys2_msgs/srv/get_domain_constants.hpp"
 #include "plansys2_msgs/srv/get_domain_actions.hpp"
 #include "plansys2_msgs/srv/get_domain_action_details.hpp"
+#include "plansys2_msgs/srv/get_domain_derived_predicate_details.hpp"
 #include "plansys2_msgs/srv/get_domain_durative_action_details.hpp"
 #include "plansys2_msgs/srv/get_node_details.hpp"
 #include "plansys2_msgs/srv/get_states.hpp"
@@ -101,6 +105,22 @@ public:
    */
   std::optional<plansys2::Function> getFunction(const std::string & function);
 
+  /// Get the derived predicates existing in the domain.
+  /**
+   * \return The vector containing the derived predicates.
+   */
+  std::vector<plansys2::Predicate> getDerivedPredicates();
+
+  /// Get the details of a derived predicate existing in the domain.
+  /**
+   * \param[in] predicate The name of the predicate.
+   * \return A Derived object containing the predicate name, its parameters (name and type), and preconditions.
+   *    If the predicate does not exist, the value returned has not value.
+   */
+  std::vector<plansys2_msgs::msg::Derived> getDerivedPredicate(
+    const std::string & predicate,
+    const std::vector<std::string> & params = {});
+
   /// Get the regular actions existing in the domain.
   /**
    * \return The vector containing the names of the actions.
@@ -139,6 +159,14 @@ public:
    */
   std::string getDomain();
 
+  /// Get the current cached domain, ready to be saved to file, or to initialize another domain.
+  /**
+   * \param[in] use_cache Use cache, if available.
+   * \return A string containing the domain.
+   */
+  std::string getDomain(bool use_cache);
+  std::string cached_domain_;
+
 private:
   rclcpp::Node::SharedPtr node_;
 
@@ -148,6 +176,9 @@ private:
   rclcpp::Client<plansys2_msgs::srv::GetDomainConstants>::SharedPtr get_constants_client_;
   rclcpp::Client<plansys2_msgs::srv::GetStates>::SharedPtr get_predicates_client_;
   rclcpp::Client<plansys2_msgs::srv::GetStates>::SharedPtr get_functions_client_;
+  rclcpp::Client<plansys2_msgs::srv::GetStates>::SharedPtr get_derived_predicates_client_;
+  rclcpp::Client<plansys2_msgs::srv::GetDomainDerivedPredicateDetails>::SharedPtr
+    get_derived_predicate_details_client_;
   rclcpp::Client<plansys2_msgs::srv::GetDomainActions>::SharedPtr get_actions_client_;
   rclcpp::Client<plansys2_msgs::srv::GetDomainActions>::SharedPtr get_durative_actions_client_;
   rclcpp::Client<plansys2_msgs::srv::GetNodeDetails>::SharedPtr get_predicate_details_client_;
@@ -155,6 +186,7 @@ private:
   rclcpp::Client<plansys2_msgs::srv::GetDomainActionDetails>::SharedPtr get_action_details_client_;
   rclcpp::Client<plansys2_msgs::srv::GetDomainDurativeActionDetails>::SharedPtr
     get_durative_action_details_client_;
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr domain_sub_;
 };
 
 }  // namespace plansys2

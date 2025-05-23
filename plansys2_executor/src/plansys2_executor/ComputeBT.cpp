@@ -39,6 +39,7 @@
 #include "plansys2_executor/behavior_tree/check_atend_req_node.hpp"
 #include "plansys2_executor/behavior_tree/check_timeout_node.hpp"
 #include "plansys2_executor/behavior_tree/apply_atstart_effect_node.hpp"
+#include "plansys2_executor/behavior_tree/restore_atstart_effect_node.hpp"
 #include "plansys2_executor/behavior_tree/apply_atend_effect_node.hpp"
 
 namespace plansys2
@@ -219,7 +220,7 @@ ComputeBT::computeBTCallback(
   domain_node_->set_parameter({"model_file", domain_filename});
   problem_node_->set_parameter({"model_file", domain_filename});
 
-  rclcpp::executors::MultiThreadedExecutor exe(rclcpp::ExecutorOptions(), 8);
+  rclcpp::experimental::executors::EventsExecutor exe;
 
   exe.add_node(domain_node_->get_node_base_interface());
   exe.add_node(problem_node_->get_node_base_interface());
@@ -257,15 +258,24 @@ ComputeBT::computeBTCallback(
   for (const auto & plan_item : plan.value().items) {
     auto index = BTBuilder::to_action_id(plan_item, 3);
 
+
     (*action_map)[index] = ActionExecutionInfo();
+    (*action_map)[index].plan_item = plan_item;
     (*action_map)[index].action_executor =
       ActionExecutor::make_shared(plan_item.action, shared_from_this());
-    (*action_map)[index].durative_action_info =
-      domain_client_->getDurativeAction(
-      get_action_name(plan_item.action), get_action_params(plan_item.action));
+
+    auto actions = domain_client_->getActions();
+    std::string action_name_ = get_action_name(plan_item.action);
+    if (std::find(actions.begin(), actions.end(), action_name_) != actions.end()) {
+      (*action_map)[index].action_info.action = domain_client_->getAction(
+        action_name_, get_action_params(plan_item.action));
+    } else {
+      (*action_map)[index].action_info.action = domain_client_->getDurativeAction(
+        action_name_, get_action_params(plan_item.action));
+    }
 
     (*action_map)[index].duration = plan_item.duration;
-    std::string action_name = (*action_map)[index].durative_action_info->name;
+    std::string action_name = (*action_map)[index].action_info.get_action_name();
     if (std::find(
         action_timeout_actions.begin(), action_timeout_actions.end(),
         action_name) != action_timeout_actions.end() &&
@@ -327,6 +337,7 @@ ComputeBT::computeBTCallback(
   factory.registerNodeType<WaitAtStartReq>("WaitAtStartReq");
   factory.registerNodeType<CheckAtEndReq>("CheckAtEndReq");
   factory.registerNodeType<ApplyAtStartEffect>("ApplyAtStartEffect");
+  factory.registerNodeType<RestoreAtStartEffect>("RestoreAtStartEffect");
   factory.registerNodeType<ApplyAtEndEffect>("ApplyAtEndEffect");
   factory.registerNodeType<CheckTimeout>("CheckTimeout");
 

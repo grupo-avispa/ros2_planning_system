@@ -26,7 +26,7 @@
 #include "plansys2_planner/PlannerClient.hpp"
 #include "plansys2_executor/ExecutorNode.hpp"
 #include "plansys2_executor/ExecutorClient.hpp"
-#include "plansys2_pddl_parser/Utils.h"
+#include "plansys2_pddl_parser/Utils.hpp"
 
 #include "plansys2_tests/test_action_node.hpp"
 #include "plansys2_tests/execution_logger.hpp"
@@ -61,7 +61,7 @@ TEST(test_3, test_3)
   domain_node->set_parameter({"model_file", pkgpath + "/test_3/pddl/test_3.pddl"});
   problem_node->set_parameter({"model_file", pkgpath + "/test_3/pddl/test_3.pddl"});
 
-  rclcpp::executors::MultiThreadedExecutor exe(rclcpp::ExecutorOptions(), 8);
+  rclcpp::experimental::executors::EventsExecutor exe;
 
   exe.add_node(domain_node->get_node_base_interface());
   exe.add_node(problem_node->get_node_base_interface());
@@ -186,7 +186,7 @@ TEST(test_3, test_3)
 
   auto result = executor_client->getResult();
 
-  ASSERT_TRUE(result.value().success);
+  ASSERT_EQ(result.value().result, plansys2_msgs::action::ExecutePlan::Result::SUCCESS);
 
   ASSERT_TRUE(
     execution_logger->sorted(

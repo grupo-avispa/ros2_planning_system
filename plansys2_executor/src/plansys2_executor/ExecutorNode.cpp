@@ -27,7 +27,7 @@
 #include "plansys2_executor/ActionExecutor.hpp"
 #include "plansys2_executor/BTBuilder.hpp"
 #include "plansys2_problem_expert/Utils.hpp"
-#include "plansys2_pddl_parser/Utils.h"
+#include "plansys2_pddl_parser/Utils.hpp"
 
 #include "lifecycle_msgs/msg/state.hpp"
 #include "plansys2_msgs/msg/action_execution_info.hpp"
@@ -48,6 +48,7 @@
 #include "plansys2_executor/behavior_tree/check_atend_req_node.hpp"
 #include "plansys2_executor/behavior_tree/check_timeout_node.hpp"
 #include "plansys2_executor/behavior_tree/apply_atstart_effect_node.hpp"
+#include "plansys2_executor/behavior_tree/restore_atstart_effect_node.hpp"
 #include "plansys2_executor/behavior_tree/apply_atend_effect_node.hpp"
 
 namespace plansys2
@@ -58,7 +59,8 @@ using namespace std::chrono_literals;
 
 ExecutorNode::ExecutorNode()
 : rclcpp_lifecycle::LifecycleNode("executor"),
-  bt_builder_loader_("plansys2_executor", "plansys2::BTBuilder")
+  bt_builder_loader_("plansys2_executor", "plansys2::BTBuilder"),
+  executor_state_(STATE_IDLE)
 {
   using namespace std::placeholders;
 
@@ -99,6 +101,13 @@ ExecutorNode::ExecutorNode()
     "executor/get_plan",
     std::bind(
       &ExecutorNode::get_plan_service_callback,
+      this, std::placeholders::_1, std::placeholders::_2,
+      std::placeholders::_3));
+
+  get_remaining_plan_service_ = create_service<plansys2_msgs::srv::GetPlan>(
+    "executor/get_remaining_plan",
+    std::bind(
+      &ExecutorNode::get_remaining_plan_service_callback,
       this, std::placeholders::_1, std::placeholders::_2,
       std::placeholders::_3));
 }
@@ -170,6 +179,8 @@ ExecutorNode::on_configure(const rclcpp_lifecycle::State & state)
     "action_execution_info", 100);
   executing_plan_pub_ = create_publisher<plansys2_msgs::msg::Plan>(
     "executing_plan", rclcpp::QoS(100).transient_local());
+  remaining_plan_pub_ = create_publisher<plansys2_msgs::msg::Plan>(
+    "remaining_plan", rclcpp::QoS(100));
 
   domain_client_ = std::make_shared<plansys2::DomainExpertClient>();
   problem_client_ = std::make_shared<plansys2::ProblemExpertClient>();
@@ -186,7 +197,13 @@ ExecutorNode::on_activate(const rclcpp_lifecycle::State & state)
   dotgraph_pub_->on_activate();
   execution_info_pub_->on_activate();
   executing_plan_pub_->on_activate();
+  remaining_plan_pub_->on_activate();
   RCLCPP_INFO(get_logger(), "[%s] Activated", get_name());
+
+  //  execution_timer_ = create_wall_timer(
+  //    20ms, std::bind(&ExecutorNode::execution_cycle, this));
+
+  std::thread{std::bind(&ExecutorNode::execution_cycle, this)}.detach();
 
   return CallbackReturnT::SUCCESS;
 }
@@ -197,6 +214,7 @@ ExecutorNode::on_deactivate(const rclcpp_lifecycle::State & state)
   RCLCPP_INFO(get_logger(), "[%s] Deactivating...", get_name());
   dotgraph_pub_->on_deactivate();
   executing_plan_pub_->on_deactivate();
+  remaining_plan_pub_->on_deactivate();
   RCLCPP_INFO(get_logger(), "[%s] Deactivated", get_name());
 
   return CallbackReturnT::SUCCESS;
@@ -208,6 +226,7 @@ ExecutorNode::on_cleanup(const rclcpp_lifecycle::State & state)
   RCLCPP_INFO(get_logger(), "[%s] Cleaning up...", get_name());
   dotgraph_pub_.reset();
   executing_plan_pub_.reset();
+  remaining_plan_pub_.reset();
   RCLCPP_INFO(get_logger(), "[%s] Cleaned up", get_name());
 
   return CallbackReturnT::SUCCESS;
@@ -219,6 +238,7 @@ ExecutorNode::on_shutdown(const rclcpp_lifecycle::State & state)
   RCLCPP_INFO(get_logger(), "[%s] Shutting down...", get_name());
   dotgraph_pub_.reset();
   executing_plan_pub_.reset();
+  remaining_plan_pub_.reset();
   RCLCPP_INFO(get_logger(), "[%s] Shutted down", get_name());
 
   return CallbackReturnT::SUCCESS;
@@ -238,27 +258,17 @@ ExecutorNode::get_ordered_sub_goals_service_callback(
   const std::shared_ptr<plansys2_msgs::srv::GetOrderedSubGoals::Request> request,
   const std::shared_ptr<plansys2_msgs::srv::GetOrderedSubGoals::Response> response)
 {
-  if (ordered_sub_goals_.has_value()) {
-    response->sub_goals = ordered_sub_goals_.value();
-    response->success = true;
-  } else {
-    response->success = false;
-    response->error_info = "No current plan.";
-  }
+  response->sub_goals = runtime_info_.ordered_sub_goals;
+  response->success = true;
 }
 
-std::optional<std::vector<plansys2_msgs::msg::Tree>>
-ExecutorNode::getOrderedSubGoals()
+void
+ExecutorNode::get_ordered_subgoals(PlanRuntineInfo & runtime_info)
 {
-  if (!current_plan_.has_value()) {
-    return {};
-  }
-
   auto goal = problem_client_->getGoal();
   auto local_predicates = problem_client_->getPredicates();
   auto local_functions = problem_client_->getFunctions();
 
-  std::vector<plansys2_msgs::msg::Tree> ordered_goals;
   std::vector<uint32_t> unordered_subgoals = parser::pddl::getSubtreeIds(goal);
 
   // just in case some goals are already satisfied
@@ -266,33 +276,41 @@ ExecutorNode::getOrderedSubGoals()
     if (check(goal, local_predicates, local_functions, *it)) {
       plansys2_msgs::msg::Tree new_goal;
       parser::pddl::fromString(new_goal, "(and " + parser::pddl::toString(goal, (*it)) + ")");
-      ordered_goals.push_back(new_goal);
+      runtime_info.ordered_sub_goals.push_back(new_goal);
       it = unordered_subgoals.erase(it);
     } else {
       ++it;
     }
   }
 
-  for (const auto & plan_item : current_plan_.value().items) {
-    std::shared_ptr<plansys2_msgs::msg::DurativeAction> action =
-      domain_client_->getDurativeAction(
-      get_action_name(plan_item.action), get_action_params(plan_item.action));
-    apply(action->at_start_effects, local_predicates, local_functions);
-    apply(action->at_end_effects, local_predicates, local_functions);
+  for (const auto & plan_item : runtime_info.complete_plan.items) {
+    auto actions = domain_client_->getActions();
+    std::string action_name = get_action_name(plan_item.action);
+    if (std::find(actions.begin(), actions.end(), action_name) != actions.end()) {
+      std::shared_ptr<plansys2_msgs::msg::Action> action =
+        domain_client_->getAction(
+        action_name, get_action_params(plan_item.action));
+      apply(action->effects, local_predicates, local_functions);
+    } else {
+      std::shared_ptr<plansys2_msgs::msg::DurativeAction> action =
+        domain_client_->getDurativeAction(
+        action_name, get_action_params(plan_item.action));
+      apply(action->at_start_effects, local_predicates, local_functions);
+      apply(action->at_end_effects, local_predicates, local_functions);
+    }
+
 
     for (auto it = unordered_subgoals.begin(); it != unordered_subgoals.end(); ) {
       if (check(goal, local_predicates, local_functions, *it)) {
         plansys2_msgs::msg::Tree new_goal;
         parser::pddl::fromString(new_goal, "(and " + parser::pddl::toString(goal, (*it)) + ")");
-        ordered_goals.push_back(new_goal);
+        runtime_info.ordered_sub_goals.push_back(new_goal);
         it = unordered_subgoals.erase(it);
       } else {
         ++it;
       }
     }
   }
-
-  return ordered_goals;
 }
 
 void
@@ -301,97 +319,85 @@ ExecutorNode::get_plan_service_callback(
   const std::shared_ptr<plansys2_msgs::srv::GetPlan::Request> request,
   const std::shared_ptr<plansys2_msgs::srv::GetPlan::Response> response)
 {
-  if (current_plan_) {
+  if (executor_state_ == STATE_EXECUTING) {
     response->success = true;
-    response->plan = current_plan_.value();
+    response->plan = runtime_info_.complete_plan;
   } else {
     response->success = false;
-    response->error_info = "Plan not available";
   }
-}
-
-rclcpp_action::GoalResponse
-ExecutorNode::handle_goal(
-  const rclcpp_action::GoalUUID & uuid,
-  std::shared_ptr<const ExecutePlan::Goal> goal)
-{
-  RCLCPP_DEBUG(this->get_logger(), "Received goal request with order");
-
-  current_plan_ = {};
-  ordered_sub_goals_ = {};
-
-  return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
-}
-
-rclcpp_action::CancelResponse
-ExecutorNode::handle_cancel(
-  const std::shared_ptr<GoalHandleExecutePlan> goal_handle)
-{
-  RCLCPP_DEBUG(this->get_logger(), "Received request to cancel goal");
-
-  cancel_plan_requested_ = true;
-
-  return rclcpp_action::CancelResponse::ACCEPT;
 }
 
 void
-ExecutorNode::execute(const std::shared_ptr<GoalHandleExecutePlan> goal_handle)
+ExecutorNode::get_remaining_plan_service_callback(
+  const std::shared_ptr<rmw_request_id_t> request_header,
+  const std::shared_ptr<plansys2_msgs::srv::GetPlan::Request> request,
+  const std::shared_ptr<plansys2_msgs::srv::GetPlan::Response> response)
 {
-  auto feedback = std::make_shared<ExecutePlan::Feedback>();
-  auto result = std::make_shared<ExecutePlan::Result>();
-
-  cancel_plan_requested_ = false;
-
-  current_plan_ = goal_handle->get_goal()->plan;
-
-  if (!current_plan_.has_value()) {
-    RCLCPP_ERROR(get_logger(), "No plan found");
-    result->success = false;
-    goal_handle->succeed(result);
-
-    // Publish void plan
-    executing_plan_pub_->publish(plansys2_msgs::msg::Plan());
-    return;
+  if (executor_state_ == STATE_EXECUTING) {
+    response->success = true;
+    response->plan = runtime_info_.remaining_plan;
+  } else {
+    response->success = false;
+    response->error_info = "Not executing plan";
   }
+}
 
-  executing_plan_pub_->publish(current_plan_.value());
-
-  auto action_map = std::make_shared<std::map<std::string, ActionExecutionInfo>>();
+void
+ExecutorNode::create_plan_runtime_info(PlanRuntineInfo & runtime_info)
+{
+  runtime_info.action_map = std::make_shared<std::map<std::string, ActionExecutionInfo>>();
   auto action_timeout_actions = this->get_parameter("action_timeouts.actions").as_string_array();
 
-  (*action_map)[":0"] = ActionExecutionInfo();
-  (*action_map)[":0"].action_executor = ActionExecutor::make_shared("(INIT)", shared_from_this());
-  (*action_map)[":0"].action_executor->set_internal_status(ActionExecutor::Status::SUCCESS);
-  (*action_map)[":0"].at_start_effects_applied = true;
-  (*action_map)[":0"].at_end_effects_applied = true;
+  (*runtime_info.action_map)[":0"] = ActionExecutionInfo();
+  (*runtime_info.action_map)[":0"].action_executor = ActionExecutor::make_shared("(INIT)",
+    shared_from_this());
+  (*runtime_info.action_map)[":0"].action_executor->set_internal_status(
+    ActionExecutor::Status::SUCCESS);
+  (*runtime_info.action_map)[":0"].at_start_effects_applied = true;
+  (*runtime_info.action_map)[":0"].at_end_effects_applied = true;
+  (*runtime_info.action_map)[":0"].at_start_effects_applied_time = now();
+  (*runtime_info.action_map)[":0"].at_end_effects_applied_time = now();
 
-  for (const auto & plan_item : current_plan_.value().items) {
+  for (const auto & plan_item : runtime_info.complete_plan.items) {
     auto index = BTBuilder::to_action_id(plan_item, 3);
-
-    (*action_map)[index] = ActionExecutionInfo();
-    (*action_map)[index].action_executor =
+    (*runtime_info.action_map)[index] = ActionExecutionInfo();
+    (*runtime_info.action_map)[index].plan_item = plan_item;
+    (*runtime_info.action_map)[index].action_executor =
       ActionExecutor::make_shared(plan_item.action, shared_from_this());
-    (*action_map)[index].durative_action_info =
-      domain_client_->getDurativeAction(
-      get_action_name(plan_item.action), get_action_params(plan_item.action));
 
-    (*action_map)[index].duration = plan_item.duration;
-    std::string action_name = (*action_map)[index].durative_action_info->name;
+    auto actions = domain_client_->getActions();
+    std::string action_name = get_action_name(plan_item.action);
+    if (std::find(actions.begin(), actions.end(), action_name) != actions.end()) {
+      (*runtime_info.action_map)[index].action_info = domain_client_->getAction(
+        action_name, get_action_params(plan_item.action));
+    } else {
+      (*runtime_info.action_map)[index].action_info = domain_client_->getDurativeAction(
+        action_name, get_action_params(plan_item.action));
+    }
+
+    action_name = (*runtime_info.action_map)[index].action_info.get_action_name();
+    (*runtime_info.action_map)[index].duration = plan_item.duration;
+
     if (std::find(
         action_timeout_actions.begin(), action_timeout_actions.end(),
         action_name) != action_timeout_actions.end() &&
       this->has_parameter("action_timeouts." + action_name + ".duration_overrun_percentage"))
     {
-      (*action_map)[index].duration_overrun_percentage = this->get_parameter(
+      (*runtime_info.action_map)[index].duration_overrun_percentage = this->get_parameter(
         "action_timeouts." + action_name + ".duration_overrun_percentage").as_double();
     }
     RCLCPP_INFO(
       get_logger(), "Action %s timeout percentage %f", action_name.c_str(),
-      (*action_map)[index].duration_overrun_percentage);
+      (*runtime_info.action_map)[index].duration_overrun_percentage);
   }
 
-  ordered_sub_goals_ = getOrderedSubGoals();
+  runtime_info.ordered_sub_goals = {};
+  get_ordered_subgoals(runtime_info);
+}
 
+bool
+ExecutorNode::get_tree_from_plan(PlanRuntineInfo & runtime_info)
+{
   auto bt_builder_plugin = this->get_parameter("bt_builder_plugin").as_string();
   if (bt_builder_plugin.empty()) {
     bt_builder_plugin = "SimpleBTBuilder";
@@ -414,22 +420,16 @@ ExecutorNode::execute(const std::shared_ptr<GoalHandleExecutePlan> goal_handle)
     // bt_builder->initialize(start_action_bt_xml_, end_action_bt_xml_, precision);
   }
 
-  auto bt_xml_tree = bt_builder->get_tree(current_plan_.value());
+  auto bt_xml_tree = bt_builder->get_tree(runtime_info.complete_plan);
   if (bt_xml_tree.empty()) {
     RCLCPP_ERROR(get_logger(), "Error computing behavior tree!");
-
-    result->success = false;
-    goal_handle->succeed(result);
-
-    // Publish void plan
-    executing_plan_pub_->publish(plansys2_msgs::msg::Plan());
-    return;
+    return false;
   }
 
   auto action_graph = bt_builder->get_graph();
   std_msgs::msg::String dotgraph_msg;
   dotgraph_msg.data = bt_builder->get_dotgraph(
-    action_map, this->get_parameter("enable_dotgraph_legend").as_bool(),
+    runtime_info.action_map, this->get_parameter("enable_dotgraph_legend").as_bool(),
     this->get_parameter("print_graph").as_bool());
   dotgraph_pub_->publish(dotgraph_msg);
 
@@ -446,96 +446,117 @@ ExecutorNode::execute(const std::shared_ptr<GoalHandleExecutePlan> goal_handle)
   factory.registerNodeType<WaitAtStartReq>("WaitAtStartReq");
   factory.registerNodeType<CheckAtEndReq>("CheckAtEndReq");
   factory.registerNodeType<ApplyAtStartEffect>("ApplyAtStartEffect");
+  factory.registerNodeType<RestoreAtStartEffect>("RestoreAtStartEffect");
   factory.registerNodeType<ApplyAtEndEffect>("ApplyAtEndEffect");
   factory.registerNodeType<CheckTimeout>("CheckTimeout");
 
-  (*action_map)[":0"].at_start_effects_applied_time = now();
-  (*action_map)[":0"].at_end_effects_applied_time = now();
-
   auto blackboard = BT::Blackboard::create();
-  blackboard->set("action_map", action_map);
+
+  blackboard->set("action_map", runtime_info.action_map);
   blackboard->set("action_graph", action_graph);
   blackboard->set("node", shared_from_this());
   blackboard->set("domain_client", domain_client_);
   blackboard->set("problem_client", problem_client_);
   blackboard->set("bt_builder", bt_builder);
 
-  auto tree = factory.createTreeFromText(bt_xml_tree, blackboard);
+  runtime_info.current_tree = std::make_shared<TreeInfo>();
+  *runtime_info.current_tree = {
+    factory.createTreeFromText(bt_xml_tree, blackboard), blackboard, bt_builder};
 
-  auto info_pub = create_wall_timer(
-    1s, [this, &action_map]() {
-      auto msgs = get_feedback_info(action_map);
-      for (const auto & msg : msgs) {
-        execution_info_pub_->publish(msg);
-      }
-    });
+  return runtime_info.current_tree != nullptr;
+}
 
-  rclcpp::Rate rate(10);
-  auto status = BT::NodeStatus::RUNNING;
+bool
+ExecutorNode::init_plan_for_execution(PlanRuntineInfo & runtime_info)
+{
+  cancel_plan_requested_ = false;
+  replan_requested_ = false;
 
-  while (status == BT::NodeStatus::RUNNING && !cancel_plan_requested_) {
-    try {
-      status = tree.tickOnce();
-    } catch (std::exception & e) {
-      std::cerr << e.what() << std::endl;
-      status = BT::NodeStatus::FAILURE;
+  if (runtime_info.action_map != nullptr) {
+    for (auto & entry : *runtime_info.action_map) {
+      ActionExecutionInfo & action_info = entry.second;
+      action_info.action_executor->cancel();
+      action_info.action_executor->clean_up();
+      action_info.action_executor = nullptr;
     }
-
-    feedback->action_execution_status = get_feedback_info(action_map);
-    goal_handle->publish_feedback(feedback);
-
-    dotgraph_msg.data = bt_builder->get_dotgraph(
-      action_map, this->get_parameter("enable_dotgraph_legend").as_bool());
-    dotgraph_pub_->publish(dotgraph_msg);
-
-    rate.sleep();
+    runtime_info.action_map->clear();
   }
 
-  if (cancel_plan_requested_) {
-    tree.haltTree();
+  create_plan_runtime_info(runtime_info);
+
+  bool plan_success = get_tree_from_plan(runtime_info);
+
+  if (!plan_success) {
+    return false;
   }
 
-  if (status == BT::NodeStatus::FAILURE) {
-    tree.haltTree();
-    RCLCPP_ERROR(get_logger(), "Executor BT finished with FAILURE state");
-  }
+  return true;
+}
 
-  dotgraph_msg.data = bt_builder->get_dotgraph(
-    action_map, this->get_parameter("enable_dotgraph_legend").as_bool());
-  dotgraph_pub_->publish(dotgraph_msg);
+bool
+ExecutorNode::replan_for_execution(PlanRuntineInfo & runtime_info)
+{
+  cancel_plan_requested_ = false;
+  replan_requested_ = false;
 
-  result->success = status == BT::NodeStatus::SUCCESS;
-  result->action_execution_status = get_feedback_info(action_map);
+  std::map<std::string, ActionExecutionInfo> previous_action_map = *runtime_info.action_map;
 
-  size_t i = 0;
-  while (i < result->action_execution_status.size() && result->success) {
-    if (result->action_execution_status[i].status !=
-      plansys2_msgs::msg::ActionExecutionInfo::SUCCEEDED)
-    {
-      result->success = false;
-    }
-    i++;
-  }
+  create_plan_runtime_info(runtime_info);
 
-  if (rclcpp::ok()) {
-    if (cancel_plan_requested_) {
-      goal_handle->canceled(result);
+  bool plan_success = get_tree_from_plan(runtime_info);
+
+  auto it = previous_action_map.begin();
+  while (it != previous_action_map.end()) {
+    if (it->second.action_executor->get_internal_status() != ActionExecutor::RUNNING) {
+      ActionExecutionInfo & action_info = it->second;
+      action_info.action_executor->clean_up();
+      action_info.action_executor = nullptr;
+      it = previous_action_map.erase(it);
     } else {
-      goal_handle->succeed(result);
-    }
-    if (result->success) {
-      RCLCPP_INFO(this->get_logger(), "Plan Succeeded");
-    } else {
-      RCLCPP_INFO(this->get_logger(), "Plan Failed");
+      ++it;
     }
   }
+
+  for (auto action_info : previous_action_map) {
+    size_t pos = action_info.first.find(':');
+    std::string query_action_name = action_info.first.substr(0, pos) + ":0";
+
+    auto match_it = runtime_info.action_map->find(query_action_name);
+    if (match_it != runtime_info.action_map->end()) {
+      match_it->second.action_executor = action_info.second.action_executor;
+      match_it->second.at_start_effects_applied = action_info.second.at_start_effects_applied;
+      match_it->second.at_end_effects_applied = action_info.second.at_end_effects_applied;
+      match_it->second.at_start_effects_applied_time =
+        action_info.second.at_start_effects_applied_time;
+      match_it->second.execution_error_info = action_info.second.execution_error_info;
+      match_it->second.duration = action_info.second.duration;
+      match_it->second.duration_overrun_percentage =
+        action_info.second.duration_overrun_percentage;
+    } else {
+      action_info.second.action_executor->cancel();
+      action_info.second.action_executor->clean_up();
+      action_info.second.action_executor = nullptr;
+    }
+  }
+
+  if (!plan_success) {
+    return false;
+  }
+
+  return true;
 }
 
 void
-ExecutorNode::handle_accepted(const std::shared_ptr<GoalHandleExecutePlan> goal_handle)
+ExecutorNode::cancel_all_running_actions(PlanRuntineInfo & runtime_info)
 {
-  using namespace std::placeholders;
-  std::thread{std::bind(&ExecutorNode::execute, this, _1), goal_handle}.detach();
+  if (runtime_info.action_map != nullptr) {
+    for (auto & entry : *runtime_info.action_map) {
+      ActionExecutionInfo & action_info = entry.second;
+      if (action_info.action_executor->get_internal_status() == ActionExecutor::RUNNING) {
+        action_info.action_executor->cancel();
+      }
+    }
+  }
 }
 
 std::vector<plansys2_msgs::msg::ActionExecutionInfo>
@@ -618,8 +639,8 @@ ExecutorNode::print_execution_info(
         fprintf(stderr, "\tFAILURE\n");
         break;
     }
-    if (action_info.second.durative_action_info == nullptr) {
-      fprintf(stderr, "\tWith no duration info\n");
+    if (action_info.second.action_info.action.index() == std::variant_npos) {
+      fprintf(stderr, "\tWith no action info\n");
     }
 
     if (action_info.second.at_start_effects_applied) {
@@ -633,6 +654,206 @@ ExecutorNode::print_execution_info(
     } else {
       fprintf(stderr, "\tAt end effects NOT applied\n");
     }
+  }
+}
+
+void
+ExecutorNode::update_plan(PlanRuntineInfo & runtime_info)
+{
+  for (const auto & action : *runtime_info.action_map) {
+    if (action.second.action_executor == nullptr) {continue;}
+
+    switch (action.second.action_executor->get_internal_status()) {
+      case ActionExecutor::IDLE:
+      case ActionExecutor::DEALING:
+      case ActionExecutor::RUNNING:
+        break;
+      case ActionExecutor::SUCCESS:
+      case ActionExecutor::FAILURE:
+      case ActionExecutor::CANCELLED:
+        {
+          auto pos = std::find(
+            runtime_info.remaining_plan.items.begin(),
+            runtime_info.remaining_plan.items.end(),
+            action.second.plan_item);
+          if (pos != runtime_info.remaining_plan.items.end()) {
+            runtime_info.remaining_plan.items.erase(pos);
+          }
+        }
+        break;
+    }
+  }
+}
+
+rclcpp_action::GoalResponse
+ExecutorNode::handle_goal(
+  const rclcpp_action::GoalUUID & uuid,
+  std::shared_ptr<const ExecutePlan::Goal> goal)
+{
+  RCLCPP_INFO(this->get_logger(), "Received goal request with order");
+
+  return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
+}
+
+rclcpp_action::CancelResponse
+ExecutorNode::handle_cancel(
+  const std::shared_ptr<GoalHandleExecutePlan> goal_handle)
+{
+  RCLCPP_INFO(this->get_logger(), "Received request to cancel goal");
+
+  if (executor_state_ == STATE_EXECUTING) {
+    cancel_goal_handle_ = goal_handle;
+    cancel_requested_ = true;
+
+    return rclcpp_action::CancelResponse::ACCEPT;
+  } else {
+    return rclcpp_action::CancelResponse::REJECT;
+  }
+}
+
+void
+ExecutorNode::handle_accepted(const std::shared_ptr<GoalHandleExecutePlan> goal_handle)
+{
+  RCLCPP_INFO(this->get_logger(), "Accepted new goal");
+
+  new_goal_handle_ = goal_handle;
+  new_plan_received_ = true;
+}
+
+void
+ExecutorNode::execution_cycle()
+{
+  rclcpp::Rate rate(50);
+  while (rclcpp::ok()) {
+    auto feedback = std::make_shared<ExecutePlan::Feedback>();
+    auto result = std::make_shared<ExecutePlan::Result>();
+
+    switch (executor_state_) {
+      case STATE_IDLE:
+        if (new_plan_received_) {
+          new_plan_received_ = false;
+
+          current_goal_handle_ = new_goal_handle_;
+
+          runtime_info_ = PlanRuntineInfo();
+          runtime_info_.complete_plan = current_goal_handle_->get_goal()->plan;
+          runtime_info_.remaining_plan = current_goal_handle_->get_goal()->plan;
+
+          if (!init_plan_for_execution(runtime_info_)) {
+            executor_state_ = STATE_ABORTING;
+          } else {
+            executor_state_ = STATE_EXECUTING;
+          }
+        }
+        break;
+      case STATE_EXECUTING:
+        {
+          BT::NodeStatus status;
+          try {
+            status = runtime_info_.current_tree->tree.tickOnce();
+          } catch (std::exception & e) {
+            std::cerr << e.what() << std::endl;
+            executor_state_ = STATE_FAILED;
+          }
+
+          auto feedback_info_msgs = get_feedback_info(runtime_info_.action_map);
+          feedback->action_execution_status = feedback_info_msgs;
+          current_goal_handle_->publish_feedback(feedback);
+          for (const auto & msg : feedback_info_msgs) {
+            execution_info_pub_->publish(msg);
+          }
+
+          update_plan(runtime_info_);
+          remaining_plan_pub_->publish(runtime_info_.remaining_plan);
+          executing_plan_pub_->publish(runtime_info_.complete_plan);
+
+          std_msgs::msg::String dotgraph_msg;
+          dotgraph_msg.data = runtime_info_.current_tree->bt_builder->get_dotgraph(
+            runtime_info_.action_map, this->get_parameter("enable_dotgraph_legend").as_bool(),
+            this->get_parameter("print_graph").as_bool());
+          dotgraph_pub_->publish(dotgraph_msg);
+
+          if (status == BT::NodeStatus::SUCCESS) {
+            executor_state_ = STATE_SUCCEDED;
+          } else if (status == BT::NodeStatus::FAILURE) {
+            executor_state_ = STATE_FAILED;
+          } else if (cancel_requested_) {
+            cancel_requested_ = false;
+            executor_state_ = STATE_CANCELLED;
+          } else if (new_plan_received_) {
+            new_plan_received_ = false;
+            executor_state_ = STATE_REPLANNING;
+          }
+        }
+        break;
+      case STATE_REPLANNING:
+        result->result = plansys2_msgs::action::ExecutePlan::Result::PREEMPT;
+
+        if (current_goal_handle_->is_canceling()) {
+          RCLCPP_DEBUG(get_logger(), "previous is cancelling");
+        } else if (current_goal_handle_->is_active()) {
+          RCLCPP_DEBUG(get_logger(), "previous is active");
+          current_goal_handle_->abort(result);
+        } else {
+          current_goal_handle_ = new_goal_handle_;
+
+          runtime_info_.complete_plan = current_goal_handle_->get_goal()->plan;
+          runtime_info_.remaining_plan = current_goal_handle_->get_goal()->plan;
+
+          if (!replan_for_execution(runtime_info_)) {
+            executor_state_ = STATE_ERROR;
+          } else {
+            executor_state_ = STATE_EXECUTING;
+          }
+        }
+
+        break;
+      case STATE_ABORTING:
+        cancel_all_running_actions(runtime_info_);
+
+        result->result = plansys2_msgs::action::ExecutePlan::Result::FAILURE;
+        result->action_execution_status = get_feedback_info(runtime_info_.action_map);
+
+        current_goal_handle_->abort(result);
+        executor_state_ = STATE_IDLE;
+        break;
+      case STATE_CANCELLED:
+        cancel_all_running_actions(runtime_info_);
+
+        result->result = plansys2_msgs::action::ExecutePlan::Result::FAILURE;
+        result->action_execution_status = get_feedback_info(runtime_info_.action_map);
+
+        current_goal_handle_->canceled(result);
+        executor_state_ = STATE_IDLE;
+        break;
+      case STATE_FAILED:
+        cancel_all_running_actions(runtime_info_);
+
+        result->result = plansys2_msgs::action::ExecutePlan::Result::FAILURE;
+        result->action_execution_status = get_feedback_info(runtime_info_.action_map);
+
+        current_goal_handle_->succeed(result);
+        executor_state_ = STATE_IDLE;
+        break;
+      case STATE_ERROR:
+        cancel_all_running_actions(runtime_info_);
+
+        result->result = plansys2_msgs::action::ExecutePlan::Result::FAILURE;
+        result->action_execution_status = get_feedback_info(runtime_info_.action_map);
+
+        current_goal_handle_->abort(result);
+        executor_state_ = STATE_IDLE;
+        break;
+      case STATE_SUCCEDED:
+        result->result = plansys2_msgs::action::ExecutePlan::Result::SUCCESS;
+        result->action_execution_status = get_feedback_info(runtime_info_.action_map);
+
+        current_goal_handle_->succeed(result);
+        executor_state_ = STATE_IDLE;
+        break;
+    }
+
+    rate.sleep();
   }
 }
 

@@ -19,9 +19,13 @@
 #include <memory>
 #include <vector>
 
+#include "plansys2_msgs/msg/action.hpp"
 #include "plansys2_msgs/msg/action_execution.hpp"
 #include "plansys2_msgs/msg/action_execution_info.hpp"
 #include "plansys2_msgs/msg/durative_action.hpp"
+#include "plansys2_msgs/msg/param.hpp"
+#include "plansys2_msgs/msg/plan_item.hpp"
+#include "plansys2_pddl_parser/Utils.hpp"
 #include "behaviortree_cpp/behavior_tree.h"
 
 #include "rclcpp/rclcpp.hpp"
@@ -54,6 +58,8 @@ public:
   explicit ActionExecutor(
     const std::string & action, rclcpp_lifecycle::LifecycleNode::SharedPtr node);
 
+  ~ActionExecutor();
+
   BT::NodeStatus tick(const rclcpp::Time & now);
   void cancel();
   BT::NodeStatus get_status();
@@ -64,7 +70,7 @@ public:
   void set_internal_status(Status state) {state_ = state;}
   std::string get_action_name() const {return action_name_;}
   std::vector<std::string> get_action_params() const {return action_params_;}
-  plansys2_msgs::msg::ActionExecution last_msg;
+  plansys2_msgs::msg::ActionExecution::SharedPtr last_msg_;
 
   rclcpp::Time get_start_time() const {return start_execution_;}
   rclcpp::Time get_current_time() const {return node_->now();}
@@ -72,6 +78,8 @@ public:
 
   std::string get_feedback() const {return feedback_;}
   float get_completion() const {return completion_;}
+
+  void clean_up();
 
 protected:
   rclcpp_lifecycle::LifecycleNode::SharedPtr node_;
@@ -92,7 +100,7 @@ protected:
     action_hub_pub_;
   rclcpp::Subscription<plansys2_msgs::msg::ActionExecution>::SharedPtr action_hub_sub_;
 
-  void action_hub_callback(const plansys2_msgs::msg::ActionExecution::SharedPtr msg);
+  void action_hub_callback(plansys2_msgs::msg::ActionExecution::SharedPtr msg);
   void request_for_performers();
   void confirm_performer(const std::string & node_id);
   void reject_performer(const std::string & node_id);
@@ -104,14 +112,131 @@ protected:
   rclcpp::TimerBase::SharedPtr waiting_timer_;
 };
 
+struct ActionVariant
+{
+  using shared_ptr_action = std::shared_ptr<plansys2_msgs::msg::Action>;
+  using shared_ptr_durative = std::shared_ptr<plansys2_msgs::msg::DurativeAction>;
+
+  std::variant<
+    std::shared_ptr<plansys2_msgs::msg::Action>,
+    std::shared_ptr<plansys2_msgs::msg::DurativeAction>> action;
+
+  ActionVariant & operator=(shared_ptr_action ptr)
+  {
+    action = ptr;
+    return *this;
+  }
+
+  ActionVariant & operator=(shared_ptr_durative ptr)
+  {
+    action = ptr;
+    return *this;
+  }
+
+  std::string get_action_string() const
+  {
+    std::string action_string;
+    if (std::holds_alternative<shared_ptr_action>(action)) {
+      action_string = parser::pddl::nameActionsToString(
+        std::get<shared_ptr_action>(action));
+    } else if (std::holds_alternative<shared_ptr_durative>(action)) {
+      action_string = parser::pddl::nameActionsToString(
+        std::get<shared_ptr_durative>(action));
+    }
+    return action_string;
+  }
+
+  std::string get_action_name() const
+  {
+    std::string action_name;
+    if (std::holds_alternative<shared_ptr_action>(action)) {
+      action_name = std::get<shared_ptr_action>(action)->name;
+    } else if (std::holds_alternative<shared_ptr_durative>(action)) {
+      action_name = std::get<shared_ptr_durative>(action)->name;
+    }
+    return action_name;
+  }
+
+  std::vector<plansys2_msgs::msg::Param> get_action_params() const
+  {
+    std::vector<plansys2_msgs::msg::Param> params;
+    if (std::holds_alternative<shared_ptr_action>(action)) {
+      params = std::get<shared_ptr_action>(action)->parameters;
+    } else if (std::holds_alternative<shared_ptr_durative>(action)) {
+      params = std::get<shared_ptr_durative>(action)->parameters;
+    }
+    return params;
+  }
+
+  plansys2_msgs::msg::Tree get_overall_requirements() const
+  {
+    plansys2_msgs::msg::Tree reqs;
+    if (std::holds_alternative<shared_ptr_action>(action)) {
+      reqs = std::get<shared_ptr_action>(action)->preconditions;
+    } else if (std::holds_alternative<shared_ptr_durative>(action)) {
+      reqs = std::get<shared_ptr_durative>(action)->over_all_requirements;
+    }
+    return reqs;
+  }
+
+  plansys2_msgs::msg::Tree get_at_start_requirements() const
+  {
+    plansys2_msgs::msg::Tree reqs;
+    if (std::holds_alternative<shared_ptr_durative>(action)) {
+      reqs = std::get<shared_ptr_durative>(action)->at_start_requirements;
+    }
+    return reqs;
+  }
+
+  plansys2_msgs::msg::Tree get_at_end_requirements() const
+  {
+    plansys2_msgs::msg::Tree reqs;
+    if (std::holds_alternative<shared_ptr_durative>(action)) {
+      reqs = std::get<shared_ptr_durative>(action)->at_end_requirements;
+    }
+    return reqs;
+  }
+
+  plansys2_msgs::msg::Tree get_at_start_effects() const
+  {
+    plansys2_msgs::msg::Tree effects;
+    if (std::holds_alternative<shared_ptr_durative>(action)) {
+      effects = std::get<shared_ptr_durative>(action)->at_start_effects;
+    }
+    return effects;
+  }
+
+  plansys2_msgs::msg::Tree get_at_end_effects() const
+  {
+    plansys2_msgs::msg::Tree effects;
+    if (std::holds_alternative<shared_ptr_action>(action)) {
+      effects = std::get<shared_ptr_action>(action)->effects;
+    } else if (std::holds_alternative<shared_ptr_durative>(action)) {
+      effects = std::get<shared_ptr_durative>(action)->at_end_effects;
+    }
+    return effects;
+  }
+
+  bool is_action() const
+  {
+    return std::holds_alternative<shared_ptr_action>(action);
+  }
+
+  bool is_durative_action() const
+  {
+    return std::holds_alternative<shared_ptr_durative>(action);
+  }
+};
+
 struct ActionExecutionInfo
 {
+  plansys2_msgs::msg::PlanItem plan_item;
   std::shared_ptr<ActionExecutor> action_executor = {nullptr};
   bool at_start_effects_applied = {false};
   bool at_end_effects_applied = {false};
   rclcpp::Time at_start_effects_applied_time;
   rclcpp::Time at_end_effects_applied_time;
-  std::shared_ptr<plansys2_msgs::msg::DurativeAction> durative_action_info = {nullptr};
+  ActionVariant action_info;
   std::string execution_error_info;
   double duration;
   double duration_overrun_percentage = -1.0;

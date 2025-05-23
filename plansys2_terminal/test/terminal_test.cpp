@@ -81,9 +81,14 @@ private:
 class TerminalTestCase : public ::testing::Test
 {
 protected:
-  static void SetUpTestCase()
+  void SetUp()
   {
     rclcpp::init(0, nullptr);
+  }
+
+  void TearDown()
+  {
+    rclcpp::shutdown();
   }
 };
 
@@ -277,8 +282,7 @@ TEST_F(TerminalTestCase, load_popf_plugin)
   domain_node->set_parameter({"model_file", pkgpath + "/pddl/simple_example.pddl"});
   problem_node->set_parameter({"model_file", pkgpath + "/pddl/simple_example.pddl"});
 
-  rclcpp::executors::MultiThreadedExecutor exe(rclcpp::ExecutorOptions(), 16, true);
-  ASSERT_GT(exe.get_number_of_threads(), 15u);
+  rclcpp::experimental::executors::EventsExecutor exe;
 
   exe.add_node(domain_node->get_node_base_interface());
   exe.add_node(problem_node->get_node_base_interface());
@@ -606,8 +610,7 @@ TEST_F(TerminalTestCase, add_problem)
   domain_node->set_parameter({"model_file", pkgpath + "/pddl/simple_example.pddl"});
   problem_node->set_parameter({"model_file", pkgpath + "/pddl/simple_example.pddl"});
 
-  rclcpp::executors::MultiThreadedExecutor exe(rclcpp::ExecutorOptions(), 16, true);
-  ASSERT_GT(exe.get_number_of_threads(), 15u);
+  rclcpp::experimental::executors::EventsExecutor exe;
 
   exe.add_node(domain_node->get_node_base_interface());
   exe.add_node(problem_node->get_node_base_interface());
@@ -721,8 +724,7 @@ TEST_F(TerminalTestCase, add_problem_empty_domain)
   domain_node->set_parameter({"model_file", pkgpath + "/pddl/simple_example.pddl"});
   problem_node->set_parameter({"model_file", pkgpath + "/pddl/simple_example.pddl"});
 
-  rclcpp::executors::MultiThreadedExecutor exe(rclcpp::ExecutorOptions(), 16, true);
-  ASSERT_GT(exe.get_number_of_threads(), 15u);
+  rclcpp::experimental::executors::EventsExecutor exe;
 
   exe.add_node(domain_node->get_node_base_interface());
   exe.add_node(problem_node->get_node_base_interface());
@@ -829,7 +831,7 @@ TEST_F(TerminalTestCase, check_actors)
   domain_node->set_parameter({"model_file", pkgpath + "/pddl/simple_example.pddl"});
   problem_node->set_parameter({"model_file", pkgpath + "/pddl/simple_example.pddl"});
 
-  rclcpp::executors::SingleThreadedExecutor exe;
+  rclcpp::experimental::executors::EventsExecutor exe;
 
   exe.add_node(domain_node->get_node_base_interface());
   exe.add_node(problem_node->get_node_base_interface());
@@ -977,8 +979,7 @@ TEST_F(TerminalTestCase, source_run_plan)
   std::string cmd_file = pkgpath + "/pddl/commands";
   std::string plan_file = pkgpath + "/pddl/plan";
 
-  rclcpp::executors::MultiThreadedExecutor exe(rclcpp::ExecutorOptions(), 16, true);
-  ASSERT_GT(exe.get_number_of_threads(), 15u);
+  rclcpp::experimental::executors::EventsExecutor exe;
 
   exe.add_node(domain_node->get_node_base_interface());
   exe.add_node(problem_node->get_node_base_interface());

@@ -51,6 +51,7 @@ public:
 private:
   std::shared_ptr<std::map<std::string, ActionExecutionInfo>> action_map_;
   std::shared_ptr<plansys2::ProblemExpertClient> problem_client_;
+  rclcpp::Time last_check_problem_ts_;
 };
 
 }  // namespace plansys2

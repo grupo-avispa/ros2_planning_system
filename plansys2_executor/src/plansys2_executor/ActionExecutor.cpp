@@ -16,7 +16,7 @@
 #include <memory>
 #include <vector>
 
-#include "plansys2_pddl_parser/Utils.h"
+#include "plansys2_pddl_parser/Utils.hpp"
 
 #include "plansys2_executor/ActionExecutor.hpp"
 
@@ -46,12 +46,25 @@ ActionExecutor::ActionExecutor(
   state_time_ = start_execution_;
 }
 
-void
-ActionExecutor::action_hub_callback(const plansys2_msgs::msg::ActionExecution::SharedPtr msg)
+ActionExecutor::~ActionExecutor()
 {
-  last_msg = *msg;
+  clean_up();
+}
 
-  switch (msg->type) {
+void
+ActionExecutor::clean_up()
+{
+  if (action_hub_sub_ != nullptr) {
+    action_hub_sub_->clear_on_new_message_callback();
+  }
+}
+
+void
+ActionExecutor::action_hub_callback(plansys2_msgs::msg::ActionExecution::SharedPtr msg)
+{
+  last_msg_ = msg;
+
+  switch (last_msg_->type) {
     case plansys2_msgs::msg::ActionExecution::REQUEST:
     case plansys2_msgs::msg::ActionExecution::CONFIRM:
     case plansys2_msgs::msg::ActionExecution::REJECT:
@@ -59,54 +72,52 @@ ActionExecutor::action_hub_callback(const plansys2_msgs::msg::ActionExecution::S
       // These cases have no meaning requester
       break;
     case plansys2_msgs::msg::ActionExecution::RESPONSE:
-      if (msg->arguments == action_params_ && msg->action == action_name_) {
+      if (last_msg_->arguments == action_params_ && last_msg_->action == action_name_) {
         if (state_ == DEALING) {
-          confirm_performer(msg->node_id);
-          current_performer_id_ = msg->node_id;
+          confirm_performer(last_msg_->node_id);
+          current_performer_id_ = last_msg_->node_id;
           state_ = RUNNING;
           waiting_timer_ = nullptr;
           start_execution_ = node_->now();
           state_time_ = node_->now();
         } else {
-          reject_performer(msg->node_id);
+          reject_performer(last_msg_->node_id);
         }
       }
       break;
     case plansys2_msgs::msg::ActionExecution::FEEDBACK:
-      if (state_ != RUNNING || msg->arguments != action_params_ || msg->action != action_name_ ||
-        msg->node_id != current_performer_id_)
+      if (state_ != RUNNING || last_msg_->arguments != action_params_ ||
+        last_msg_->action != action_name_ || last_msg_->node_id != current_performer_id_)
       {
         return;
       }
-      feedback_ = msg->status;
-      completion_ = msg->completion;
+      feedback_ = last_msg_->status;
+      completion_ = last_msg_->completion;
       state_time_ = node_->now();
 
       break;
     case plansys2_msgs::msg::ActionExecution::FINISH:
-      if (msg->arguments == action_params_ &&
-        msg->action == action_name_ && msg->node_id == current_performer_id_)
+      if (last_msg_->arguments == action_params_ &&
+        last_msg_->action == action_name_ && last_msg_->node_id == current_performer_id_)
       {
-        if (msg->success) {
+        if (last_msg_->success) {
           state_ = SUCCESS;
         } else {
           state_ = FAILURE;
         }
 
-        feedback_ = msg->status;
-        completion_ = msg->completion;
+        feedback_ = last_msg_->status;
+        completion_ = last_msg_->completion;
 
         state_time_ = node_->now();
 
         action_hub_pub_->on_deactivate();
-        action_hub_pub_ = nullptr;
-        action_hub_sub_ = nullptr;
       }
       break;
     default:
       RCLCPP_ERROR(
         node_->get_logger(), "Msg %d type not recognized in %s executor requester",
-        msg->type, action_.c_str());
+        last_msg_->type, action_.c_str());
       break;
   }
 }
