@@ -44,12 +44,14 @@ target_link_libraries(${PROJECT_NAME}
   terminal
 )
 
-install(TARGETS
-  terminal
-  ${PROJECT_NAME}
+install(TARGETS terminal
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
+)
+
+install(TARGETS ${PROJECT_NAME}
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
 if(BUILD_TESTING)

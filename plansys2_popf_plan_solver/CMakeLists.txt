@@ -26,8 +26,7 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNC
 
 pluginlib_export_plugin_description_file(plansys2_core plansys2_popf_plan_solver_plugin.xml)
 
-install(
-  DIRECTORY include/
+install(DIRECTORY include/
   DESTINATION include/${PROJECT_NAME}
 )
 
@@ -35,8 +34,8 @@ install(FILES plansys2_popf_plan_solver_plugin.xml
   DESTINATION share/${PROJECT_NAME}
 )
 
-install(TARGETS
-  ${PROJECT_NAME} EXPORT ${PROJECT_NAME}
+install(TARGETS ${PROJECT_NAME}
+  EXPORT ${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin

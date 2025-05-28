@@ -52,28 +52,23 @@ target_link_libraries(planner_node
   rclcpp::rclcpp
 )
 
-install(
-  DIRECTORY include/
+install(DIRECTORY include/
   DESTINATION include/${PROJECT_NAME}
 )
 
-install(
-  DIRECTORY launch
+install(DIRECTORY launch
   DESTINATION share/${PROJECT_NAME}
 )
 
-install(TARGETS
-  ${PROJECT_NAME} EXPORT ${PROJECT_NAME}
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION lib/${PROJECT_NAME}
-)
-
-install(TARGETS
-  planner_node
+install(TARGETS ${PROJECT_NAME}
+  EXPORT ${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
+)
+
+install(TARGETS planner_node
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
 if(BUILD_TESTING)

@@ -43,24 +43,19 @@ target_link_libraries(bt_action_node
   ${lifecycle_msgs_TARGETS}
 )
 
-install(
-  DIRECTORY include/
+install(DIRECTORY include/
   DESTINATION include/${PROJECT_NAME}
 )
 
-install(TARGETS
-  bt_action_node
-  ${PROJECT_NAME} EXPORT ${PROJECT_NAME}
+install(TARGETS ${PROJECT_NAME}
+  EXPORT ${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
 )
 
-install(TARGETS
-  bt_action_node
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
+install(TARGETS bt_action_node
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
 if(BUILD_TESTING)

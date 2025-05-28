@@ -43,8 +43,7 @@ install(DIRECTORY ../behavior_tree
   DESTINATION share/${PROJECT_NAME}/test
 )
 
-install(TARGETS
-  ${plugin_libs}
+install(TARGETS ${plugin_libs}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin

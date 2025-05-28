@@ -29,15 +29,11 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-install(
-  DIRECTORY launch params
+install(DIRECTORY launch params
   DESTINATION share/${PROJECT_NAME}
 )
-install(TARGETS
-  plansys2_node
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
+install(TARGETS plansys2_node
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
 ament_export_dependencies(

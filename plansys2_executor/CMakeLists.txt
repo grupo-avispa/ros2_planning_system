@@ -124,27 +124,22 @@ install(
   DESTINATION share/${PROJECT_NAME}
 )
 
-install(TARGETS
-  ${PROJECT_NAME} EXPORT ${PROJECT_NAME}
+install(TARGETS ${PROJECT_NAME}
+  EXPORT ${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
 )
 
-install(TARGETS
-  bt_builder_plugins EXPORT bt_builder_plugins
+install(TARGETS bt_builder_plugins
+  EXPORT bt_builder_plugins
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
 )
 
-install(TARGETS
-  bt_builder_plugins
-  executor_node
-  compute_bt
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
+install(TARGETS bt_builder_plugins executor_node compute_bt
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
 if(BUILD_TESTING)

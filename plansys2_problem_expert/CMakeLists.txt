@@ -49,28 +49,23 @@ target_link_libraries(problem_expert_node
   rclcpp::rclcpp
 )
 
-install(
-  DIRECTORY include/
+install(DIRECTORY include/
   DESTINATION include/${PROJECT_NAME}
 )
 
-install(
-  DIRECTORY launch
+install(DIRECTORY launch
   DESTINATION share/${PROJECT_NAME}
 )
 
-install(TARGETS
-  ${PROJECT_NAME} EXPORT ${PROJECT_NAME}
+install(TARGETS ${PROJECT_NAME}
+  EXPORT ${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
 )
 
-install(TARGETS
-  problem_expert_node
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
+install(TARGETS problem_expert_node
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
 if(BUILD_TESTING)
