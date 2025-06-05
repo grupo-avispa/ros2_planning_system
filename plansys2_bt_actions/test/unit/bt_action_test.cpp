@@ -132,9 +132,11 @@ TEST_F(BTActionsTestCase, load_plugins)
 
   bool finish = false;
   std::thread t([&]() {
+      rclcpp::Rate rate(100);
       while (!finish) {
         rclcpp::spin_some(move_server_node);
         rclcpp::spin_some(node->get_node_base_interface());
+        rate.sleep();
       }
     });
 
@@ -162,6 +164,8 @@ TEST_F(BTActionsTestCase, load_plugins)
   }
 
   t.join();
+
+  node->shutdown();
 }
 
 TEST_F(BTActionsTestCase, on_tick_failure)
@@ -172,9 +176,11 @@ TEST_F(BTActionsTestCase, on_tick_failure)
 
   bool finished = false;
   std::thread t([&]() {
+      rclcpp::Rate rate(100);
       while (!finished) {
         rclcpp::spin_some(move_server_node);
         rclcpp::spin_some(node->get_node_base_interface());
+        rate.sleep();
       }
     });
 
@@ -200,6 +206,8 @@ TEST_F(BTActionsTestCase, on_tick_failure)
 
   finished = true;
   t.join();
+
+  node->shutdown();
 }
 
 TEST_F(BTActionsTestCase, on_feedback_failure)
@@ -210,9 +218,11 @@ TEST_F(BTActionsTestCase, on_feedback_failure)
 
   bool finished = false;
   std::thread t([&]() {
+      rclcpp::Rate rate(100);
       while (!finished) {
         rclcpp::spin_some(move_server_node);
         rclcpp::spin_some(node->get_node_base_interface());
+        rate.sleep();
       }
     });
 
@@ -239,6 +249,8 @@ TEST_F(BTActionsTestCase, on_feedback_failure)
 
   finished = true;
   t.join();
+
+  node->shutdown();
 }
 
 TEST_F(BTActionsTestCase, bt_action)
@@ -276,6 +288,8 @@ TEST_F(BTActionsTestCase, bt_action)
   while ( (lc_node->now() - start).seconds() < 2) {
     exe.spin_some();
   }
+
+  lc_node->shutdown();
 }
 
 TEST_F(BTActionsTestCase, cancel_bt_action)
@@ -365,4 +379,6 @@ TEST_F(BTActionsTestCase, cancel_bt_action)
 
   finish = true;
   t.join();
+
+  lc_node->shutdown();
 }
