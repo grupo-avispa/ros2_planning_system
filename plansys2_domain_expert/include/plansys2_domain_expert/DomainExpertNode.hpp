@@ -39,196 +39,203 @@
 namespace plansys2
 {
 
-/// DomainExpertNode contains a model, and manages the requests from the DomainExpertClient.
+/**
+ * @class plansys2::DomainExpertNode
+ * @brief ROS2 Lifecycle Node that manages the domain model and handles requests from DomainExpertClient.
+ *
+ * This node provides services to query and manipulate the planning domain,
+ * including actions, predicates, functions, and derived predicates.
+ */
 class DomainExpertNode : public rclcpp_lifecycle::LifecycleNode
 {
 public:
-  /// Create a new DomainExpertNode
+  /**
+   * @brief Construct a new DomainExpertNode object.
+   */
   DomainExpertNode();
 
   using CallbackReturnT =
     rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
 
-  /// Configures domain by creating a DomainExpert object
   /**
-   * \param[in] state LifeCycle Node's state
-   * \return Success or Failure
+   * @brief Configures the domain by creating a DomainExpert object.
+   * @param[in] state The current lifecycle state.
+   * @return Success or Failure.
    */
   CallbackReturnT on_configure(const rclcpp_lifecycle::State & state);
 
-  /// Activates the node
   /**
-   * \param[in] state LifeCycle Node's state
-   * \return Success or Failure
+   * @brief Activates the node.
+   * @param[in] state The current lifecycle state.
+   * @return Success or Failure.
    */
   CallbackReturnT on_activate(const rclcpp_lifecycle::State & state);
 
-  /// Deactivates the node
   /**
-   * \param[in] state LifeCycle Node's state
-   * \return Success or Failure
+   * @brief Deactivates the node.
+   * @param[in] state The current lifecycle state.
+   * @return Success or Failure.
    */
   CallbackReturnT on_deactivate(const rclcpp_lifecycle::State & state);
 
-  /// Cleans up the node
   /**
-   * \param[in] state LifeCycle Node's state
-   * \return Success or Failure
+   * @brief Cleans up the node.
+   * @param[in] state The current lifecycle state.
+   * @return Success or Failure.
    */
   CallbackReturnT on_cleanup(const rclcpp_lifecycle::State & state);
 
-  /// Shuts down the node
   /**
-   * \param[in] state LifeCycle Node's state
-   * \return Success or Failure
+   * @brief Shuts down the node.
+   * @param[in] state The current lifecycle state.
+   * @return Success or Failure.
    */
   CallbackReturnT on_shutdown(const rclcpp_lifecycle::State & state);
 
-  /// Manages the error in the node
   /**
-   * \param[in] state LifeCycle Node's state
-   * \return Success or Failure
+   * @brief Handles errors in the node.
+   * @param[in] state The current lifecycle state.
+   * @return Success or Failure.
    */
   CallbackReturnT on_error(const rclcpp_lifecycle::State & state);
 
-
-  /// Receives the result of the GetDomainName service call
   /**
-   * \param[in] request_header The header of the request
-   * \param[in] request The request
-   * \param[out] request The response
+   * @brief Service callback for GetDomainName.
+   * @param[in] request_header The header of the request.
+   * @param[in] request The request.
+   * @param[out] response The response.
    */
   void get_domain_name_service_callback(
     const std::shared_ptr<rmw_request_id_t> request_header,
     const std::shared_ptr<plansys2_msgs::srv::GetDomainName::Request> request,
     const std::shared_ptr<plansys2_msgs::srv::GetDomainName::Response> response);
 
-  /// Receives the result of the GetDomainTypes service call
   /**
-   * \param[in] request_header The header of the request
-   * \param[in] request The request
-   * \param[out] request The response
+   * @brief Service callback for GetDomainTypes.
+   * @param[in] request_header The header of the request.
+   * @param[in] request The request.
+   * @param[out] response The response.
    */
   void get_domain_types_service_callback(
     const std::shared_ptr<rmw_request_id_t> request_header,
     const std::shared_ptr<plansys2_msgs::srv::GetDomainTypes::Request> request,
     const std::shared_ptr<plansys2_msgs::srv::GetDomainTypes::Response> response);
 
-  /// Receives the result of the GetDomainActions service call
   /**
-   * \param[in] request_header The header of the request
-   * \param[in] request The request
-   * \param[out] request The response
+   * @brief Service callback for GetDomainActions.
+   * @param[in] request_header The header of the request.
+   * @param[in] request The request.
+   * @param[out] response The response.
    */
   void get_domain_actions_service_callback(
     const std::shared_ptr<rmw_request_id_t> request_header,
     const std::shared_ptr<plansys2_msgs::srv::GetDomainActions::Request> request,
     const std::shared_ptr<plansys2_msgs::srv::GetDomainActions::Response> response);
 
-  /// Receives the result of the GetDomainActionDetails service call
   /**
-   * \param[in] request_header The header of the request
-   * \param[in] request The request
-   * \param[out] request The response
+   * @brief Service callback for GetDomainActionDetails.
+   * @param[in] request_header The header of the request.
+   * @param[in] request The request.
+   * @param[out] response The response.
    */
   void get_domain_action_details_service_callback(
     const std::shared_ptr<rmw_request_id_t> request_header,
     const std::shared_ptr<plansys2_msgs::srv::GetDomainActionDetails::Request> request,
     const std::shared_ptr<plansys2_msgs::srv::GetDomainActionDetails::Response> response);
 
-  /// Receives the result of the GetDomainActions service call
   /**
-   * \param[in] request_header The header of the request
-   * \param[in] request The request
-   * \param[out] request The response
+   * @brief Service callback for GetDomainDurativeActions.
+   * @param[in] request_header The header of the request.
+   * @param[in] request The request.
+   * @param[out] response The response.
    */
   void get_domain_durative_actions_service_callback(
     const std::shared_ptr<rmw_request_id_t> request_header,
     const std::shared_ptr<plansys2_msgs::srv::GetDomainActions::Request> request,
     const std::shared_ptr<plansys2_msgs::srv::GetDomainActions::Response> response);
 
-  /// Receives the result of the GetDomainDurativeActionDetails service call
   /**
-   * \param[in] request_header The header of the request
-   * \param[in] request The request
-   * \param[out] request The response
+   * @brief Service callback for GetDomainDurativeActionDetails.
+   * @param[in] request_header The header of the request.
+   * @param[in] request The request.
+   * @param[out] response The response.
    */
   void get_domain_durative_action_details_service_callback(
     const std::shared_ptr<rmw_request_id_t> request_header,
     const std::shared_ptr<plansys2_msgs::srv::GetDomainDurativeActionDetails::Request> request,
     const std::shared_ptr<plansys2_msgs::srv::GetDomainDurativeActionDetails::Response> response);
 
-  /// Receives the result of the GetDomainPredicates service call
   /**
-   * \param[in] request_header The header of the request
-   * \param[in] request The request
-   * \param[out] request The response
+   * @brief Service callback for GetDomainPredicates.
+   * @param[in] request_header The header of the request.
+   * @param[in] request The request.
+   * @param[out] response The response.
    */
   void get_domain_predicates_service_callback(
     const std::shared_ptr<rmw_request_id_t> request_header,
     const std::shared_ptr<plansys2_msgs::srv::GetStates::Request> request,
     const std::shared_ptr<plansys2_msgs::srv::GetStates::Response> response);
 
-  /// Receives the result of the GetNodeDetails service call
   /**
-   * \param[in] request_header The header of the request
-   * \param[in] request The request
-   * \param[out] request The response
+   * @brief Service callback for GetDomainPredicateDetails.
+   * @param[in] request_header The header of the request.
+   * @param[in] request The request.
+   * @param[out] response The response.
    */
   void get_domain_predicate_details_service_callback(
     const std::shared_ptr<rmw_request_id_t> request_header,
     const std::shared_ptr<plansys2_msgs::srv::GetNodeDetails::Request> request,
     const std::shared_ptr<plansys2_msgs::srv::GetNodeDetails::Response> response);
 
-  /// Receives the result of the GetDomainFunctions service call
   /**
-   * \param[in] request_header The header of the request
-   * \param[in] request The request
-   * \param[out] request The response
+   * @brief Service callback for GetDomainFunctions.
+   * @param[in] request_header The header of the request.
+   * @param[in] request The request.
+   * @param[out] response The response.
    */
   void get_domain_functions_service_callback(
     const std::shared_ptr<rmw_request_id_t> request_header,
     const std::shared_ptr<plansys2_msgs::srv::GetStates::Request> request,
     const std::shared_ptr<plansys2_msgs::srv::GetStates::Response> response);
 
-  /// Receives the result of the GetDomainFunctionDetails service call
   /**
-   * \param[in] request_header The header of the request
-   * \param[in] request The request
-   * \param[out] request The response
+   * @brief Service callback for GetDomainFunctionDetails.
+   * @param[in] request_header The header of the request.
+   * @param[in] request The request.
+   * @param[out] response The response.
    */
   void get_domain_function_details_service_callback(
     const std::shared_ptr<rmw_request_id_t> request_header,
     const std::shared_ptr<plansys2_msgs::srv::GetNodeDetails::Request> request,
     const std::shared_ptr<plansys2_msgs::srv::GetNodeDetails::Response> response);
 
-  /// Receives the result of the GetDomainDerivedPredicates service call
   /**
-   * \param[in] request_header The header of the request
-   * \param[in] request The request
-   * \param[out] request The response
+   * @brief Service callback for GetDomainDerivedPredicates.
+   * @param[in] request_header The header of the request.
+   * @param[in] request The request.
+   * @param[out] response The response.
    */
   void get_domain_derived_predicates_service_callback(
     const std::shared_ptr<rmw_request_id_t> request_header,
     const std::shared_ptr<plansys2_msgs::srv::GetStates::Request> request,
     const std::shared_ptr<plansys2_msgs::srv::GetStates::Response> response);
 
-  /// Receives the result of the GetDomainDerivedPredicateDetails service call
   /**
-   * \param[in] request_header The header of the request
-   * \param[in] request The request
-   * \param[out] request The response
+   * @brief Service callback for GetDomainDerivedPredicateDetails.
+   * @param[in] request_header The header of the request.
+   * @param[in] request The request.
+   * @param[out] response The response.
    */
   void get_domain_derived_predicate_details_service_callback(
     const std::shared_ptr<rmw_request_id_t> request_header,
     const std::shared_ptr<plansys2_msgs::srv::GetDomainDerivedPredicateDetails::Request> request,
     const std::shared_ptr<plansys2_msgs::srv::GetDomainDerivedPredicateDetails::Response> response);
 
-  /// Receives the result of the GetDomain service call
   /**
-   * \param[in] request_header The header of the request
-   * \param[in] request The request
-   * \param[out] request The response
+   * @brief Service callback for GetDomain.
+   * @param[in] request_header The header of the request.
+   * @param[in] request The request.
+   * @param[out] response The response.
    */
   void get_domain_service_callback(
     const std::shared_ptr<rmw_request_id_t> request_header,
