@@ -58,7 +58,7 @@ install(DIRECTORY launch
 )
 
 install(TARGETS ${PROJECT_NAME}
-  EXPORT ${PROJECT_NAME}
+  EXPORT export_${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
@@ -79,7 +79,7 @@ endif()
 
 ament_export_include_directories("include/${PROJECT_NAME}")
 ament_export_libraries(${PROJECT_NAME})
-ament_export_targets(${PROJECT_NAME})
+ament_export_targets(export_${PROJECT_NAME})
 ament_export_dependencies(
   rclcpp
   rclcpp_lifecycle
