@@ -48,7 +48,7 @@ public:
   /**
    * @brief Halt method (required by the BT framework).
    */
-  void halt() {}
+  void halt();
 
   /**
    * @brief Main execution method for the BT node.
