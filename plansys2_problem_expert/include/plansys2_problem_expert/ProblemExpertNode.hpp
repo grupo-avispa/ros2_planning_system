@@ -65,10 +65,10 @@ public:
     rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
 
   /**
-   * @brief Configures the domain by creating a DomainExpert object.
+   * @brief Configures the node.
    *
    * @param[in] state The current lifecycle state.
-   * @return Success or Failure.
+   * @return SUCCESS if configuration is successful, FAILURE otherwise.
    */
   CallbackReturnT on_configure(const rclcpp_lifecycle::State & state);
 
@@ -76,7 +76,7 @@ public:
    * @brief Activates the node.
    *
    * @param[in] state The current lifecycle state.
-   * @return Success or Failure.
+   * @return SUCCESS if activation is successful, FAILURE otherwise.
    */
   CallbackReturnT on_activate(const rclcpp_lifecycle::State & state);
 
@@ -84,7 +84,7 @@ public:
    * @brief Deactivates the node.
    *
    * @param[in] state The current lifecycle state.
-   * @return Success or Failure.
+   * @return SUCCESS if deactivation is successful, FAILURE otherwise.
    */
   CallbackReturnT on_deactivate(const rclcpp_lifecycle::State & state);
 
@@ -92,7 +92,7 @@ public:
    * @brief Cleans up the node.
    *
    * @param[in] state The current lifecycle state.
-   * @return Success or Failure.
+   * @return SUCCESS if cleanup is successful, FAILURE otherwise.
    */
   CallbackReturnT on_cleanup(const rclcpp_lifecycle::State & state);
 
@@ -100,7 +100,7 @@ public:
    * @brief Shuts down the node.
    *
    * @param[in] state The current lifecycle state.
-   * @return Success or Failure.
+   * @return SUCCESS if shutdown is successful, FAILURE otherwise.
    */
   CallbackReturnT on_shutdown(const rclcpp_lifecycle::State & state);
 
@@ -108,7 +108,7 @@ public:
    * @brief Handles errors in the node.
    *
    * @param[in] state The current lifecycle state.
-   * @return Success or Failure.
+   * @return SUCCESS if error handling is successful, FAILURE otherwise.
    */
   CallbackReturnT on_error(const rclcpp_lifecycle::State & state);
 
