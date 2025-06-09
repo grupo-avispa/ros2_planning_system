@@ -57,18 +57,21 @@ public:
 
   /**
    * @brief Add a new PDDL domain to the internal list.
+   *
    * @param[in] domain The PDDL domain definition as a string.
    */
   void add_domain(const std::string & domain);
 
   /**
    * @brief Get a joint domain definition combining all added domains.
+   *
    * @return std::string The combined domain definition.
    */
   std::string get_joint_domain() const;
 
   /**
    * @brief Get the list of parsed domains.
+   *
    * @return std::vector<Domain> Vector containing all parsed domains.
    */
   std::vector<Domain> get_domains() {return domains_;}
@@ -76,6 +79,7 @@ public:
 protected:
   /**
    * @brief Find the end position of a block in the domain definition.
+   *
    * @param[in] domain The domain definition string.
    * @param[in] init_pos Initial position to start searching.
    * @return int The position of the end of the block.
@@ -84,6 +88,7 @@ protected:
 
   /**
    * @brief Extract the name of the domain.
+   *
    * @param[in,out] domain The domain definition string.
    * @return std::string The name of the domain.
    */
@@ -91,6 +96,7 @@ protected:
 
   /**
    * @brief Extract the requirements section from the domain.
+   *
    * @param[in,out] domain The domain definition string.
    * @return std::string The requirements section.
    */
@@ -98,6 +104,7 @@ protected:
 
   /**
    * @brief Extract the types defined in the domain.
+   *
    * @param[in] domain The domain definition string.
    * @return std::string The types section.
    */
@@ -105,6 +112,7 @@ protected:
 
   /**
    * @brief Extract the constants defined in the domain.
+   *
    * @param[in] domain The domain definition string.
    * @return std::string The constants section.
    */
@@ -112,6 +120,7 @@ protected:
 
   /**
    * @brief Extract the predicates defined in the domain.
+   *
    * @param[in] domain The domain definition string.
    * @return std::string The predicates section.
    */
@@ -119,6 +128,7 @@ protected:
 
   /**
    * @brief Extract the functions defined in the domain.
+   *
    * @param[in] domain The domain definition string.
    * @return std::string The functions section.
    */
@@ -126,6 +136,7 @@ protected:
 
   /**
    * @brief Extract the derived predicates defined in the domain.
+   *
    * @param[in] domain The domain definition string.
    * @return std::vector<std::string> Vector containing derived predicates.
    */
@@ -133,6 +144,7 @@ protected:
 
   /**
    * @brief Extract the actions defined in the domain.
+   *
    * @param[in] domain The domain definition string.
    * @return std::vector<std::string> Vector containing actions.
    */

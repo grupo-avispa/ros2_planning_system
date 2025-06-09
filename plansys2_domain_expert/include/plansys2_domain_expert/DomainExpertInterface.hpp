@@ -45,18 +45,21 @@ public:
 
   /**
    * @brief Get the domain name.
+   *
    * @return std::string The name of the domain.
    */
   virtual std::string getName() = 0;
 
   /**
    * @brief Get the types defined in the domain.
+   *
    * @return std::vector<std::string> The names of the types defined in the domain.
    */
   virtual std::vector<std::string> getTypes() = 0;
 
   /**
    * @brief Get the constants defined for a given type.
+   *
    * @param[in] type The name of the type.
    * @return std::vector<std::string> List of constant names for the specified type.
    */
@@ -64,12 +67,14 @@ public:
 
   /**
    * @brief Get the predicates defined in the domain.
+   *
    * @return std::vector<plansys2::Predicate> Vector containing the predicates.
    */
   virtual std::vector<plansys2::Predicate> getPredicates() = 0;
 
   /**
    * @brief Get the details of a predicate defined in the domain.
+   *
    * @param[in] predicate The name of the predicate.
    * @return std::optional<plansys2::Predicate> Predicate object containing the predicate name
    *         and its parameters (name and type).
@@ -79,12 +84,14 @@ public:
 
   /**
    * @brief Get the functions defined in the domain.
+   *
    * @return std::vector<plansys2::Function> Vector containing the functions.
    */
   virtual std::vector<plansys2::Function> getFunctions() = 0;
 
   /**
    * @brief Get the details of a function defined in the domain.
+   *
    * @param[in] function The name of the function.
    * @return std::optional<plansys2::Function> The function name and its parameters (name and type).
    *         If the function does not exist, the returned value is empty.
@@ -93,6 +100,7 @@ public:
 
   /**
    * @brief Get the derived predicates defined in the domain.
+   *
    * @return std::vector<plansys2::Predicate> Vector containing the derived predicates
    *         defined in the domain.
    */
@@ -100,6 +108,7 @@ public:
 
   /**
    * @brief Get the details of a derived predicate defined in the domain.
+   *
    * @param[in] predicate The name of the derived predicate.
    * @param[in] params Optional parameters for the predicate.
    * @return std::vector<plansys2_msgs::msg::Derived> Vector containing the details
@@ -113,12 +122,14 @@ public:
 
   /**
    * @brief Get the regular actions defined in the domain.
+   *
    * @return std::vector<std::string> Vector containing the names of the actions.
    */
   virtual std::vector<std::string> getActions() = 0;
 
   /**
    * @brief Get the details of a regular action defined in the domain.
+   *
    * @param[in] action The name of the action.
    * @param[in] params Optional parameters for the action.
    * @return plansys2_msgs::msg::Action object containing the action name, parameters,
@@ -130,12 +141,14 @@ public:
 
   /**
    * @brief Get the durative actions defined in the domain.
+   *
    * @return std::vector<std::string> Vector containing the names of the durative actions.
    */
   virtual std::vector<std::string> getDurativeActions() = 0;
 
   /**
    * @brief Get the details of a durative action defined in the domain.
+   *
    * @param[in] action The name of the durative action.
    * @param[in] params Optional parameters for the action.
    * @return plansys2_msgs::msg::DurativeAction object containing the action name, parameters,
@@ -148,6 +161,7 @@ public:
   /**
    * @brief Get the current domain definition as a string,
    *        which can be used to save to a file or initialize another domain.
+   *
    * @return std::string The current domain definition in PDDL format.
    */
   virtual std::string getDomain() = 0;

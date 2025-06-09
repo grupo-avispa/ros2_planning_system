@@ -59,6 +59,7 @@ public:
 
   /**
    * @brief Configures the domain by creating a DomainExpert object.
+   *
    * @param[in] state The current lifecycle state.
    * @return Success or Failure.
    */
@@ -66,6 +67,7 @@ public:
 
   /**
    * @brief Activates the node.
+   *
    * @param[in] state The current lifecycle state.
    * @return Success or Failure.
    */
@@ -73,6 +75,7 @@ public:
 
   /**
    * @brief Deactivates the node.
+   *
    * @param[in] state The current lifecycle state.
    * @return Success or Failure.
    */
@@ -80,6 +83,7 @@ public:
 
   /**
    * @brief Cleans up the node.
+   *
    * @param[in] state The current lifecycle state.
    * @return Success or Failure.
    */
@@ -87,6 +91,7 @@ public:
 
   /**
    * @brief Shuts down the node.
+   *
    * @param[in] state The current lifecycle state.
    * @return Success or Failure.
    */
@@ -94,16 +99,18 @@ public:
 
   /**
    * @brief Handles errors in the node.
+   *
    * @param[in] state The current lifecycle state.
    * @return Success or Failure.
    */
   CallbackReturnT on_error(const rclcpp_lifecycle::State & state);
 
   /**
-   * @brief Service callback for GetDomainName.
-   * @param[in] request_header The header of the request.
-   * @param[in] request The request.
-   * @param[out] response The response.
+   * @brief Service callback to retrieve the PDDL domain name.
+   *
+   * @param[in] request_header ROS service request header.
+   * @param[in] request Empty service request.
+   * @param[out] response Service response containing the domain name and success status.
    */
   void get_domain_name_service_callback(
     const std::shared_ptr<rmw_request_id_t> request_header,
@@ -111,10 +118,11 @@ public:
     const std::shared_ptr<plansys2_msgs::srv::GetDomainName::Response> response);
 
   /**
-   * @brief Service callback for GetDomainTypes.
-   * @param[in] request_header The header of the request.
-   * @param[in] request The request.
-   * @param[out] response The response.
+   * @brief Service callback to retrieve all types defined in the domain.
+   *
+   * @param[in] request_header ROS service request header.
+   * @param[in] request Empty service request.
+   * @param[out] response Service response containing the list of types and success status.
    */
   void get_domain_types_service_callback(
     const std::shared_ptr<rmw_request_id_t> request_header,
@@ -122,10 +130,11 @@ public:
     const std::shared_ptr<plansys2_msgs::srv::GetDomainTypes::Response> response);
 
   /**
-   * @brief Service callback for GetDomainActions.
-   * @param[in] request_header The header of the request.
-   * @param[in] request The request.
-   * @param[out] response The response.
+   * @brief Service callback to retrieve all non-durative actions in the domain.
+   *
+   * @param[in] request_header ROS service request header.
+   * @param[in] request Empty service request.
+   * @param[out] response Service response containing the list of actions and success status.
    */
   void get_domain_actions_service_callback(
     const std::shared_ptr<rmw_request_id_t> request_header,
@@ -133,10 +142,11 @@ public:
     const std::shared_ptr<plansys2_msgs::srv::GetDomainActions::Response> response);
 
   /**
-   * @brief Service callback for GetDomainActionDetails.
-   * @param[in] request_header The header of the request.
-   * @param[in] request The request.
-   * @param[out] response The response.
+   * @brief Service callback to retrieve details of a specific action.
+   *
+   * @param[in] request_header ROS service request header.
+   * @param[in] request Service request containing the action name and parameters.
+   * @param[out] response Service response containing the action details and success status.
    */
   void get_domain_action_details_service_callback(
     const std::shared_ptr<rmw_request_id_t> request_header,
@@ -144,10 +154,11 @@ public:
     const std::shared_ptr<plansys2_msgs::srv::GetDomainActionDetails::Response> response);
 
   /**
-   * @brief Service callback for GetDomainDurativeActions.
-   * @param[in] request_header The header of the request.
-   * @param[in] request The request.
-   * @param[out] response The response.
+   * @brief Service callback to retrieve all durative actions in the domain.
+   *
+   * @param[in] request_header ROS service request header.
+   * @param[in] request Empty service request.
+   * @param[out] response Service response containing the list of durative actions and success status.
    */
   void get_domain_durative_actions_service_callback(
     const std::shared_ptr<rmw_request_id_t> request_header,
@@ -155,10 +166,11 @@ public:
     const std::shared_ptr<plansys2_msgs::srv::GetDomainActions::Response> response);
 
   /**
-   * @brief Service callback for GetDomainDurativeActionDetails.
-   * @param[in] request_header The header of the request.
-   * @param[in] request The request.
-   * @param[out] response The response.
+   * @brief Service callback to retrieve details of a specific durative action.
+   *
+   * @param[in] request_header ROS service request header.
+   * @param[in] request Service request containing the durative action name and parameters.
+   * @param[out] response Service response containing the durative action details and success status.
    */
   void get_domain_durative_action_details_service_callback(
     const std::shared_ptr<rmw_request_id_t> request_header,
@@ -166,10 +178,11 @@ public:
     const std::shared_ptr<plansys2_msgs::srv::GetDomainDurativeActionDetails::Response> response);
 
   /**
-   * @brief Service callback for GetDomainPredicates.
-   * @param[in] request_header The header of the request.
-   * @param[in] request The request.
-   * @param[out] response The response.
+   * @brief Service callback to retrieve all predicates defined in the domain.
+   *
+   * @param[in] request_header ROS service request header.
+   * @param[in] request Empty service request.
+   * @param[out] response Service response containing the list of predicates and success status.
    */
   void get_domain_predicates_service_callback(
     const std::shared_ptr<rmw_request_id_t> request_header,
@@ -177,10 +190,11 @@ public:
     const std::shared_ptr<plansys2_msgs::srv::GetStates::Response> response);
 
   /**
-   * @brief Service callback for GetDomainPredicateDetails.
-   * @param[in] request_header The header of the request.
-   * @param[in] request The request.
-   * @param[out] response The response.
+   * @brief Service callback to retrieve details of a specific predicate.
+   *
+   * @param[in] request_header ROS service request header.
+   * @param[in] request Service request containing the predicate expression.
+   * @param[out] response Service response containing the predicate details and success status.
    */
   void get_domain_predicate_details_service_callback(
     const std::shared_ptr<rmw_request_id_t> request_header,
@@ -188,10 +202,11 @@ public:
     const std::shared_ptr<plansys2_msgs::srv::GetNodeDetails::Response> response);
 
   /**
-   * @brief Service callback for GetDomainFunctions.
-   * @param[in] request_header The header of the request.
-   * @param[in] request The request.
-   * @param[out] response The response.
+   * @brief Service callback to retrieve all functions defined in the domain.
+   *
+   * @param[in] request_header ROS service request header.
+   * @param[in] request Empty service request.
+   * @param[out] response Service response containing the list of functions and success status.
    */
   void get_domain_functions_service_callback(
     const std::shared_ptr<rmw_request_id_t> request_header,
@@ -199,10 +214,11 @@ public:
     const std::shared_ptr<plansys2_msgs::srv::GetStates::Response> response);
 
   /**
-   * @brief Service callback for GetDomainFunctionDetails.
-   * @param[in] request_header The header of the request.
-   * @param[in] request The request.
-   * @param[out] response The response.
+   * @brief Service callback to retrieve details of a specific function.
+   *
+   * @param[in] request_header ROS service request header.
+   * @param[in] request Service request containing the function expression.
+   * @param[out] response Service response containing the function details and success status.
    */
   void get_domain_function_details_service_callback(
     const std::shared_ptr<rmw_request_id_t> request_header,
@@ -210,10 +226,11 @@ public:
     const std::shared_ptr<plansys2_msgs::srv::GetNodeDetails::Response> response);
 
   /**
-   * @brief Service callback for GetDomainDerivedPredicates.
-   * @param[in] request_header The header of the request.
-   * @param[in] request The request.
-   * @param[out] response The response.
+   * @brief Service callback to retrieve all derived predicates in the domain.
+   *
+   * @param[in] request_header ROS service request header.
+   * @param[in] request Empty service request.
+   * @param[out] response Service response containing the list of derived predicates and success status.
    */
   void get_domain_derived_predicates_service_callback(
     const std::shared_ptr<rmw_request_id_t> request_header,
@@ -221,10 +238,11 @@ public:
     const std::shared_ptr<plansys2_msgs::srv::GetStates::Response> response);
 
   /**
-   * @brief Service callback for GetDomainDerivedPredicateDetails.
-   * @param[in] request_header The header of the request.
-   * @param[in] request The request.
-   * @param[out] response The response.
+   * @brief Service callback to retrieve details of a specific derived predicate.
+   *
+   * @param[in] request_header ROS service request header.
+   * @param[in] request Service request containing the derived predicate name.
+   * @param[out] response Service response containing the predicate rules and success status.
    */
   void get_domain_derived_predicate_details_service_callback(
     const std::shared_ptr<rmw_request_id_t> request_header,
@@ -232,10 +250,11 @@ public:
     const std::shared_ptr<plansys2_msgs::srv::GetDomainDerivedPredicateDetails::Response> response);
 
   /**
-   * @brief Service callback for GetDomain.
-   * @param[in] request_header The header of the request.
-   * @param[in] request The request.
-   * @param[out] response The response.
+   * @brief Service callback to retrieve the complete PDDL domain.
+   *
+   * @param[in] request_header ROS service request header.
+   * @param[in] request Empty service request.
+   * @param[out] response Service response containing the PDDL domain string and success status.
    */
   void get_domain_service_callback(
     const std::shared_ptr<rmw_request_id_t> request_header,
