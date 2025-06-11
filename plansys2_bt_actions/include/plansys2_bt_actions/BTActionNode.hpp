@@ -57,6 +57,8 @@ public:
 
     // Get the required items from the blackboard
     getInputOrBlackboard("server_timeout", server_timeout_);
+    wait_for_service_timeout_ =
+      config().blackboard->get<std::chrono::milliseconds>("wait_for_service_timeout");
 
     // Initialize the input and output messages
     goal_ = typename ActionT::Goal();
@@ -89,13 +91,13 @@ public:
     // Make sure the server is actually there before continuing
     RCLCPP_INFO(node_->get_logger(), "Waiting for \"%s\" action server", action_name.c_str());
 
-    bool success_waiting = action_client_->wait_for_action_server(server_timeout_);
+    bool success_waiting = action_client_->wait_for_action_server(wait_for_service_timeout_);
 
     if (!success_waiting) {
       RCLCPP_ERROR(
         node_->get_logger(),
         "Timeout (%ld secs) waiting for \"%s\" action server",
-        server_timeout_.count() * 1000,
+        wait_for_service_timeout_.count() * 1000,
         action_name.c_str());
     }
 
@@ -447,6 +449,9 @@ protected:
   // The timeout value while waiting for response from a server when a
   // new action goal is sent or canceled
   std::chrono::milliseconds server_timeout_;
+
+  // The timeout value for waiting for a service to response
+  std::chrono::milliseconds wait_for_service_timeout_;
 
   static const int IDLE = 0;
   static const int GOAL_SENT = 1;

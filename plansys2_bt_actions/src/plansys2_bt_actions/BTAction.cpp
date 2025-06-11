@@ -41,6 +41,7 @@ BTAction::BTAction(const std::string & action, const std::chrono::nanoseconds & 
   declare_parameter<bool>("enable_groot_monitoring", false);
   declare_parameter<int>("server_port", -1);
   declare_parameter<int>("server_timeout", 20);
+  declare_parameter<int>("wait_for_service_timeout", 1000);
 }
 
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
@@ -60,6 +61,9 @@ BTAction::on_configure(const rclcpp_lifecycle::State & previous_state)
   int default_server_timeout;
   get_parameter("server_timeout", default_server_timeout);
   default_server_timeout_ = std::chrono::milliseconds(default_server_timeout);
+  int wait_for_service_timeout;
+  get_parameter("wait_for_service_timeout", wait_for_service_timeout);
+  wait_for_service_timeout_ = std::chrono::milliseconds(wait_for_service_timeout);
 
   BT::SharedLibrary loader;
 
@@ -76,6 +80,8 @@ BTAction::on_configure(const rclcpp_lifecycle::State & previous_state)
   // Put items in the blackboard
   blackboard_->set<rclcpp::Node::SharedPtr>("node", client_node_);  // NOLINT
   blackboard_->set<std::chrono::milliseconds>("server_timeout", default_server_timeout_);  // NOLINT
+  blackboard_->set<std::chrono::milliseconds>(
+    "wait_for_service_timeout", wait_for_service_timeout_);
 
   return ActionExecutorClient::on_configure(previous_state);
 }

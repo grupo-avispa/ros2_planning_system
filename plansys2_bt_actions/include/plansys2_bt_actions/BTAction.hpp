@@ -150,6 +150,9 @@ private:
   // Default timeout value while waiting for response from a server
   std::chrono::milliseconds default_server_timeout_;
 
+  // The timeout value for waiting for a service to response
+  std::chrono::milliseconds wait_for_service_timeout_;
+
   // A regular, non-spinning ROS node that we can use for calls to the action client
   rclcpp::Node::SharedPtr client_node_;
 };
