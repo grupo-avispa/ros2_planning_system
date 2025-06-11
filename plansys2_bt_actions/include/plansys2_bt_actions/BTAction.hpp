@@ -146,6 +146,12 @@ private:
   std::unique_ptr<BT::MinitraceLogger> bt_minitrace_logger_;
   // Groot2 monitor
   std::unique_ptr<BT::Groot2Publisher> groot_monitor_;
+
+  // Default timeout value while waiting for response from a server
+  std::chrono::milliseconds default_server_timeout_;
+
+  // A regular, non-spinning ROS node that we can use for calls to the action client
+  rclcpp::Node::SharedPtr client_node_;
 };
 
 }  // namespace plansys2

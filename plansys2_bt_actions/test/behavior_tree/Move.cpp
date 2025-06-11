@@ -32,7 +32,7 @@ Move::Move(
   const BT::NodeConfig & conf)
 : plansys2::BtActionNode<test_msgs::action::Fibonacci>(xml_tag_name, action_name, conf)
 {
-  rclcpp_lifecycle::LifecycleNode::SharedPtr node;
+  rclcpp::Node::SharedPtr node;
   if (!config().blackboard->get("node", node)) {
     RCLCPP_ERROR(node_->get_logger(), "Failed to get 'node' from the blackboard");
   }

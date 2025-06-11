@@ -19,6 +19,7 @@
 #include <string>
 
 #include "behaviortree_cpp/action_node.h"
+#include "plansys2_bt_actions/BTUtils.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
@@ -55,7 +56,7 @@ public:
     }
 
     // Get the required items from the blackboard
-    server_timeout_ = 5s;
+    getInputOrBlackboard("server_timeout", server_timeout_);
 
     // Initialize the input and output messages
     goal_ = typename ActionT::Goal();
@@ -194,15 +195,6 @@ public:
           RCLCPP_DEBUG(node_->get_logger(), "%s IDLE", node_->get_name());
           assert((status() == BT::NodeStatus::IDLE));
 
-          double server_timeout = 5.0;
-          if (!getInput("server_timeout", server_timeout)) {
-            RCLCPP_INFO(
-              node_->get_logger(),
-              "Missing input port [server_timeout], "
-              "using default value of 5s");
-          }
-          server_timeout_ = std::chrono::milliseconds(static_cast<int>(server_timeout * 1000.0));
-
           if (!createActionClient(action_name_)) {
             RCLCPP_ERROR(node_->get_logger(), "Failed to create action client");
             return BT::NodeStatus::FAILURE;
@@ -231,8 +223,7 @@ public:
             if (!goal_handle_) {
               RCLCPP_ERROR(
                 node_->get_logger(),
-                "Goal was rejected by action server %s",
-                action_name_.c_str());
+                "Goal was rejected by action server %s", action_name_.c_str());
               state_ = GOAL_FAILURE;
               return BT::NodeStatus::FAILURE;
             } else {
@@ -243,8 +234,7 @@ public:
             if ((node_->now() - goal_sent_ts_) > server_timeout_) {
               RCLCPP_ERROR(
                 node_->get_logger(),
-                "Failed to send goal to action server %s",
-                action_name_.c_str());
+                "Failed to send goal to action server %s", action_name_.c_str());
               state_ = GOAL_FAILURE;
               return BT::NodeStatus::FAILURE;
             } else {
@@ -452,7 +442,7 @@ protected:
   typename rclcpp_action::ClientGoalHandle<ActionT>::WrappedResult result_;
 
   // The node that will be used for any ROS operations
-  rclcpp_lifecycle::LifecycleNode::SharedPtr node_;
+  rclcpp::Node::SharedPtr node_;
 
   // The timeout value while waiting for response from a server when a
   // new action goal is sent or canceled
