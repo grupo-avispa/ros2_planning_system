@@ -137,7 +137,7 @@ BTAction::on_activate(const rclcpp_lifecycle::State & previous_state)
     if (server_port <= 0) {
       RCLCPP_WARN(get_logger(), "Groot2 monitoring port not provided, disabling it");
     } else {
-      RCLCPP_INFO(get_logger(), "Enabling Groot2 monitoring on port: %d", get_name(), server_port);
+      RCLCPP_INFO(get_logger(), "Enabling Groot2 monitoring on port: %d", server_port);
       addGrootMonitoring(&tree_, server_port);
     }
   }
