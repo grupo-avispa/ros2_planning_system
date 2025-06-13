@@ -72,7 +72,7 @@ public:
   }
 
 
-  MoveAction(const std::string & id)
+  explicit MoveAction(const std::string & id)
   : ActionExecutorClient(id)
   {
     executions_ = 0;

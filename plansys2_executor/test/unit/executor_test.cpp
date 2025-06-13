@@ -90,7 +90,7 @@ public:
   }
 
 
-  MoveAction(const std::string & id)
+  explicit MoveAction(const std::string & id)
   : ActionExecutorClient(id),
     executions_(0),
     cycles_(0),
@@ -169,7 +169,7 @@ public:
   }
 
 
-  TransportAction(const std::string & id)
+  explicit TransportAction(const std::string & id)
   : ActionExecutorClient(id)
   {
     executions_ = 0;
@@ -2619,7 +2619,7 @@ public:
   }
 
 
-  PatrolAction(const std::string & id)
+  explicit PatrolAction(const std::string & id)
   : ActionExecutorClient(id)
   {
     executions_ = 0;
