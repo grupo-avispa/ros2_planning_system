@@ -42,7 +42,7 @@ public:
     return ret;
   }
 
-  TestAction(const std::string & action_name, float increment = 0.4);
+  explicit TestAction(const std::string & action_name, float increment = 0.4);
 
 private:
   void do_work();
