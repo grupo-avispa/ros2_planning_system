@@ -152,6 +152,9 @@ private:
   // The timeout value for waiting for a service to response
   std::chrono::milliseconds wait_for_service_timeout_;
 
+  // Duration for each iteration of BT execution
+  std::chrono::milliseconds bt_loop_duration_;
+
   // A regular, non-spinning ROS node that we can use for calls to the action client
   rclcpp::Node::SharedPtr client_node_;
 };

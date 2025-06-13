@@ -64,6 +64,7 @@ BTAction::on_configure(const rclcpp_lifecycle::State & previous_state)
   int wait_for_service_timeout;
   get_parameter("wait_for_service_timeout", wait_for_service_timeout);
   wait_for_service_timeout_ = std::chrono::milliseconds(wait_for_service_timeout);
+  bt_loop_duration_ = std::chrono::duration_cast<std::chrono::milliseconds>(period_);
 
   BT::SharedLibrary loader;
 
@@ -82,6 +83,7 @@ BTAction::on_configure(const rclcpp_lifecycle::State & previous_state)
   blackboard_->set<std::chrono::milliseconds>("server_timeout", default_server_timeout_);  // NOLINT
   blackboard_->set<std::chrono::milliseconds>(
     "wait_for_service_timeout", wait_for_service_timeout_);
+  blackboard_->set<std::chrono::milliseconds>("bt_loop_duration", bt_loop_duration_);  // NOLINT
 
   return ActionExecutorClient::on_configure(previous_state);
 }
