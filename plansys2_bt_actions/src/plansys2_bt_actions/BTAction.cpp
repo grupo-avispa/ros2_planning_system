@@ -31,8 +31,8 @@
 namespace plansys2
 {
 
-BTAction::BTAction(const std::string & action, const std::chrono::nanoseconds & rate)
-: ActionExecutorClient(action, rate)
+BTAction::BTAction(const std::string & action)
+: ActionExecutorClient(action)
 {
   declare_parameter<std::string>("bt_xml_file", "");
   declare_parameter<std::vector<std::string>>("plugins", std::vector<std::string>({}));
