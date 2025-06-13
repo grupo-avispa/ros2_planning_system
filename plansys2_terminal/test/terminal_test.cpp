@@ -42,13 +42,13 @@ class ActT : public plansys2::ActionExecutorClient
 {
 public:
   ActT()
-  : plansys2::ActionExecutorClient("None", 1s)
+  : plansys2::ActionExecutorClient("None")
   {
     progress_ = 0.0;
     name_ = std::string("None");
   }
   explicit ActT(const std::string name)
-  : plansys2::ActionExecutorClient(name, 1s)
+  : plansys2::ActionExecutorClient(name)
   {
     progress_ = 0.0;
     name_ = name;
@@ -816,15 +816,19 @@ TEST_F(TerminalTestCase, check_actors)
 
   using namespace std::chrono_literals;
 
-  auto move_actor_1_node = plansys2::ActionExecutorClient::make_shared("move_1", 100ms);
-  auto move_actor_2_node = plansys2::ActionExecutorClient::make_shared("move_2", 100ms);
-  auto ask_charge_actor_1_node = plansys2::ActionExecutorClient::make_shared("askcharge", 100ms);
-  auto charge_actor_1_node = plansys2::ActionExecutorClient::make_shared("charge", 100ms);
+  auto move_actor_1_node = plansys2::ActionExecutorClient::make_shared("move_1");
+  auto move_actor_2_node = plansys2::ActionExecutorClient::make_shared("move_2");
+  auto ask_charge_actor_1_node = plansys2::ActionExecutorClient::make_shared("askcharge");
+  auto charge_actor_1_node = plansys2::ActionExecutorClient::make_shared("charge");
 
   move_actor_1_node->set_parameter({"action_name", "move"});
+  move_actor_1_node->set_parameter({"rate", 10.0});
   move_actor_2_node->set_parameter({"action_name", "move"});
+  move_actor_2_node->set_parameter({"rate", 10.0});
   ask_charge_actor_1_node->set_parameter({"action_name", "askcharge"});
+  ask_charge_actor_1_node->set_parameter({"rate", 10.0});
   charge_actor_1_node->set_parameter({"action_name", "charge"});
+  charge_actor_1_node->set_parameter({"rate", 10.0});
 
   std::string pkgpath = ament_index_cpp::get_package_share_directory("plansys2_terminal");
 
@@ -968,8 +972,11 @@ TEST_F(TerminalTestCase, source_run_plan)
   auto charge_actor_1_node = std::make_shared<ActT>("charge");
 
   move_actor_1_node->set_parameter({"action_name", "move"});
+  move_actor_1_node->set_parameter({"rate", 1.0});
   ask_charge_actor_1_node->set_parameter({"action_name", "askcharge"});
+  ask_charge_actor_1_node->set_parameter({"rate", 1.0});
   charge_actor_1_node->set_parameter({"action_name", "charge"});
+  charge_actor_1_node->set_parameter({"rate", 1.0});
 
   std::string pkgpath = ament_index_cpp::get_package_share_directory("plansys2_terminal");
 
