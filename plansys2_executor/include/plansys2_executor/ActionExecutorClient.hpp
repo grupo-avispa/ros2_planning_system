@@ -61,7 +61,7 @@ public:
    *
    * @param[in] node_name Name for the ROS node.
    */
-  ActionExecutorClient(const std::string & node_name);
+  explicit ActionExecutorClient(const std::string & node_name);
 
   /**
    * @brief Get the time when the action execution started.
