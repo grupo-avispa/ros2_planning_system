@@ -73,7 +73,7 @@ BTAction::on_configure(const rclcpp_lifecycle::State & previous_state)
   }
 
   // Create a regular, non-spinning ROS node that we can use for calls to the action client
-  client_node_ = std::make_shared<rclcpp::Node>(action_);
+  client_node_ = std::make_shared<rclcpp::Node>("_");
 
   // Create the blackboard that will be shared by all of the nodes in the tree
   blackboard_ = BT::Blackboard::create();
