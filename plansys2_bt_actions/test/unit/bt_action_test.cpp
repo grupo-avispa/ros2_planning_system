@@ -150,8 +150,11 @@ TEST_F(BTActionsTestCase, load_plugins)
   std::string pkgpath = ament_index_cpp::get_package_share_directory("plansys2_bt_actions");
   std::string xml_file = pkgpath + "/test/behavior_tree/transport.xml";
 
+  auto client_node = rclcpp::Node::make_shared("client_node");
   auto blackboard = BT::Blackboard::create();
-  blackboard->set("node", node);
+  blackboard->set("node", client_node);
+  blackboard->set<std::chrono::milliseconds>("server_timeout", 20ms);
+  blackboard->set<std::chrono::milliseconds>("wait_for_service_timeout", 10ms);
   BT::Tree tree = factory.createTreeFromFile(xml_file, blackboard);
 
   rclcpp::Rate rate(10);
@@ -187,8 +190,11 @@ TEST_F(BTActionsTestCase, on_tick_failure)
 
   BT::NodeConfig config;
   BT::assignDefaultRemapping<plansys2_bt_tests::OnTickFail>(config);
+  auto client_node = rclcpp::Node::make_shared("client_node");
   auto bb = BT::Blackboard::create();
-  bb->set("node", node);
+  bb->set("node", client_node);
+  bb->set<std::chrono::milliseconds>("server_timeout", 20ms);
+  bb->set<std::chrono::milliseconds>("wait_for_service_timeout", 10ms);
   config.blackboard = bb;
 
   plansys2_bt_tests::OnTickFail failure_node("OnTickFail", "move", config);
@@ -228,8 +234,11 @@ TEST_F(BTActionsTestCase, on_feedback_failure)
 
   BT::NodeConfig config;
   BT::assignDefaultRemapping<plansys2_bt_tests::OnFeedbackFail>(config);
+  auto client_node = rclcpp::Node::make_shared("client_node");
   auto bb = BT::Blackboard::create();
-  bb->set("node", node);
+  bb->set("node", client_node);
+  bb->set<std::chrono::milliseconds>("server_timeout", 20ms);
+  bb->set<std::chrono::milliseconds>("wait_for_service_timeout", 10ms);
   config.blackboard = bb;
 
   plansys2_bt_tests::OnFeedbackFail failure_node("OnFeedbackFail",
