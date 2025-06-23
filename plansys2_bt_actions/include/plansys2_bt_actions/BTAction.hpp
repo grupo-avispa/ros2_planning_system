@@ -32,27 +32,89 @@
 namespace plansys2
 {
 
+/**
+ * @class plansys2::BTAction
+ * @brief Class that implements an action executor using Behavior Trees.
+ *
+ * This class provides a framework for executing PDDL actions using Behavior Trees.
+ * It loads and executes a BT from an XML file and handles the lifecycle operations.
+ */
 class BTAction : public plansys2::ActionExecutorClient
 {
 public:
+  /**
+   * @brief Constructor for the BTAction.
+   *
+   * @param[in] action Name of the action this executor handles.
+   * @param[in] rate Execution rate for the action.
+   */
   explicit BTAction(const std::string & action, const std::chrono::nanoseconds & rate);
 
+  /**
+   * @brief Get the name of the action.
+   *
+   * @return std::string The action name.
+   */
   const std::string & getActionName() const {return action_;}
+
+  /**
+   * @brief Get the path to the BT XML file.
+   *
+   * @return std::string The path to the BT XML file.
+   */
   const std::string & getBTFile() const {return bt_xml_file_;}
 
 protected:
-  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
-  on_configure(const rclcpp_lifecycle::State & previous_state);
+  using CallbackReturnT =
+    rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
 
-  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
-  on_cleanup(const rclcpp_lifecycle::State & previous_state);
+  /**
+   * @brief Configures the action executor.
+   *
+   * Retrieves parameters for action name, BT XML file, and plugins.
+   * Registers BT plugins and creates a blackboard.
+   *
+   * @param[in] state The current lifecycle state.
+   * @return SUCCESS if configuration successful, FAILURE otherwise.
+   */
+  CallbackReturnT on_configure(const rclcpp_lifecycle::State & state);
 
-  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
-  on_activate(const rclcpp_lifecycle::State & previous_state);
+  /**
+   * @brief Activates the action executor.
+   *
+   * Creates the BT from the XML file, sets up the blackboard with action arguments,
+   * and initializes logging if enabled.
+   *
+   * @param[in] state The current lifecycle state.
+   * @return SUCCESS if activation successful, FAILURE otherwise.
+   */
+  CallbackReturnT on_activate(const rclcpp_lifecycle::State & state);
 
-  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
-  on_deactivate(const rclcpp_lifecycle::State & previous_state);
+  /**
+   * @brief Deactivates the action executor.
+   *
+   * Cleans up loggers and halts the BT.
+   *
+   * @param[in] state The current lifecycle state.
+   * @return SUCCESS if deactivation successful, FAILURE otherwise.
+   */
+  CallbackReturnT on_deactivate(const rclcpp_lifecycle::State & state);
 
+  /**
+   * @brief Cleans up resources.
+   *
+   * @param[in] state The current lifecycle state.
+   * @return SUCCESS if cleanup successful, FAILURE otherwise.
+   */
+  CallbackReturnT on_cleanup(const rclcpp_lifecycle::State & state);
+
+  /**
+   * @brief Main work method that executes the BT.
+   *
+   * Called periodically to execute a tick of the BT.
+   * Handles the BT execution status (SUCCESS, RUNNING, FAILURE)
+   * and reports feedback/results accordingly.
+   */
   void do_work();
 
   /**
@@ -67,6 +129,10 @@ protected:
    */
   void resetGrootMonitor();
 
+  /**
+   * @brief Factory for creating Behavior Trees instances.
+   * @return BT::BehaviorTreeFactory& Reference to the factory.
+   */
   BT::BehaviorTreeFactory factory_;
 
 private:
