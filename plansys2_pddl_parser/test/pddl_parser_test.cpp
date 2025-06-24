@@ -105,3 +105,21 @@ TEST(PDDLParserTestCase, exists_get_tree)
   std::string str3 = parser::pddl::toString(tree3);
   ASSERT_EQ(str3, "(exists (?1 ?2) (and (robot_at ?0 ?1)(connected ?1 ?2)))");
 }
+
+TEST(PDDLParserTestCase, open_door_test)
+{
+  std::string pkgpath = ament_index_cpp::get_package_share_directory("plansys2_pddl_parser");
+  std::string domain_file = pkgpath + "/pddl/dom2.pddl";
+
+  std::ifstream domain_ifs(domain_file);
+  std::string domain_str(
+    (std::istreambuf_iterator<char>(domain_ifs)), std::istreambuf_iterator<char>());
+  parser::pddl::Domain domain(domain_str);
+
+  auto action = domain.actions.get("open_door");
+  plansys2_msgs::msg::Tree tree;
+  action->pre->getTree(tree, domain);
+  std::string str = parser::pddl::toString(tree);
+
+  ASSERT_EQ(str, "(and (door_open ?0)(robot_at ?1 ?0))");
+}
