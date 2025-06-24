@@ -117,9 +117,12 @@ TEST(PDDLParserTestCase, open_door_test)
   parser::pddl::Domain domain(domain_str);
 
   auto action = domain.actions.get("open_door");
-  plansys2_msgs::msg::Tree tree;
-  action->pre->getTree(tree, domain);
-  std::string str = parser::pddl::toString(tree);
-
-  ASSERT_EQ(str, "(and (door_open ?0)(robot_at ?1 ?0))");
+  plansys2_msgs::msg::Tree tree_pre;
+  action->pre->getTree(tree_pre, domain);
+  std::string str_c = parser::pddl::toString(tree_pre);
+  plansys2_msgs::msg::Tree tree_eff;
+  action->eff->getTree(tree_eff, domain);
+  std::string str_e = parser::pddl::toString(tree_eff);
+  ASSERT_EQ(str_c, "(and (not_door_open))");
+  ASSERT_EQ(str_e, "(and (door_open)(not (not_door_open)))");
 }

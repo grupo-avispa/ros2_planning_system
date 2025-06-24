@@ -13,7 +13,8 @@
         (at start (not_door_open))
     )
     :effect (and
-        (at end (door_open))
+        (at start (door_open))
+        (at start (not (not_door_open)))
     )
 )
 
@@ -24,7 +25,8 @@
         (at start (door_open))
     )
     :effect (and
-         (at end (not_door_open))
+         (at start (not_door_open))
+         (at start (not (door_open)))
     )
 )
 )
