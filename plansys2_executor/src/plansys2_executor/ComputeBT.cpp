@@ -69,6 +69,9 @@ ComputeBT::ComputeBT()
       0.0);
   }
 
+  this->declare_parameter<bool>("enable_groot_monitoring", false);
+  this->declare_parameter<int>("server_port", 1800);
+
   compute_bt_srv_ = create_service<std_srvs::srv::Trigger>(
     "compute_bt",
     std::bind(
@@ -354,6 +357,13 @@ ComputeBT::computeBTCallback(
 
   auto tree = factory.createTreeFromText(bt_xml_tree, blackboard);
 
+  bool enable_groot_monitoring = get_parameter("enable_groot_monitoring").as_bool();
+  int server_port = get_parameter("server_port").as_int();
+  if (enable_groot_monitoring) {
+    RCLCPP_INFO(get_logger(), "Enabling Groot2 monitoring on port: %d", get_name(), server_port);
+    addGrootMonitoring(&tree, server_port);
+  }
+
   finish = true;
   t.join();
 
@@ -409,6 +419,19 @@ ComputeBT::saveDotGraph(const std::string & dotgraph, const std::string & filena
     file.close();
   } else {
     std::cerr << "Unable to open " << filename << "_graph.dot" << std::endl;
+  }
+}
+
+void ComputeBT::addGrootMonitoring(BT::Tree * tree, uint16_t server_port)
+{
+  // This logger publish status changes using Groot2
+  groot_monitor_ = std::make_unique<BT::Groot2Publisher>(*tree, server_port);
+}
+
+void ComputeBT::resetGrootMonitor()
+{
+  if (groot_monitor_) {
+    groot_monitor_.reset();
   }
 }
 

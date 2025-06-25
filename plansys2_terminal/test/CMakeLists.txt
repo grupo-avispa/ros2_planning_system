@@ -1,6 +1,9 @@
 ament_add_gtest(terminal_test terminal_test.cpp TIMEOUT 500)
-ament_target_dependencies(terminal_test ${dependencies})
-target_link_libraries(terminal_test terminal readline)
+target_link_libraries(terminal_test
+  terminal
+  readline
+  ament_index_cpp::ament_index_cpp
+)
 
 install(DIRECTORY
   pddl

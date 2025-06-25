@@ -6,6 +6,9 @@
 Status](https://github.com/PlanSys2/ros2_planning_system/workflows/rolling/badge.svg)](https://github.com/PlanSys2/ros2_planning_system)
 
 [![GitHub Action
+Status](https://github.com/PlanSys2/ros2_planning_system/workflows/kilted-devel/badge.svg)](https://github.com/PlanSys2/ros2_planning_system)
+
+[![GitHub Action
 Status](https://github.com/PlanSys2/ros2_planning_system/workflows/jazzy-devel/badge.svg)](https://github.com/PlanSys2/ros2_planning_system)
 
 [![GitHub Action

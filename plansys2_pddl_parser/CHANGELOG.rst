@@ -2,8 +2,18 @@
 Changelog for package plansys2_pddl_parser
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.0.0 (2025-06-06)
+------------------
+* Modify export target. Rename metapackage
+* Revamp CMake and clean unused headers
+* Remove unused dependencies
+* Fix deprecation of ament_target_dependencies
+* Multiple plans and replanning stability
+* Remove specification for C++17
+* Fix version for releasing
+* 🎨 linter for plansys2_pddl_parser
+* Add support for ParamExpression and ConstExpression
+* Support for existential preconditions
 * fix Exists print
 * add fromStringExists
 * adjust toStringExists
@@ -14,29 +24,38 @@ Forthcoming
 * add exists getTree
 * fix exists parse
 * add :existential-preconditions requirement
+* Support negation of CompositeExpression
+* include "object" in getType
 * fix bug in ParamExpression getTree
 * fix ParamExpression PDDLPrint
 * support for ParamExpression and ConstExpression
 * adjust toString for negated comp expression
 * support negation of CompositeExpression
 * include "object" in getType
+* [pddl_parser] Fix support for disjunctive-preconditions
+* Fix to have constants and numeric fluents in the goal
 * Fixed errors that prevented all the tests to pass
+* Fix CI after BT-CPP v4
+* Merge branch 'rolling' into add_parameter_for_timeout_of_plan_solver
 * Remove cmake warning
 * Fixed the regexps in getNodeType function
 * Added proper support for constants in the goal
 * Slightly changed order of printing
-* pddl_parser. Fix support for disjunctive-preconditions
+* [pddl_parser] Fix support for disjunctive-preconditions
+* Add Imply to PDDL domain parsing
 * Add forall and imply to PDDL parsing test
 * Remove commented out debug stuff
 * Add Imply to PDDL domain parsing
+* Fix goal structure issue 205
+* Fix regex for 'not', 'and', 'or' in parser utils
 * fix regex for 'and' and 'or'
 * fix regex for NOT
 * Removed debug code
 * Fixed support for complex goals and other changes
 * Fixed some errors and some tests to comply with the revised output
-* Merge remote-tracking branch 'origin/master' into fix_goal_structure_issue_205
 * Fixed support for the complex goal parsing both from the terminal and from file
-* Contributors: Francisco Martín Rico, Gustavo, Josh Zapf, Marco Roveri, Mostafa Gomaa, Paul Gesel, Sebastian Castro, Splinter1984
+* Contributors: Alberto Tudela, Francisco Martín Rico, Gustavo, Josh Zapf, Marco Roveri, Mostafa Gomaa, Paul Gesel, Sebastian Castro, Splinter1984
+
 
 2.0.9 (2022-07-10)
 ------------------

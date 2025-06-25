@@ -21,15 +21,20 @@
 namespace plansys2
 {
 
+/**
+ * @brief Splits a string into tokens based on a delimiter.
+ * @param[in] string The original string to tokenize.
+ * @param[in] delim The delimiter used to split the string.
+ * @return std::vector<std::string> Vector containing the resulting tokens.
+ */
 std::vector<std::string> tokenize(const std::string & string, const std::string & delim);
 
 /**
- * @brief get a substring without empty lines
- *
- * @param string original string
- * @param init_pos first character in the original string
- * @param end_pos last character in the original string
- * @return a substring without empty lines
+ * @brief Get a substring without empty lines.
+ * @param[in] string The original string.
+ * @param[in] init_pos The first character in the original string.
+ * @param[in] end_pos The last character in the original string.
+ * @return std::string A substring without empty lines.
  */
 std::string substr_without_empty_lines(
   std::string string,
@@ -37,10 +42,9 @@ std::string substr_without_empty_lines(
   std::size_t end_pos);
 
 /**
- * @brief remove the comments on a pddl string
- *
- * @param pddl a pddl string
- * @return a pddl string without comments
+ * @brief Remove the comments from a PDDL string.
+ * @param[in] pddl A PDDL string.
+ * @return std::string The PDDL string without comments.
  */
 std::string remove_comments(const std::string & pddl);
 

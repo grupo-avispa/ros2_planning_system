@@ -3,4 +3,11 @@ install(DIRECTORY pddl
 )
 
 ament_add_gtest(test_3 test_3.cpp TIMEOUT 300)
-target_link_libraries(test_3 ${PROJECT_NAME})
+target_link_libraries(test_3
+  ${PROJECT_NAME}
+  ament_index_cpp::ament_index_cpp
+  plansys2_domain_expert::plansys2_domain_expert
+  plansys2_problem_expert::plansys2_problem_expert
+  plansys2_planner::plansys2_planner
+  plansys2_pddl_parser::plansys2_pddl_parser
+)

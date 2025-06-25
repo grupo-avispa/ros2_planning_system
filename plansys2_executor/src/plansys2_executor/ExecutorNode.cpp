@@ -80,6 +80,9 @@ ExecutorNode::ExecutorNode()
       0.0);
   }
 
+  this->declare_parameter<bool>("enable_groot_monitoring", false);
+  this->declare_parameter<int>("server_port", 1800);
+
   execute_plan_action_server_ = rclcpp_action::create_server<ExecutePlan>(
     this->get_node_base_interface(),
     this->get_node_clock_interface(),
@@ -462,6 +465,13 @@ ExecutorNode::get_tree_from_plan(PlanRuntineInfo & runtime_info)
   runtime_info.current_tree = std::make_shared<TreeInfo>();
   *runtime_info.current_tree = {
     factory.createTreeFromText(bt_xml_tree, blackboard), blackboard, bt_builder};
+
+  bool enable_groot_monitoring = get_parameter("enable_groot_monitoring").as_bool();
+  int server_port = get_parameter("server_port").as_int();
+  if (enable_groot_monitoring) {
+    RCLCPP_INFO(get_logger(), "Enabling Groot2 monitoring on port: %d", get_name(), server_port);
+    addGrootMonitoring(&runtime_info.current_tree->tree, server_port);
+  }
 
   return runtime_info.current_tree != nullptr;
 }
@@ -854,6 +864,19 @@ ExecutorNode::execution_cycle()
     }
 
     rate.sleep();
+  }
+}
+
+void ExecutorNode::addGrootMonitoring(BT::Tree * tree, uint16_t server_port)
+{
+  // This logger publish status changes using Groot2
+  groot_monitor_ = std::make_unique<BT::Groot2Publisher>(*tree, server_port);
+}
+
+void ExecutorNode::resetGrootMonitor()
+{
+  if (groot_monitor_) {
+    groot_monitor_.reset();
   }
 }
 

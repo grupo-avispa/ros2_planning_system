@@ -17,22 +17,33 @@ add_library(plansys2_failure_test_nodes SHARED
 list(APPEND plugin_libs plansys2_failure_test_nodes)
 
 foreach(bt_plugin ${plugin_libs})
-  ament_target_dependencies(${bt_plugin} ${dependencies})
+  target_include_directories(${bt_plugin}
+    PRIVATE
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>")
+  target_link_libraries(${bt_plugin}
+    behaviortree_cpp::behaviortree_cpp
+    ${geometry_msgs_TARGETS}
+    rclcpp::rclcpp
+    rclcpp_action::rclcpp_action
+    rclcpp_lifecycle::rclcpp_lifecycle
+    ${test_msgs_TARGETS}
+  )
   target_compile_definitions(${bt_plugin} PRIVATE BT_PLUGIN_EXPORT)
 endforeach()
 
 ament_add_gtest(bt_action_test bt_action_test.cpp)
 target_link_libraries(bt_action_test
   ${PROJECT_NAME}
+  ${geometry_msgs_TARGETS}
+  ${lifecycle_msgs_TARGETS}
+  ${test_msgs_TARGETS}
 )
-ament_target_dependencies(bt_action_test ${dependencies})
 
 install(DIRECTORY ../behavior_tree
   DESTINATION share/${PROJECT_NAME}/test
 )
 
-install(TARGETS
-  ${plugin_libs}
+install(TARGETS ${plugin_libs}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin

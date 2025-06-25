@@ -30,9 +30,6 @@
 #include "plansys2_planner/PlannerNode.hpp"
 #include "plansys2_planner/PlannerClient.hpp"
 
-#include "pluginlib/class_loader.hpp"
-#include "pluginlib/class_list_macros.hpp"
-
 #include "rclcpp/rclcpp.hpp"
 
 

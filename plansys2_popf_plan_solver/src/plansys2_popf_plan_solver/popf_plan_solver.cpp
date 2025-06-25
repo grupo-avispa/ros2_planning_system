@@ -17,6 +17,7 @@
 
 #include "plansys2_msgs/msg/plan_item.hpp"
 #include "plansys2_popf_plan_solver/popf_plan_solver.hpp"
+#include "rclcpp/logging.hpp"
 
 namespace plansys2
 {
@@ -156,7 +157,7 @@ POPFPlanSolver::parse_plan_result(const std::string & plan_path)
     plan_file.close();
   }
 
-  if (solution && !plan.items.empty()) {
+  if (solution) {
     return plan;
   } else {
     return {};

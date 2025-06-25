@@ -22,22 +22,24 @@
 #include <memory>
 #include <chrono>
 
+#include "behaviortree_cpp/json_export.h"
 #include "behaviortree_cpp/utils/shared_library.h"
+#include "std_msgs/msg/header.hpp"
 #include "plansys2_bt_actions/BTAction.hpp"
+#include "plansys2_bt_actions/JSONUtils.hpp"
 
 namespace plansys2
 {
 
-BTAction::BTAction(
-  const std::string & action,
-  const std::chrono::nanoseconds & rate)
+BTAction::BTAction(const std::string & action, const std::chrono::nanoseconds & rate)
 : ActionExecutorClient(action, rate)
 {
   declare_parameter<std::string>("bt_xml_file", "");
-  declare_parameter<std::vector<std::string>>(
-    "plugins", std::vector<std::string>({}));
+  declare_parameter<std::vector<std::string>>("plugins", std::vector<std::string>({}));
   declare_parameter<bool>("bt_file_logging", false);
   declare_parameter<bool>("bt_minitrace_logging", false);
+  declare_parameter<bool>("enable_groot_monitoring", false);
+  declare_parameter<int>("server_port", -1);
 }
 
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
@@ -75,6 +77,9 @@ BTAction::on_cleanup(const rclcpp_lifecycle::State & previous_state)
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
 BTAction::on_activate(const rclcpp_lifecycle::State & previous_state)
 {
+  // If a new tree is created, than the Groot2 Publisher must be destroyed
+  resetGrootMonitor();
+
   try {
     tree_ = factory_.createTreeFromFile(bt_xml_file_, blackboard_);
   } catch (const std::exception & ex) {
@@ -108,7 +113,7 @@ BTAction::on_activate(const rclcpp_lifecycle::State & previous_state)
     filename << std::put_time(std::localtime(&now_time_t), "%Y_%m_%d__%H_%M_%S");
 
     if (get_parameter("bt_file_logging").as_bool()) {
-      std::string filename_extension = filename.str() + ".fbl";
+      std::string filename_extension = filename.str() + ".btlog";
       RCLCPP_INFO_STREAM(
         get_logger(),
         "Logging to file: " << filename_extension);
@@ -126,6 +131,17 @@ BTAction::on_activate(const rclcpp_lifecycle::State & previous_state)
     }
   }
 
+  bool enable_groot_monitoring = get_parameter("enable_groot_monitoring").as_bool();
+  int server_port = get_parameter("server_port").as_int();
+  if (enable_groot_monitoring) {
+    if (server_port <= 0) {
+      RCLCPP_WARN(get_logger(), "Groot2 monitoring port not provided, disabling it");
+    } else {
+      RCLCPP_INFO(get_logger(), "Enabling Groot2 monitoring on port: %d", server_port);
+      addGrootMonitoring(&tree_, server_port);
+    }
+  }
+
   finished_ = false;
   return ActionExecutorClient::on_activate(previous_state);
 }
@@ -136,12 +152,12 @@ BTAction::on_deactivate(const rclcpp_lifecycle::State & previous_state)
   bt_minitrace_logger_.reset();
   bt_file_logger_.reset();
   tree_.haltTree();
+  resetGrootMonitor();
 
   return ActionExecutorClient::on_deactivate(previous_state);
 }
 
-void
-BTAction::do_work()
+void BTAction::do_work()
 {
   if (!finished_) {
     BT::NodeStatus result;
@@ -170,6 +186,23 @@ BTAction::do_work()
         finished_ = true;
         break;
     }
+  }
+}
+
+void BTAction::addGrootMonitoring(BT::Tree * tree, uint16_t server_port)
+{
+  // This logger publish status changes using Groot2
+  groot_monitor_ = std::make_unique<BT::Groot2Publisher>(*tree, server_port);
+
+  // Register common types JSON definitions
+  BT::RegisterJsonDefinition<builtin_interfaces::msg::Time>();
+  BT::RegisterJsonDefinition<std_msgs::msg::Header>();
+}
+
+void BTAction::resetGrootMonitor()
+{
+  if (groot_monitor_) {
+    groot_monitor_.reset();
   }
 }
 

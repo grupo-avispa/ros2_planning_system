@@ -3,4 +3,10 @@ install(DIRECTORY pddl
 )
 
 ament_add_gtest(test_1 test_1.cpp)
-target_link_libraries(test_1 ${PROJECT_NAME})
+target_link_libraries(test_1
+  ${PROJECT_NAME}
+  ament_index_cpp::ament_index_cpp
+  plansys2_domain_expert::plansys2_domain_expert
+  plansys2_problem_expert::plansys2_problem_expert
+  plansys2_planner::plansys2_planner
+)

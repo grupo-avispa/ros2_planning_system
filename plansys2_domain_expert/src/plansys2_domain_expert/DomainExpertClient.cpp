@@ -12,13 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "plansys2_domain_expert/DomainExpertClient.hpp"
-
 #include <optional>
 #include <algorithm>
 #include <string>
 #include <vector>
 #include <memory>
+
+#include "plansys2_domain_expert/DomainExpertClient.hpp"
+#include "plansys2_msgs/msg/node.hpp"
 
 namespace plansys2
 {

@@ -2,25 +2,64 @@
 Changelog for package plansys2_executor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.0.0 (2025-06-06)
+------------------
+* Modify export target. Rename metapackage
+* Revamp CMake and clean unused headers
+* Update install
+* Move pluginlib
+* Remove unused dependencies
+* Update CMakeLists to manage dependencies more efficiently in various packages.
+* Update CI adding BT.CPP as source dependecy
+* Fix deprecation of ament_target_dependencies
+* Multiple plans and replanning stability
+* Deactivate suborderred goals test
+* Linting and fixing tests
+* Lint and example for restore at start effect
+* Add getProblemWithTimestamp to Problem Expert
+* Improve stability in Executor
+* Fix goal_handle bug
+* Add flexibility for replan tests
+* Fix get plan services
+* Publish current plan
+* Replanning
+* Keep running actions in new plan
+* Multi robot replan test added
+* Fix concurrency bug with publish info
+* Executor basic replanning done
+* Executor refactor
+* Publisher and Service to know the remaining plan during execution
+* Change to EventsExecutor
+* Check if action_map\_ is null or don't exists
+* Change to EventsExecutor
+* 🎨 linter for plansys2_pddl_parser
+* execute regular actions
+* fix code style
 * add ActionVariant
 * execute regular actions
-* Remove cmake warning
-* Fix ccplinti and uncrustify
-* fail execute_plan action if initial conditions changed
+* Fix CI after BT-CPP v4
+* Merge branch 'rolling' into add_parameter_for_timeout_of_plan_solver
+* [executor] fail execute_plan action if initial conditions changed
+* [executor] Send Cancelation response to ActionClient
+* [executor] ExecutorNode, remove unused ros node
+* Removed some small references still related to the old version of BehaviorTree.CPP 3.8
+* [executor] Fix ccplinti and uncrustify
+* [executor] fail execute_plan action if initial conditions changed
   We terminate the program is many senarios instead of just returning an
   explict value. We used to terminate if the initial conditions changed
   before the plan is started. Now just send a result that the action
   server failed to execute the plan
-* Send Cancelation response to ActionClient
-* ExecutorNode, remove unused ros node
+* [executor] Send Cancelation response to ActionClient
+* [executor] ExecutorNode, remove unused ros node
 * Removed some small references still related to the old version of BehaviorTree
+* Upgrade to Behaviortree.CPP v4
 * Bump Behaviortree.CPP v3 to v4 - fix executor test
 * Fix Timeout BT Node
+* Bump Behaviortree.CPP v3 to v4
 * Adding imports to stn builder
 * Fixing line-length
 * Adding duration to dotgraphs.
+* Lintering and fix after stn bugs
 * Restore tests and enable warnings
 * Revert STN changes in Executor BT
 * Removing unused or commented out code.
@@ -37,33 +76,44 @@ Forthcoming
 * Adding action graph to blackboard.
 * Moving STNBTBuilder node and graph structures to parent class.
 * Ensure that every start node has direct link to end node in BT.
+* Check at end reqs in bt builder
+* Fix bt node
 * Change MultiThreaded for SingleThreaded in CI failing tests
 * Change double quotes for simple ones (linter)
 * Insert in blackboard the action ROS 2 Node
 * Adding Eigen3 dependency to plansys2_executor.
 * Removing redundant get_current_time function.
 * Fixing RCLCPP_ERROR message bug.
-* Fixing colcon build warning.
-* Fixing colcon build warnings.
 * Cleaning up code for merge request.
 * Cleaning up changes.
-* Match example is now working!
 * Modified BT by hand to get plan to succeed.
-* BT not finishing.
 * Fixing bug with updating STN time bounds.
 * Adding time propagation step.
 * Don't check time limits on start-end connections.
 * Supporting time-triggered execution.
+* Standalone BT Builder Service
 * Checking for self-referencing edges in STNBTBuilder. Adding standalone compute_bt service.
+* New BT Builder and Plugin Interface
 * bt-builder-plugins: Setting default BT builder plugin to SimpleBTBuilder.
 * bt-builder-plugins: Creating BT builder plugin interface. Moving current BT builder to plugin named SimpleBTBuilder. Adding new and improved STN-based BT builder plugin named STNBTBuilder.
-* Check at end reqs in bt builder
-* Change MultiThreaded for SingleThreaded in CI failing tests
-* Insert in blackboard the action ROS 2 Node
-* Checking for self-referencing edges in STNBTBuilder. Adding standalone compute_bt service.
-* bt-builder-plugins: Setting default BT builder plugin to SimpleBTBuilder.
-* bt-builder-plugins: Creating BT builder plugin interface. Moving current BT builder to plugin named SimpleBTBuilder. Adding new and improved STN-based BT builder plugin named STNBTBuilder.
-* Contributors: Alexander Xydes, Andrianov Roman, Francisco Martín Rico, Gustavo, Josh Zapf, Marco Roveri, Mostafa Gomaa, Samuele Sandrini, Splinter1984, robodrome
+* add ActionVariant
+* Remove cmake warning
+* fail execute_plan action if initial conditions changed
+  We terminate the program is many senarios instead of just returning an
+  explict value. We used to terminate if the initial conditions changed
+  before the plan is started. Now just send a result that the action
+  server failed to execute the plan
+* Send Cancelation response to ActionClient
+* ExecutorNode, remove unused ros node
+* Removed some small references still related to the old version of BehaviorTree
+* Bump Behaviortree.CPP v3 to v4 - fix executor test
+* Fix Timeout BT Node
+* Adding imports to stn builder
+* Adding duration to dotgraphs.
+* Removing unused or commented out code.
+* Updating ComputeBT.cpp.
+* Contributors: Alexander Xydes, Alberto Tudela, Alexander Xydes, Andrianov Roman, Francisco Martín Rico, Gustavo, Josh Zapf, Marco Roveri, Mostafa Gomaa, Samuele Sandrini, Splinter1984, robodrome
+
 
 2.0.9 (2022-07-10)
 ------------------

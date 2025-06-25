@@ -28,10 +28,22 @@ namespace plansys2
 
 using namespace std::chrono_literals;  // NOLINT
 
+/**
+ * @brief Abstract class representing an action based BT node
+ * @tparam ActionT Type of action
+ * @note This is an Asynchronous (long-running) node which may return a RUNNING state while executing.
+ *       It will re-initialize when halted.
+ */
 template<class ActionT>
 class BtActionNode : public BT::ActionNodeBase
 {
 public:
+  /**
+   * @brief A plansys2::BtActionNode constructor
+   * @param xml_tag_name Name for the XML tag for this node
+   * @param action_name Action name this node creates a client for
+   * @param conf BT node configuration
+   */
   BtActionNode(
     const std::string & xml_tag_name,
     const std::string & action_name,
@@ -64,7 +76,10 @@ public:
   {
   }
 
-  // Create instance of an action server
+  /**
+   * @brief Create instance of an action client
+   * @param action_name Action name to create client for
+   */
   bool createActionClient(const std::string & action_name)
   {
     // Now that we have the ROS node to use, create the action client for this BT action
@@ -86,8 +101,12 @@ public:
     return success_waiting;
   }
 
-  // Any subclass of BtActionNode that accepts parameters must provide a providedPorts method
-  // and call providedBasicPorts in it.
+  /**
+   * @brief Any subclass of BtActionNode that accepts parameters must provide a
+   * providedPorts method and call providedBasicPorts in it.
+   * @param addition Additional ports to add to BT port list
+   * @return BT::PortsList Containing basic ports along with node-specific ports
+   */
   static BT::PortsList providedBasicPorts(BT::PortsList addition)
   {
     BT::PortsList basic = {
@@ -103,6 +122,10 @@ public:
     return basic;
   }
 
+  /**
+   * @brief Creates list of BT ports
+   * @return BT::PortsList Containing basic ports along with node-specific ports
+   */
   static BT::PortsList providedPorts()
   {
     return providedBasicPorts({});
@@ -111,43 +134,58 @@ public:
   // Derived classes can override any of the following methods to hook into the
   // processing for the action: on_tick, and on_success
 
-  // Could do dynamic checks, such as getting updates to values on the blackboard
-  // Can also update variable goal_updated_ to request a new goal
+  /**
+   * @brief Function to perform some user-defined operation on tick
+   * Could do dynamic checks, such as getting updates to values on the blackboard
+   */
   virtual BT::NodeStatus on_tick()
   {
     return BT::NodeStatus::RUNNING;
   }
 
-  // Provides the opportunity for derived classes to log feedback, update the
-  // goal, or cancel the goal
+  /**
+   * @brief Provides the opportunity for derived classes to log feedback, update the
+   * goal, or cancel the goal
+   * @param feedback The feedback received from the action server
+   */
   virtual void on_feedback(
     const std::shared_ptr<const typename ActionT::Feedback> feedback)
   {
     (void)feedback;
   }
 
-  // Called upon successful completion of the action. A derived class can override this
-  // method to put a value on the blackboard, for example.
+  /**
+   * @brief Function to perform some user-defined operation upon successful
+   * completion of the action. Could put a value on the blackboard.
+   * @return BT::NodeStatus Returns SUCCESS by default, user may override return another value
+   */
   virtual BT::NodeStatus on_success()
   {
     return BT::NodeStatus::SUCCESS;
   }
 
-  // Called when a the action is aborted. By default, the node will return FAILURE.
-  // The user may override it to return another value, instead.
+  /**
+   * @brief Function to perform some user-defined operation when the action is aborted.
+   * @return BT::NodeStatus Returns FAILURE by default, user may override return another value
+   */
   virtual BT::NodeStatus on_aborted()
   {
     return BT::NodeStatus::FAILURE;
   }
 
-  // Called when a the action is cancelled. By default, the node will return SUCCESS.
-  // The user may override it to return another value, instead.
+  /**
+   * @brief Function to perform some user-defined operation when the action is cancelled.
+   * @return BT::NodeStatus Returns SUCCESS by default, user may override return another value
+   */
   virtual BT::NodeStatus on_cancelled()
   {
     return BT::NodeStatus::SUCCESS;
   }
 
-  // The main override required by a BT action
+  /**
+   * @brief The main override required by a BT action
+   * @return BT::NodeStatus Status of tick execution
+   */
   BT::NodeStatus tick() override
   {
     switch (state_) {
@@ -302,8 +340,10 @@ public:
     return BT::NodeStatus::RUNNING;
   }
 
-  // The other (optional) override required by a BT action. In this case, we
-  // make sure to cancel the ROS2 action if it is still running.
+  /**
+   * @brief The other (optional) override required by a BT action. In this case, we
+   * make sure to cancel the ROS2 action if it is still running.
+   */
   void halt() override
   {
     if (should_cancel_goal()) {
@@ -314,6 +354,11 @@ public:
   }
 
 protected:
+  /**
+   * @brief Function to cancel the current goal
+   * If the goal handle is not set, it will cancel the goal using the action client.
+   * If the goal handle is set, it will create a new action client and cancel the goal.
+   */
   void cancel_goal()
   {
     if (goal_handle_ == nullptr) {
@@ -325,6 +370,10 @@ protected:
     }
   }
 
+  /**
+   * @brief Function to check if current goal should be cancelled
+   * @return bool True if current goal should be cancelled, false otherwise
+   */
   bool should_cancel_goal()
   {
     // Shut the node down if it is currently running
@@ -344,7 +393,9 @@ protected:
            status == action_msgs::msg::GoalStatus::STATUS_EXECUTING;
   }
 
-
+  /**
+   * @brief Function to send a new goal to the action server
+   */
   void on_new_goal_received()
   {
     goal_result_available_ = false;
@@ -374,6 +425,9 @@ protected:
     goal_sent_ts_ = node_->now();
   }
 
+  /**
+   * @brief Function to increment recovery count on blackboard if this node wraps a recovery
+   */
   void increment_recovery_count()
   {
     int recovery_count = 0;
