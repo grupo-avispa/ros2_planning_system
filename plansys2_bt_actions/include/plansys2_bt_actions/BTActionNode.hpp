@@ -444,7 +444,7 @@ protected:
   typename rclcpp_action::ClientGoalHandle<ActionT>::WrappedResult result_;
 
   // The node that will be used for any ROS operations
-  rclcpp::Node::SharedPtr node_;
+  rclcpp_lifecycle::LifecycleNode::SharedPtr node_;
 
   // The timeout value while waiting for response from a server when a
   // new action goal is sent or canceled

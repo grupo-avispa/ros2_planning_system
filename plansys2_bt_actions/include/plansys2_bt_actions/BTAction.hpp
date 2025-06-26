@@ -163,9 +163,6 @@ private:
 
   // Duration for each iteration of BT execution
   std::chrono::milliseconds bt_loop_duration_;
-
-  // A regular, non-spinning ROS node that we can use for calls to the action client
-  rclcpp::Node::SharedPtr client_node_;
 };
 
 }  // namespace plansys2

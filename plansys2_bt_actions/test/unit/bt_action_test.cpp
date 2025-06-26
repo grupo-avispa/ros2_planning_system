@@ -126,7 +126,6 @@ protected:
 
 TEST_F(BTActionsTestCase, load_plugins)
 {
-  auto client_node = rclcpp::Node::make_shared("client_node");
   auto node = rclcpp_lifecycle::LifecycleNode::make_shared("load_plugins_node");
   auto move_server_node = std::make_shared<MoveServer>();
   move_server_node->start_server();
@@ -136,7 +135,6 @@ TEST_F(BTActionsTestCase, load_plugins)
       rclcpp::Rate rate(100);
       while (!finish) {
         rclcpp::spin_some(move_server_node);
-        rclcpp::spin_some(client_node);
         rclcpp::spin_some(node->get_node_base_interface());
         rate.sleep();
       }
@@ -153,7 +151,7 @@ TEST_F(BTActionsTestCase, load_plugins)
   std::string xml_file = pkgpath + "/test/behavior_tree/transport.xml";
 
   auto blackboard = BT::Blackboard::create();
-  blackboard->set("node", client_node);
+  blackboard->set("node", node);
   blackboard->set<std::chrono::milliseconds>("server_timeout", 20ms);
   blackboard->set<std::chrono::milliseconds>("wait_for_service_timeout", 10ms);
   BT::Tree tree = factory.createTreeFromFile(xml_file, blackboard);
@@ -175,7 +173,6 @@ TEST_F(BTActionsTestCase, load_plugins)
 TEST_F(BTActionsTestCase, on_tick_failure)
 {
   auto node = rclcpp_lifecycle::LifecycleNode::make_shared("test_node");
-  auto client_node = rclcpp::Node::make_shared("client_node");
   auto move_server_node = std::make_shared<MoveServer>();
   move_server_node->start_server();
 
@@ -184,7 +181,6 @@ TEST_F(BTActionsTestCase, on_tick_failure)
       rclcpp::Rate rate(100);
       while (!finished) {
         rclcpp::spin_some(move_server_node);
-        rclcpp::spin_some(client_node);
         rclcpp::spin_some(node->get_node_base_interface());
         rate.sleep();
       }
@@ -194,7 +190,7 @@ TEST_F(BTActionsTestCase, on_tick_failure)
   BT::NodeConfig config;
   BT::assignDefaultRemapping<plansys2_bt_tests::OnTickFail>(config);
   auto bb = BT::Blackboard::create();
-  bb->set("node", client_node);
+  bb->set("node", node);
   bb->set<std::chrono::milliseconds>("server_timeout", 20ms);
   bb->set<std::chrono::milliseconds>("wait_for_service_timeout", 10ms);
   config.blackboard = bb;
@@ -221,7 +217,6 @@ TEST_F(BTActionsTestCase, on_tick_failure)
 TEST_F(BTActionsTestCase, on_feedback_failure)
 {
   auto node = rclcpp_lifecycle::LifecycleNode::make_shared("test_node");
-  auto client_node = rclcpp::Node::make_shared("client_node");
   auto move_server_node = std::make_shared<MoveServer>();
   move_server_node->start_server();
 
@@ -230,7 +225,6 @@ TEST_F(BTActionsTestCase, on_feedback_failure)
       rclcpp::Rate rate(100);
       while (!finished) {
         rclcpp::spin_some(move_server_node);
-        rclcpp::spin_some(client_node);
         rclcpp::spin_some(node->get_node_base_interface());
         rate.sleep();
       }
@@ -239,7 +233,7 @@ TEST_F(BTActionsTestCase, on_feedback_failure)
   BT::NodeConfig config;
   BT::assignDefaultRemapping<plansys2_bt_tests::OnFeedbackFail>(config);
   auto bb = BT::Blackboard::create();
-  bb->set("node", client_node);
+  bb->set("node", node);
   bb->set<std::chrono::milliseconds>("server_timeout", 20ms);
   bb->set<std::chrono::milliseconds>("wait_for_service_timeout", 10ms);
   config.blackboard = bb;

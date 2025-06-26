@@ -85,14 +85,11 @@ BTAction::on_configure(const rclcpp_lifecycle::State & previous_state)
     factory_.registerFromPlugin(loader.getOSName(plugin));
   }
 
-  // Create a regular, non-spinning ROS node that we can use for calls to the action client
-  client_node_ = std::make_shared<rclcpp::Node>("_");
-
   // Create the blackboard that will be shared by all of the nodes in the tree
   blackboard_ = BT::Blackboard::create();
 
   // Put items in the blackboard
-  blackboard_->set<rclcpp::Node::SharedPtr>("node", client_node_);
+  blackboard_->set<rclcpp_lifecycle::LifecycleNode::SharedPtr>("node", shared_from_this());
   blackboard_->set<std::chrono::milliseconds>("server_timeout", default_server_timeout_);
   blackboard_->set<std::chrono::milliseconds>(
     "wait_for_service_timeout", wait_for_service_timeout_);
@@ -104,7 +101,6 @@ BTAction::on_configure(const rclcpp_lifecycle::State & previous_state)
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
 BTAction::on_cleanup(const rclcpp_lifecycle::State & previous_state)
 {
-  client_node_.reset();
   plugin_list_.clear();
   blackboard_.reset();
   return ActionExecutorClient::on_cleanup(previous_state);
