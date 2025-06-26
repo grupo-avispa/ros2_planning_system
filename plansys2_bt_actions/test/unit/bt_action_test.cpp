@@ -305,6 +305,45 @@ TEST_F(BTActionsTestCase, bt_action)
   lc_node->shutdown();
 }
 
+TEST_F(BTActionsTestCase, bt_action_old_constructor)
+{
+  std::string pkgpath = ament_index_cpp::get_package_share_directory("plansys2_bt_actions");
+  std::string xml_file = pkgpath + "/test/behavior_tree/assemble.xml";
+
+  std::vector<std::string> plugins = {
+    "plansys2_close_gripper_bt_node", "plansys2_open_gripper_bt_node"};
+
+  auto bt_action = std::make_shared<plansys2::BTAction>("assemble", 100ms);
+
+  auto lc_node = rclcpp_lifecycle::LifecycleNode::make_shared("test_node");
+  auto action_client = plansys2::ActionExecutor::make_shared("(assemble r2d2 z p1 p2 p3)", lc_node);
+
+  bt_action->set_parameter(rclcpp::Parameter("action_name", "assemble"));
+  bt_action->set_parameter(rclcpp::Parameter("bt_xml_file", xml_file));
+  bt_action->set_parameter(rclcpp::Parameter("plugins", plugins));
+
+  bt_action->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_CONFIGURE);
+
+  rclcpp::experimental::executors::EventsExecutor exe;
+  exe.add_node(bt_action->get_node_base_interface());
+  exe.add_node(lc_node->get_node_base_interface());
+
+  bool finished = false;
+  while (rclcpp::ok && !finished) {
+    exe.spin_some();
+
+    action_client->tick(lc_node->now());
+    finished = action_client->get_status() == BT::NodeStatus::SUCCESS;
+  }
+
+  auto start = lc_node->now();
+  while ( (lc_node->now() - start).seconds() < 2) {
+    exe.spin_some();
+  }
+
+  lc_node->shutdown();
+}
+
 TEST_F(BTActionsTestCase, cancel_bt_action)
 {
   std::string pkgpath = ament_index_cpp::get_package_share_directory("plansys2_bt_actions");

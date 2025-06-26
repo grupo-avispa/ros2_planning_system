@@ -27,6 +27,7 @@ namespace plansys2
 {
 
 using namespace std::chrono_literals;
+using std::placeholders::_1;
 
 ActionExecutorClient::ActionExecutorClient(const std::string & node_name)
 : CascadeLifecycleNode(node_name),
@@ -44,9 +45,21 @@ ActionExecutorClient::ActionExecutorClient(const std::string & node_name)
   status_.node_name = get_name();
 }
 
-using CallbackReturnT =
-  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
-using std::placeholders::_1;
+ActionExecutorClient::ActionExecutorClient(
+  const std::string & node_name, const std::chrono::nanoseconds & rate)
+: CascadeLifecycleNode(node_name),
+  period_(rate), committed_(false)
+{
+  declare_parameter<std::string>("action_name", "");
+  declare_parameter<std::vector<std::string>>(
+    "specialized_arguments", std::vector<std::string>({}));
+
+  double default_rate = 1.0 / std::chrono::duration<double>(period_).count();
+  declare_parameter<double>("rate", default_rate);
+  status_.state = plansys2_msgs::msg::ActionPerformerStatus::NOT_READY;
+  status_.status_stamp = now();
+  status_.node_name = get_name();
+}
 
 CallbackReturnT
 ActionExecutorClient::on_configure(const rclcpp_lifecycle::State & state)

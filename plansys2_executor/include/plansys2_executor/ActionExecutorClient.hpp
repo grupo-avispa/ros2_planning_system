@@ -32,6 +32,9 @@
 namespace plansys2
 {
 
+using CallbackReturnT =
+  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
+
 /**
  * @class plansys2::ActionExecutorClient
  * @brief Base class for implementing action executors in the planning system.
@@ -62,6 +65,15 @@ public:
    * @param[in] node_name Name for the ROS node.
    */
   explicit ActionExecutorClient(const std::string & node_name);
+
+  /**
+   * @brief Constructor for the ActionExecutorClient.
+   *
+   * @param[in] node_name Name for the ROS node.
+   * @param[in] rate Execution rate for periodic work.
+   */
+  [[deprecated("Use ActionExecutorClient(const std::string & node_name) instead")]]
+  ActionExecutorClient(const std::string & node_name, const std::chrono::nanoseconds & rate);
 
   /**
    * @brief Get the time when the action execution started.
@@ -101,9 +113,6 @@ protected:
    * @return std::stringThe action name.
    */
   const std::string get_action_name() const {return action_managed_;}
-
-  using CallbackReturnT =
-    rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
 
   /**
    * @brief Configures the node.

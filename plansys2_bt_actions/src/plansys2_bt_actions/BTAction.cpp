@@ -44,6 +44,19 @@ BTAction::BTAction(const std::string & action)
   declare_parameter<int>("wait_for_service_timeout", 1000);
 }
 
+BTAction::BTAction(const std::string & action, const std::chrono::nanoseconds & rate)
+: ActionExecutorClient(action, rate)
+{
+  declare_parameter<std::string>("bt_xml_file", "");
+  declare_parameter<std::vector<std::string>>("plugins", std::vector<std::string>({}));
+  declare_parameter<bool>("bt_file_logging", false);
+  declare_parameter<bool>("bt_minitrace_logging", false);
+  declare_parameter<bool>("enable_groot_monitoring", false);
+  declare_parameter<int>("server_port", -1);
+  declare_parameter<int>("server_timeout", 20);
+  declare_parameter<int>("wait_for_service_timeout", 1000);
+}
+
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
 BTAction::on_configure(const rclcpp_lifecycle::State & previous_state)
 {

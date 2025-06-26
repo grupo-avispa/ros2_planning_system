@@ -89,9 +89,21 @@ public:
     return std::make_shared<MoveAction>(node_name);
   }
 
+  static Ptr make_shared(const std::string & node_name, const std::chrono::nanoseconds & rate)
+  {
+    return std::make_shared<MoveAction>(node_name, rate);
+  }
 
   explicit MoveAction(const std::string & id)
   : ActionExecutorClient(id),
+    executions_(0),
+    cycles_(0),
+    runtime_(0)
+  {
+  }
+
+  MoveAction(const std::string & id, const std::chrono::nanoseconds & rate)
+  : ActionExecutorClient(id, rate),
     executions_(0),
     cycles_(0),
     runtime_(0)
@@ -162,15 +174,26 @@ public:
 class TransportAction : public plansys2::ActionExecutorClient
 {
 public:
-  using Ptr = std::shared_ptr<MoveAction>;
+  using Ptr = std::shared_ptr<TransportAction>;
   static Ptr make_shared(const std::string & node_name)
   {
-    return std::make_shared<MoveAction>(node_name);
+    return std::make_shared<TransportAction>(node_name);
   }
 
+  static Ptr make_shared(const std::string & node_name, const std::chrono::nanoseconds & rate)
+  {
+    return std::make_shared<TransportAction>(node_name, rate);
+  }
 
   explicit TransportAction(const std::string & id)
   : ActionExecutorClient(id)
+  {
+    executions_ = 0;
+    cycles_ = 0;
+  }
+
+  TransportAction(const std::string & id, const std::chrono::nanoseconds & rate)
+  : ActionExecutorClient(id, rate)
   {
     executions_ = 0;
     cycles_ = 0;
@@ -234,6 +257,107 @@ TEST(executor, action_executor_client)
   move_action_2_node->set_parameter({"rate", 10.0});
   transport_action_node->set_parameter({"action_name", "transport"});
   transport_action_node->set_parameter({"rate", 20.0});
+
+  move_action_1_node->set_parameter(
+    {"specialized_arguments", std::vector<std::string>({"robot1"})});
+  move_action_2_node->set_parameter(
+    {"specialized_arguments", std::vector<std::string>({"robot2"})});
+
+  test_node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_CONFIGURE);
+  aux_node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_CONFIGURE);
+  move_action_1_node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_CONFIGURE);
+  move_action_2_node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_CONFIGURE);
+  transport_action_node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_CONFIGURE);
+
+  test_node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_ACTIVATE);
+  aux_node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_ACTIVATE);
+
+  rclcpp::experimental::executors::EventsExecutor exe;
+
+  exe.add_node(test_node->get_node_base_interface());
+  exe.add_node(aux_node->get_node_base_interface());
+  exe.add_node(move_action_1_node->get_node_base_interface());
+  exe.add_node(move_action_2_node->get_node_base_interface());
+  exe.add_node(transport_action_node->get_node_base_interface());
+
+  std::vector<plansys2_msgs::msg::ActionExecution> history_msgs;
+  bool confirmed = false;
+  auto actions_sub = aux_node->create_subscription<plansys2_msgs::msg::ActionExecution>(
+    "actions_hub",
+    rclcpp::QoS(100).reliable(), [&](plansys2_msgs::msg::ActionExecution::UniquePtr msg) {
+      history_msgs.push_back(*msg);
+    });
+
+  bool finish = false;
+  std::thread t([&]() {
+      while (!finish) {exe.spin_some();}
+    });
+
+
+  std::string bt_xml_tree =
+    R"(
+    <root BTCPP_format="4" main_tree_to_execute = "MainTree" >
+      <BehaviorTree ID="MainTree">
+        <Sequence name="root_sequence">
+          <Parallel success_count="2" failure_count="1">
+            <ExecuteAction    action="(move robot1 wheels_zone assembly_zone):5"/>
+            <ExecuteAction    action="(move robot1 steering_wheels_zone assembly_zone):5"/>
+          </Parallel>
+          <ExecuteAction    action="(transport robot2 steering_wheels_zone assembly_zone):10"/>
+          <ExecuteAction    action="(move robot2 wheels_zone assembly_zone):15"/>
+          <ExecuteAction    action="(transport robot2 steering_wheels_zone assembly_zone):20"/>
+          <ExecuteAction    action="(move robot1 wheels_zone assembly_zone):25"/>
+          <ExecuteAction    action="(transport robot2 steering_wheels_zone assembly_zone):30"/>
+          <ExecuteAction    action="(move robot1 steering_wheels_zone assembly_zone):35"/>
+       </Sequence>
+      </BehaviorTree>
+    </root>
+  )";
+
+  auto blackboard = BT::Blackboard::create();
+
+  auto action_map = std::make_shared<std::map<std::string, plansys2::ActionExecutionInfo>>();
+  blackboard->set("action_map", action_map);
+  blackboard->set("node", test_node);
+
+  BT::BehaviorTreeFactory factory;
+  factory.registerNodeType<plansys2::ExecuteAction>("ExecuteAction");
+  factory.registerNodeType<plansys2::WaitAction>("WaitAction");
+
+  auto tree = factory.createTreeFromText(bt_xml_tree, blackboard);
+
+
+  auto status = BT::NodeStatus::RUNNING;
+  while (status != BT::NodeStatus::SUCCESS) {
+    status = tree.tickOnce();
+  }
+
+  ASSERT_EQ(status, BT::NodeStatus::SUCCESS);
+  ASSERT_EQ(move_action_1_node->executions_, 4);
+  ASSERT_EQ(move_action_1_node->cycles_, 20);
+  ASSERT_EQ(move_action_2_node->executions_, 1);
+  ASSERT_EQ(move_action_2_node->cycles_, 5);
+  ASSERT_EQ(transport_action_node->executions_, 3);
+  ASSERT_EQ(transport_action_node->cycles_, 15);
+  // ASSERT_EQ(history_msgs.size(), 64);
+
+
+  finish = true;
+  t.join();
+}
+
+TEST(executor, action_executor_client_old_constructor)
+{
+  auto test_node = rclcpp_lifecycle::LifecycleNode::make_shared("test_node");
+  auto aux_node = rclcpp_lifecycle::LifecycleNode::make_shared("aux_node");
+
+  auto move_action_1_node = MoveAction::make_shared("move_node_1", 100ms);
+  auto move_action_2_node = MoveAction::make_shared("move_node_2", 100ms);
+  auto transport_action_node = TransportAction::make_shared("transport_node", 50ms);
+
+  move_action_1_node->set_parameter({"action_name", "move"});
+  move_action_2_node->set_parameter({"action_name", "move"});
+  transport_action_node->set_parameter({"action_name", "transport"});
 
   move_action_1_node->set_parameter(
     {"specialized_arguments", std::vector<std::string>({"robot1"})});
