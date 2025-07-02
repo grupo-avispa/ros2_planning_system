@@ -1005,20 +1005,22 @@ plansys2_msgs::msg::Node fromStringPredicate(const std::string & predicate)
   plansys2_msgs::msg::Node ret;
   ret.node_type = plansys2_msgs::msg::Node::PREDICATE;
 
+  std::string predicate_(predicate);
+  if (!predicate_.empty() && predicate_.front() == '(') {
+    predicate_.erase(0, 1);
+  }
+  if (!predicate_.empty() && predicate_.back() == ')') {
+    predicate_.pop_back();
+  }
+  
   std::vector<std::string> tokens;
-  size_t start = 0, end = 0;
-
-  while (end != std::string::npos) {
-    end = predicate.find(" ", start);
-    tokens.push_back(
-      predicate.substr(start, (end == std::string::npos) ? std::string::npos : end - start));
-    start = ((end > (std::string::npos - 1)) ? std::string::npos : end + 1);
+  std::istringstream iss(predicate_);
+  std::string token;
+  while (iss >> token) {
+    tokens.push_back(token);
   }
 
-  tokens[0].erase(0, 1);
   ret.name = tokens[0];
-
-  tokens.back().pop_back();
 
   for (size_t i = 1; i < tokens.size(); i++) {
     plansys2_msgs::msg::Param param;
@@ -1186,6 +1188,9 @@ std::vector<uint32_t> getSubtreeIds(const plansys2_msgs::msg::Tree & tree)
 
   switch (tree.nodes.front().node_type) {
     case plansys2_msgs::msg::Node::AND: {
+        return tree.nodes.front().children;
+      }
+    case plansys2_msgs::msg::Node::EXISTS: {
         return tree.nodes.front().children;
       }
     default:
