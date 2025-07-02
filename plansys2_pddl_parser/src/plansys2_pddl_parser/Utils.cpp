@@ -1343,7 +1343,7 @@ bool checkTreeEquality(
 }
 
 bool checkNodeEquality(
-  const plansys2_msgs::msg::Node & first, const plansys2_msgs::msg::Node & second)
+  const plansys2_msgs::msg::Node & first, const plansys2_msgs::msg::Node & second, bool check_var_params)
 {
   if (first.node_type != second.node_type) {
     return false;
@@ -1386,7 +1386,7 @@ bool checkNodeEquality(
   }
 
   for (unsigned i = 0; i < first.parameters.size(); i++) {
-    if (!checkParamEquality(first.parameters[i], second.parameters[i])) {
+    if (!checkParamEquality(first.parameters[i], second.parameters[i], check_var_params)) {
       return false;
     }
   }
@@ -1395,7 +1395,18 @@ bool checkNodeEquality(
 }
 
 bool checkParamEquality(
-  const plansys2_msgs::msg::Param & first, const plansys2_msgs::msg::Param & second)
+  const plansys2_msgs::msg::Param & first,
+  const plansys2_msgs::msg::Param & second,
+  bool check_var_params)
+{
+  if (!check_var_params && 
+    (first.name.front() == '?' || second.name.front() == '?')) 
+  {
+    return true;
+  }
+  return first.name == second.name;
+}
+
 {
   if (first.name != second.name) {
     return false;
