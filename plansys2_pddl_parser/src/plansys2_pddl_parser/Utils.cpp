@@ -517,6 +517,7 @@ std::string toString(const plansys2_msgs::msg::Tree & tree, uint32_t node_id, bo
       break;
     case plansys2_msgs::msg::Node::PARAMETER:
       ret = toStringParameter(tree, node_id, negate);
+      break;
     case plansys2_msgs::msg::Node::EXISTS:
       ret = toStringExists(tree, node_id, negate);
       break;
