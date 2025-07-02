@@ -1267,7 +1267,10 @@ void getPredicates(
       if (
         std::find_if(
           predicates.begin(), predicates.end(),
-          std::bind(&checkNodeEquality, std::placeholders::_1, pred)) == predicates.end())
+          [&](const plansys2_msgs::msg::Node& p) {
+            return checkNodeEquality(p, pred, true);
+          }
+        ) == predicates.end())
       {
         pred.negate = negate;
         predicates.push_back(pred);
@@ -1311,7 +1314,10 @@ void getFunctions(
       if (
         std::find_if(
           functions.begin(), functions.end(),
-          std::bind(&checkNodeEquality, std::placeholders::_1, func)) == functions.end())
+          [&](const plansys2_msgs::msg::Node& f) {
+            return checkNodeEquality(f, func, true);
+          }
+        ) == functions.end())
       {
         func.value = 0.0;
         functions.push_back(func);
