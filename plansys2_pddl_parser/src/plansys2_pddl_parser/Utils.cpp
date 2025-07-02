@@ -1012,7 +1012,6 @@ plansys2_msgs::msg::Node fromStringPredicate(const std::string & predicate)
   if (!predicate_.empty() && predicate_.back() == ')') {
     predicate_.pop_back();
   }
-  
   std::vector<std::string> tokens;
   std::istringstream iss(predicate_);
   std::string token;
@@ -1267,7 +1266,7 @@ void getPredicates(
       if (
         std::find_if(
           predicates.begin(), predicates.end(),
-          [&](const plansys2_msgs::msg::Node& p) {
+          [&](const plansys2_msgs::msg::Node & p) {
             return checkNodeEquality(p, pred, true);
           }
         ) == predicates.end())
@@ -1314,7 +1313,7 @@ void getFunctions(
       if (
         std::find_if(
           functions.begin(), functions.end(),
-          [&](const plansys2_msgs::msg::Node& f) {
+          [&](const plansys2_msgs::msg::Node & f) {
             return checkNodeEquality(f, func, true);
           }
         ) == functions.end())
@@ -1343,7 +1342,9 @@ bool checkTreeEquality(
 }
 
 bool checkNodeEquality(
-  const plansys2_msgs::msg::Node & first, const plansys2_msgs::msg::Node & second, bool check_var_params)
+  const plansys2_msgs::msg::Node & first,
+  const plansys2_msgs::msg::Node & second,
+  bool check_var_params)
 {
   if (first.node_type != second.node_type) {
     return false;
@@ -1399,8 +1400,8 @@ bool checkParamEquality(
   const plansys2_msgs::msg::Param & second,
   bool check_var_params)
 {
-  if (!check_var_params && 
-    (first.name.front() == '?' || second.name.front() == '?')) 
+  if (!check_var_params &&
+    (first.name.front() == '?' || second.name.front() == '?'))
   {
     return true;
   }
@@ -1434,8 +1435,7 @@ bool checkDurativeActionEquality(
 {
   if (first.name != second.name) {
     return false;
-  }  
-
+  }
   if (first.parameters.size() != second.parameters.size()) {
     return false;
   }
@@ -1478,17 +1478,18 @@ bool empty(const plansys2_msgs::msg::Tree & tree)
 bool checkParamTypeEquivalence(
   const plansys2_msgs::msg::Param & first, const plansys2_msgs::msg::Param & second)
 {
-  return first.type == "" || compare_str_case_insensitive(first.type, "object") || 
+  return first.type == "" || compare_str_case_insensitive(first.type, "object") ||
          compare_str_case_insensitive(first.type, second.type) ||
          std::find(first.sub_types.begin(), first.sub_types.end(), second.type) !=
          first.sub_types.end();
 }
 
-bool compare_str_case_insensitive(const std::string& a, const std::string& b) {
+bool compare_str_case_insensitive(const std::string & a, const std::string & b)
+{
   return a.size() == b.size() &&
-      std::equal(a.begin(), a.end(), b.begin(), b.end(),
-          [](unsigned char ac, unsigned char bc) {
-              return std::tolower(ac) == std::tolower(bc);
+         std::equal(a.begin(), a.end(), b.begin(), b.end(),
+           [](unsigned char ac, unsigned char bc) {
+             return std::tolower(ac) == std::tolower(bc);
           });
 }
 

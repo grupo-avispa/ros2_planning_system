@@ -169,7 +169,9 @@ bool checkTreeEquality(
   const plansys2_msgs::msg::Tree & first, const plansys2_msgs::msg::Tree & second);
 
 bool checkNodeEquality(
-  const plansys2_msgs::msg::Node & first, const plansys2_msgs::msg::Node & second, bool check_var_params = true);
+  const plansys2_msgs::msg::Node & first,
+  const plansys2_msgs::msg::Node & second,
+  bool check_var_params = true);
 
 bool checkActionEquality(
   const plansys2_msgs::msg::Action & first, const plansys2_msgs::msg::Action & second);
@@ -180,9 +182,11 @@ bool checkDurativeActionEquality(
 
 // Returns true if types match and:
 //   - In var-param mode: names must be exactly equal
-//   - In non-var-param mode: if either names are variable-like, allow any match; else require exact name match
+//   - In non-var-param mode: if either names are variable-like, allow any match;
 bool checkParamEquality(
-  const plansys2_msgs::msg::Param & first, const plansys2_msgs::msg::Param & second, bool check_var_params = true);
+  const plansys2_msgs::msg::Param & first,
+  const plansys2_msgs::msg::Param & second,
+  bool check_var_params = true);
 
 bool empty(const plansys2_msgs::msg::Tree & tree);
 
@@ -190,7 +194,7 @@ bool empty(const plansys2_msgs::msg::Tree & tree);
 bool checkParamTypeEquivalence(
   const plansys2_msgs::msg::Param & first, const plansys2_msgs::msg::Param & second);
 
-bool compare_str_case_insensitive(const std::string& a, const std::string& b);
+bool compare_str_case_insensitive(const std::string & a, const std::string & b);
 
 
 }  // namespace pddl
