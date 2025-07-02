@@ -2,8 +2,19 @@
 Changelog for package plansys2_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.0.0 (2025-06-06)
+------------------
+* Revamp CMake and clean unused headers
+* Move pluginlib
+* Update CMakeLists to manage dependencies more efficiently in various packages.
+* Update CI adding BT.CPP as source dependecy
+* Fix deprecation of ament_target_dependencies
+* Multiple plans and replanning stability
+* Linting and fixing tests
+* Add stability to RQT Plan plugin
+* Remve specification for C++17
+* Fix CI after BT-CPP v4
+* Contributors: Alberto Tudela, Francisco Martín Rico, Josh Zapf, Marco Roveri, Splinter1984
 
 
 2.0.9 (2022-07-10)

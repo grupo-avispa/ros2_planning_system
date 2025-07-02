@@ -929,3 +929,6 @@ SimpleBTBuilder::get_graph_tabular(const plansys2::ActionGraph::Ptr & graph) con
 }
 
 }  // namespace plansys2
+
+#include "pluginlib/class_list_macros.hpp"
+PLUGINLIB_EXPORT_CLASS(plansys2::SimpleBTBuilder, plansys2::BTBuilder)

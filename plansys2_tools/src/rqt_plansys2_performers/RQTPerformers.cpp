@@ -27,7 +27,6 @@
 #include <utility>
 #include <string>
 
-#include <pluginlib/class_list_macros.hpp>
 #include "rqt_plansys2_performers/RQTPerformers.hpp"
 #include "rqt_plansys2_performers/PerformersTree.hpp"
 
@@ -192,4 +191,5 @@ RQTPerformers::restoreSettings(
 
 }  // namespace rqt_plansys2_performers
 
+#include <pluginlib/class_list_macros.hpp>
 PLUGINLIB_EXPORT_CLASS(rqt_plansys2_performers::RQTPerformers, rqt_gui_cpp::Plugin)

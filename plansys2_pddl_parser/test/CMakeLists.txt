@@ -1,5 +1,9 @@
 ament_add_gtest(pddl_parser_test pddl_parser_test.cpp TIMEOUT 120)
-target_link_libraries(pddl_parser_test ${dependencies} ${PROJECT_NAME})
+target_link_libraries(pddl_parser_test
+  ament_index_cpp::ament_index_cpp
+  rclcpp::rclcpp
+  ${PROJECT_NAME}
+)
 
 install(DIRECTORY
   pddl

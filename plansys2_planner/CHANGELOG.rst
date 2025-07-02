@@ -2,14 +2,36 @@
 Changelog for package plansys2_planner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.0.0 (2025-06-06)
+------------------
+* Modify export target. Rename metapackage
+* Revamp CMake and clean unused headers
+* Update install
+* Move pluginlib
+* Remove unused dependencies
+* Update CMakeLists to manage dependencies more efficiently in various packages.
+* Update CI adding BT.CPP as source dependecy
+* Fix deprecation of ament_target_dependencies
+* Multiple plans and replanning stability
+* Remove OPTIC from tests
+* Linting and fixing tests
+* Planner Plugins can be cancelled. Plan timeout effective.
+* Improve stability in Executor
+* Service and logic for get multiple plans
+* Change to EventsExecutor
+* 🎨 linter for plansys2_pddl_parser
+* Add parameter for timeout of plan solver
 * Integrated feedback, and fixes to have tests to pass
+* Fix CI after BT-CPP v4
 * Added support for configuring the planner timeout
+* Remove cmake warning
+* Add option to use planner node to validate domain in domain expert
 * Spin up temporary node for domain validation
 * Add option to use planner node to validate domain in domain expert
+* Fix goal structure issue 205
 * Minor changes to the tests to comply with some change in the generated output
-* Contributors: Francisco Martín Rico, Gustavo, Josh Zapf, Marco Roveri, Robodrome, Sebastian Castro, Splinter1984
+* Contributors: Alberto Tudela, Francisco Martín Rico, Gustavo, Josh Zapf, Marco Roveri, Robodrome, Sebastian Castro, Splinter1984
+
 
 2.0.9 (2022-07-10)
 ------------------

@@ -1,5 +1,8 @@
 ament_add_gtest(utils_test utils_test.cpp)
-target_link_libraries(utils_test ${PROJECT_NAME})
+target_link_libraries(utils_test
+  ${PROJECT_NAME}
+  ament_index_cpp::ament_index_cpp
+)
 
 set(TEST_PDDL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/pddl)
 

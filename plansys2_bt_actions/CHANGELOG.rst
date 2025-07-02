@@ -2,24 +2,32 @@
 Changelog for package plansys2_bt_actions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
-* Remove cmake warning
+3.0.0 (2025-06-06)
+------------------
+* Modify export target. Rename metapackage
+* Revamp CMake and clean unused headers
+* Multiple plans and replanning stability
+* Remove specification for C++17
+* Fix goal_handle bug
+* Fix bug in xml tree
+* Fix CI after BT-CPP v4
 * Removed some small references still related to the old version of BehaviorTree
+* Upgrade to Behaviortree.CPP v4
 * Bump Behaviortree.CPP v3 to v4
-* fix code style issues with uncrustify
+* bt_action_node: fix groot enabling
 * Update BTAction.cpp
 * fix groot enabling
-* Linting
 * Fix logger destruction at BTActions
-* Update Changelog
+* Fix bt node
 * Insert in blackboard the action ROS 2 Node
-* Insert in blackboard the action ROS 2 Node
+* Fixes for bt_actions and popf_plan_sover
 * Correct tick function call in bt_actions test
 * Merge remote-tracking branch 'origin/master' into fix_goal_structure_issue_205
-* Explicitly ignore feedback in default on_feedback
 * Add try/catch to bt creation, reset loggers
-* Contributors: Andrianov Roman, Francisco Martín Rico, Jake Keller, Marco Roveri, Splinter1984
+* Insert in blackboard the action ROS 2 Node
+* Explicitly ignore feedback in default on_feedback
+* Contributors: Andrianov Roman, Alberto Tudela, Andrianov Roman, Francisco Martín Rico, Jake Keller, Josh Zapf, Marco Roveri, Robodrome, Samuele Sandrini, Splinter1984, david, robodrome
+
 
 2.0.9 (2022-07-10)
 ------------------

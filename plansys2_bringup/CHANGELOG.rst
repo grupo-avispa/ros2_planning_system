@@ -2,20 +2,31 @@
 Changelog for package plansys2_bringup
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.0.0 (2025-06-06)
+------------------
+* Revamp CMake and clean unused headers
+* Update CMakeLists to manage dependencies more efficiently in various packages.
+* Update CI adding BT.CPP as source dependency
+* Fix deprecation of ament_target_dependencies
+* Multiple plans and replanning stability
+* Option to execute in Real Time
+* Remove unnecessary specification for C++17
+* Change to EventsExecutor
 * Add parameter for timeout of plan solver
+* Integrated feedback, and fixes to have tests to pass
 * Added support for configuring the planner timeout
-* Remove cmake warning
-* Restore tests and enable warnings
+* Use separate problem pddl for problem expert.
 * Use separate problem pddl for problem expert.
 * Simplifying bound checkin logic.
-* Change double quotes for simple ones (linter)
+* Fix bt node
 * Make explicit which BTCreator is being used
+* New BT Builder and Plugin Interface
 * bt-builder-plugins: Setting default BT builder plugin to SimpleBTBuilder.
 * bt-builder-plugins: Creating BT builder plugin interface. Moving current BT builder to plugin named SimpleBTBuilder. Adding new and improved STN-based BT builder plugin named STNBTBuilder.
+* add system status check
 * revert if statement
-* Contributors: Francisco Martín Rico, Josh Zapf, Marco Roveri, Splinter1984
+* Merge remote-tracking branch 'upstream/master'
+* Contributors: Alberto Tudela, Francisco Martín Rico, Josh Zapf, Marco Roveri, Splinter1984, adfea625
 
 2.0.9 (2022-07-10)
 ------------------

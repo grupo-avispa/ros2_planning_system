@@ -16,6 +16,7 @@
 #include <string>
 
 #include "plansys2_bt_actions/BTAction.hpp"
+#include "lifecycle_msgs/msg/transition.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 

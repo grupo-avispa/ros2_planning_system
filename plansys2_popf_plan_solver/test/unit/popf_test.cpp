@@ -24,7 +24,6 @@
 #include "plansys2_popf_plan_solver/popf_plan_solver.hpp"
 
 #include "pluginlib/class_loader.hpp"
-#include "pluginlib/class_list_macros.hpp"
 #include "plansys2_core/PlanSolverBase.hpp"
 
 void test_plan_generation(const std::string & argument = "")

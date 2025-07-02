@@ -23,49 +23,6 @@ find_package(behaviortree_cpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 
-set(dependencies
-    rclcpp::rclcpp
-    rclcpp_lifecycle::rclcpp_lifecycle
-    rclcpp_cascade_lifecycle::rclcpp_cascade_lifecycle
-    rclcpp_action::rclcpp_action
-    plansys2_pddl_parser::plansys2_pddl_parser
-    ament_index_cpp::ament_index_cpp
-    plansys2_core::plansys2_core
-    plansys2_domain_expert::plansys2_domain_expert
-    plansys2_problem_expert::plansys2_problem_expert
-    plansys2_planner::plansys2_planner
-    pluginlib::pluginlib
-    behaviortree_cpp::behaviortree_cpp
-    ${lifecycle_msgs_TARGETS}
-    ${plansys2_msgs_TARGETS}
-    ${std_msgs_TARGETS}
-    ${std_srvs_TARGETS}
-)
-
-
-set(package_dependencies
-    eigen3_cmake_module
-    Eigen3
-    rclcpp
-    rclcpp_lifecycle
-    lifecycle_msgs
-    rclcpp_cascade_lifecycle
-    rclcpp_action
-    plansys2_pddl_parser
-    ament_index_cpp
-    plansys2_core
-    plansys2_msgs
-    plansys2_domain_expert
-    plansys2_problem_expert
-    plansys2_planner
-    pluginlib
-    behaviortree_cpp
-    std_msgs
-    std_srvs
-)
-
-include_directories(include)
-
 set(EXECUTOR_SOURCES
   src/plansys2_executor/ExecutorClient.cpp
   src/plansys2_executor/ActionExecutor.cpp
@@ -84,60 +41,105 @@ set(EXECUTOR_SOURCES
   src/plansys2_executor/behavior_tree/apply_atend_effect_node.cpp
 )
 
-
 add_library(${PROJECT_NAME} SHARED ${EXECUTOR_SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>"
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
-target_link_libraries(${PROJECT_NAME} PUBLIC ${dependencies})
+target_link_libraries(${PROJECT_NAME}
+  PUBLIC
+  behaviortree_cpp::behaviortree_cpp
+  ${lifecycle_msgs_TARGETS}
+  ${plansys2_msgs_TARGETS}
+  plansys2_core::plansys2_core
+  plansys2_domain_expert::plansys2_domain_expert
+  plansys2_pddl_parser::plansys2_pddl_parser
+  plansys2_planner::plansys2_planner
+  plansys2_problem_expert::plansys2_problem_expert
+  pluginlib::pluginlib
+  rclcpp::rclcpp
+  rclcpp_action::rclcpp_action
+  rclcpp_cascade_lifecycle::rclcpp_cascade_lifecycle
+  rclcpp_lifecycle::rclcpp_lifecycle
+  ${std_msgs_TARGETS}
+  ${std_srvs_TARGETS}
+  PRIVATE
+  ament_index_cpp::ament_index_cpp
+)
 
 add_executable(executor_node
   src/executor_node.cpp
 )
-target_link_libraries(executor_node PUBLIC ${PROJECT_NAME} ${dependencies})
+target_include_directories(executor_node PRIVATE
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
+)
+target_link_libraries(executor_node
+  PRIVATE
+  ${PROJECT_NAME}
+  rclcpp::rclcpp
+)
 
 add_executable(compute_bt
   src/compute_bt.cpp
 )
-target_link_libraries(compute_bt PUBLIC ${PROJECT_NAME} ${dependencies})
-
-install(
-  DIRECTORY include/
-  DESTINATION include/${PROJECT_NAME}
+target_link_libraries(compute_bt
+  PRIVATE
+  ${PROJECT_NAME}
+  rclcpp::rclcpp
 )
 
 add_library(bt_builder_plugins SHARED
   src/plansys2_executor/bt_builder_plugins/simple_bt_builder.cpp
   src/plansys2_executor/bt_builder_plugins/stn_bt_builder.cpp
 )
-target_link_libraries(bt_builder_plugins PUBLIC ${dependencies})
+target_include_directories(bt_builder_plugins PUBLIC
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
+target_link_libraries(bt_builder_plugins
+  PUBLIC
+  Eigen3::Eigen
+  ${plansys2_msgs_TARGETS}
+  plansys2_core::plansys2_core
+  plansys2_domain_expert::plansys2_domain_expert
+  plansys2_problem_expert::plansys2_problem_expert
+  rclcpp::rclcpp
+  rclcpp_action::rclcpp_action
+  ${std_msgs_TARGETS}
+  PRIVATE
+  behaviortree_cpp::behaviortree_cpp
+  plansys2_pddl_parser::plansys2_pddl_parser
+  pluginlib::pluginlib
+)
 
 pluginlib_export_plugin_description_file(plansys2_executor plugins.xml)
 
-install(DIRECTORY launch behavior_trees DESTINATION share/${PROJECT_NAME})
+install(
+  DIRECTORY include/
+  DESTINATION include/${PROJECT_NAME}
+)
 
-install(TARGETS
-  ${PROJECT_NAME} EXPORT ${PROJECT_NAME}
+install(
+  DIRECTORY launch behavior_trees
+  DESTINATION share/${PROJECT_NAME}
+)
+
+install(TARGETS ${PROJECT_NAME}
+  EXPORT export_${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
 )
 
-install(TARGETS
-  bt_builder_plugins EXPORT bt_builder_plugins
+install(TARGETS bt_builder_plugins
+  EXPORT bt_builder_plugins
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
 )
 
-install(TARGETS
-  bt_builder_plugins
-  executor_node
-  compute_bt
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
+install(TARGETS bt_builder_plugins executor_node compute_bt
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
 if(BUILD_TESTING)
@@ -151,6 +153,25 @@ endif()
 
 ament_export_include_directories("include/${PROJECT_NAME}")
 ament_export_libraries(${PROJECT_NAME} bt_builder_plugins)
-ament_export_targets(${PROJECT_NAME} bt_builder_plugins)
-ament_export_dependencies(${package_dependencies})
+ament_export_targets(export_${PROJECT_NAME} bt_builder_plugins)
+ament_export_dependencies(
+  eigen3_cmake_module
+  Eigen3
+  rclcpp
+  rclcpp_lifecycle
+  lifecycle_msgs
+  rclcpp_cascade_lifecycle
+  rclcpp_action
+  plansys2_pddl_parser
+  ament_index_cpp
+  plansys2_core
+  plansys2_msgs
+  plansys2_domain_expert
+  plansys2_problem_expert
+  plansys2_planner
+  pluginlib
+  behaviortree_cpp
+  std_msgs
+  std_srvs
+)
 ament_package()

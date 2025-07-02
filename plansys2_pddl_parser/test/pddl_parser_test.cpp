@@ -106,6 +106,27 @@ TEST(PDDLParserTestCase, exists_get_tree)
   ASSERT_EQ(str3, "(exists (?1 ?2) (and (robot_at ?0 ?1)(connected ?1 ?2)))");
 }
 
+TEST(PDDLParserTestCase, open_door_test)
+{
+  std::string pkgpath = ament_index_cpp::get_package_share_directory("plansys2_pddl_parser");
+  std::string domain_file = pkgpath + "/pddl/dom2.pddl";
+
+  std::ifstream domain_ifs(domain_file);
+  std::string domain_str(
+    (std::istreambuf_iterator<char>(domain_ifs)), std::istreambuf_iterator<char>());
+  parser::pddl::Domain domain(domain_str);
+
+  auto action = domain.actions.get("open_door");
+  plansys2_msgs::msg::Tree tree_pre;
+  action->pre->getTree(tree_pre, domain);
+  std::string str_c = parser::pddl::toString(tree_pre);
+  plansys2_msgs::msg::Tree tree_eff;
+  action->eff->getTree(tree_eff, domain);
+  std::string str_e = parser::pddl::toString(tree_eff);
+  ASSERT_EQ(str_c, "(and (not_door_open))");
+  ASSERT_EQ(str_e, "(and (door_open)(not (not_door_open)))");
+}
+
 TEST(PDDLParserTestCase, from_string_hyphen)
 {
   auto predicate_hyphen = parser::pddl::fromStringPredicate("(predicate-hyphen ?x ?y)");

@@ -2,28 +2,41 @@
 Changelog for package plansys2_terminal
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.0.0 (2025-06-06)
+------------------
+* Revamp CMake and clean unused headers
+* Update install
+* Update CMakeLists to manage dependencies more efficiently in various packages.
+* Update CI adding BT.CPP as source dependecy
+* Fix deprecation of ament_target_dependencies
+* Closes `#352 <https://github.com/PlanSys2/ros2_planning_system/issues/352>`_
+* Fix POPF plugin issue when retrieving a successful plan (`#352 <https://github.com/PlanSys2/ros2_planning_system/issues/352>`_) and add a message in the terminal for plans with no actions (but not empty).
+* Multiple plans and replanning stability
+* Linting and fixing tests
+* Remove unnecessary specification for C++17
+* Lintering
+* Merge pull request `#338 <https://github.com/PlanSys2/ros2_planning_system/issues/338>`_ from fmrico/replanning
+  [WIP] Replanning
+* Adaptation of the rest of the packages
+* Change to EventsExecutor
+* 🎨 linter for plansys2_pddl_parser
+* Add support for derived predicates
 * add get model derived predicates to terminal
+* Add parameter for timeout of plan solver
+* Fix CI after BT-CPP v4
 * Added some information in the README to allow for using a configuration file to change the planner timeout
+* Remove cmake warning
+* Restore tests and enable warnings
 * Read multiple lines in terminal input
+* Read multiple lines in terminal input
+* Update Changelog
 * Fix Terminal and executor bugs
-* Change MultiThreaded for SingleThreaded in CI failing tests
-* Fix terminal tests
-* Contributors: Andrianov Roman, Francisco Martín Rico, Gustavo, Josh Zapf, Marco Roveri, Splinter1984
-
-* Merge remote-tracking branch 'origin/humble-devel'
-* Merge pull request `#251 <https://github.com/PlanSys2/ros2_planning_system/issues/251>`_ from PlanSys2/fix_bt_node
-  Fix bt node
-* Change MultiThreaded for SingleThreaded in CI failing tests
-* Merge pull request `#238 <https://github.com/PlanSys2/ros2_planning_system/issues/238>`_ from roveri-marco/fix_goal_structure_issue_205
-  Fix goal structure issue 205
+* Fix bt node
+* Fix goal structure issue 205
 * Fix terminal tests
 * Minor fix
-* Merge remote-tracking branch 'origin/master' into fix_goal_structure_issue_205
-* Merge remote-tracking branch 'upstream/master'
-* Merge branch 'IntelligentRoboticsLabs:master' into master
-* Contributors: Andrianov Roman, Francisco Martín Rico, Marco Roveri, Splinter1984
+* Contributors: Alberto Tudela, Andrianov Roman, Francisco Martín Rico, Gustavo, Josh Zapf, Marco Roveri, Splinter1984, aquintan4
+
 
 2.0.9 (2022-07-10)
 ------------------

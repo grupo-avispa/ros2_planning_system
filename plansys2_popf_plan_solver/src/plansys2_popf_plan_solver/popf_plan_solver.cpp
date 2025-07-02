@@ -17,6 +17,7 @@
 
 #include "plansys2_msgs/msg/plan_item.hpp"
 #include "plansys2_popf_plan_solver/popf_plan_solver.hpp"
+#include "rclcpp/logging.hpp"
 
 namespace plansys2
 {

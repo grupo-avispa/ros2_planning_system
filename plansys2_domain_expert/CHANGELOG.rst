@@ -2,30 +2,42 @@
 Changelog for package plansys2_domain_expert
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.0.0 (2025-06-06)
+------------------
+* Modify export target. Rename metapackage
+* Revamp CMake and clean unused headers
+* Update install
+* Remove unused dependencies
+* Update CMakeLists to manage dependencies more efficiently in various packages.
+* Update CI adding BT.CPP as source dependecy
+* Multiple plans and replanning stability
+* Add getProblemWithTimestamp to Problem Expert
+* Replanning
+* Add chached getDomain()
+* Change to EventsExecutor
+* 🎨 linter for plansys2_pddl_parser
 * include "object" in getType
-* fix code style
+* Add support for derived predicates
+* include "object" in getType
 * add params to getDerivedPredicate
 * add tests for getDerivedPredicate(s)
 * add getDerivedPredicate
 * add getDerivedPredicates
 * add DomainReader::get_derived_predicates
-* Small optimization
 * Fixed expected output
-* Remove cmake warning
+* Fix CI after BT-CPP v4
 * Fixed dump of functions/constants/types to handle the case where no funcions/constants/types declared to avoid printing the entry, thus generating a valid PDDL file
-* Remove commented-out line in domain expert node
-* Switch to MultiThreadedExecutor
+* Add option to use planner node to validate domain in domain expert
 * Spin up temporary node for domain validation
 * Add option to use planner node to validate domain in domain expert
-* Reduce copypasta in domain expert
+* Add ability to specify output folder in POPF planner
 * Configure POPF solver in domain expert
-* Merge remote-tracking branch 'upstream/master' into return-stn
-* Merge remote-tracking branch 'origin/humble-devel'
 * Reverting changes to checking for valid domain.
+* Fix deprecation of ament_target_dependencies
+* Add option to use planner node to validate domain in domain expert
 * Supporting time-triggered execution.
-* Contributors: Francisco Martín Rico, Gustavo, Josh Zapf, Marco Roveri, Robodrome, Sebastian Castro, Splinter1984
+* Contributors: Alberto Tudela, Francisco Martín Rico, Gustavo, Josh Zapf, Marco Roveri, Robodrome, Sebastian Castro, Splinter1984
+
 
 2.0.9 (2022-07-10)
 ------------------

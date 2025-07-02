@@ -27,8 +27,6 @@
 #include <utility>
 #include <string>
 
-#include <pluginlib/class_list_macros.hpp>
-
 #include "rqt_plansys2_knowledge/RQTKnowledge.hpp"
 #include "rqt_plansys2_knowledge/KnowledgeTree.hpp"
 
@@ -179,4 +177,5 @@ RQTKnowledge::restoreSettings(
 
 }  // namespace rqt_plansys2_knowledge
 
+#include <pluginlib/class_list_macros.hpp>
 PLUGINLIB_EXPORT_CLASS(rqt_plansys2_knowledge::RQTKnowledge, rqt_gui_cpp::Plugin)

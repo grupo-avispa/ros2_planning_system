@@ -2,11 +2,32 @@
 Changelog for package plansys2_problem_expert
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.0.0 (2025-06-06)
+------------------
+* Remove unnecessary depends
+* Revamp CMake and clean unused headers
+* Update install
+* Remove unused dependencies
+* Update CMakeLists to manage dependencies more efficiently in various packages.
+* Update CI adding BT.CPP as source dependecy
+* Fix deprecation of ament_target_dependencies
+* Multiple plans and replanning stability
+* Linting and fixing tests
+* Add getProblemWithTimestamp to Problem Expert
+* Replanning
+* Adaptation of the rest of the packages
+* Add chached getDomain() and getProblem()
+* Add chached getDomain()
+* Change to EventsExecutor
+* 🎨 linter for plansys2_pddl_parser
+* Add support for ParamExpression and ConstExpression
+* Support for existential preconditions
 * evaluate exists use_state==false
+* fix code style
 * evaluate exsits w/ problem_client
 * add replace_children_param
+* Support negation of CompositeExpression
+* Add support for derived predicates
 * return derived predicates in getPredicates
 * add cart_produdct and replace_children_param
 * fix bug in ParamExpression getTree
@@ -15,16 +36,24 @@ Forthcoming
 * negate evaluation of comp expression
 * add test problem_expert.exist_precidate
 * in existPredicate check if derived predicate is satisfied
+* Fix to have constants and numeric fluents in the goal
+* Fix CI after BT-CPP v4
+* Remove cmake warning
+* Fixed support for constants in predicates/functions/goals more fixes
 * Fixed support for constants in predicates/functions/goals
+* Use separate problem pddl for problem expert.
 * Make problemExpert case-insensitive to Instance types
 * Use separate problem pddl for problem expert.
+* Fix goal structure issue 205
 * Minor changes to the tests to comply with some change in the generated output
 * Fixed some errors and some tests to comply with the revised output
-* Fixed support for the complex goal parsing both from the terminal and from file
-* Minor changes to the tests to comply with some change in the generated output
+* Duplicate instances
 * Check instance types and associated tests
+* [problem_expert] AddInstance successeeds if instance already exists
 * Fixed support for the complex goal parsing both from the terminal and from file
-* Contributors: Ashton Larkin, Francisco Martín Rico, Gustavo, Josh Zapf, Marco Roveri, Mostafa Gomaa, Splinter1984, adfea625
+* [problem_expert] AddInstance successeeds if instance already exists
+* Contributors: Alberto Tudela, Ashton Larkin, Francisco Martín Rico, Gustavo, Josh Zapf, Marco Roveri, Mostafa Gomaa, Splinter1984, adfea625
+
 
 2.0.9 (2022-07-10)
 ------------------
