@@ -13,9 +13,17 @@ find_package(behaviortree_cpp REQUIRED)
 find_package(action_msgs REQUIRED)
 find_package(lifecycle_msgs REQUIRED)
 
-
-
 set(dependencies
+    rclcpp::rclcpp
+    rclcpp_action::rclcpp_action
+    rclcpp_lifecycle::rclcpp_lifecycle
+    plansys2_executor::plansys2_executor
+    behaviortree_cpp::behaviortree_cpp
+    ${action_msgs_TARGETS}
+    ${lifecycle_msgs_TARGETS}
+)
+
+set(package_dependencies
     rclcpp
     rclcpp_action
     rclcpp_lifecycle
@@ -32,24 +40,35 @@ set(BT_ACTIONS_SOURCES
 )
 
 add_library(${PROJECT_NAME} SHARED ${BT_ACTIONS_SOURCES})
-ament_target_dependencies(${PROJECT_NAME} ${dependencies})
+target_include_directories(${PROJECT_NAME} PUBLIC
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>"
+  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
+target_link_libraries(${PROJECT_NAME} PUBLIC ${dependencies})
 
 add_executable(bt_action_node
   src/bt_action_node.cpp
 )
-ament_target_dependencies(bt_action_node ${dependencies})
-target_link_libraries(bt_action_node ${PROJECT_NAME})
+target_link_libraries(bt_action_node PUBLIC ${PROJECT_NAME} ${dependencies})
 
-install(DIRECTORY include/
-  DESTINATION include/
+install(
+  DIRECTORY include/
+  DESTINATION include/${PROJECT_NAME}
 )
 
 install(TARGETS
   bt_action_node
-  ${PROJECT_NAME}
+  ${PROJECT_NAME} EXPORT ${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
-  RUNTIME DESTINATION lib/${PROJECT_NAME}
+  RUNTIME DESTINATION bin
+)
+
+install(TARGETS
+  bt_action_node
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
 )
 
 if(BUILD_TESTING)
@@ -61,12 +80,14 @@ if(BUILD_TESTING)
   find_package(test_msgs REQUIRED)
   find_package(geometry_msgs REQUIRED)
 
-  set(dependencies ${dependencies} plansys2_msgs test_msgs geometry_msgs)
+  set(dependencies ${dependencies} ${plansys2_msgs_TARGETS} ${test_msgs_TARGETS} ${geometry_msgs_TARGETS})
 
   add_subdirectory(test)
 endif()
 
-ament_export_include_directories(include)
-ament_export_dependencies(${dependencies})
+ament_export_include_directories("include/${PROJECT_NAME}")
+ament_export_libraries(${PROJECT_NAME})
+ament_export_targets(${PROJECT_NAME})
+ament_export_dependencies(${package_dependencies})
 
 ament_package()

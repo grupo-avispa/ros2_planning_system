@@ -17,15 +17,12 @@ add_library(plansys2_failure_test_nodes SHARED
 list(APPEND plugin_libs plansys2_failure_test_nodes)
 
 foreach(bt_plugin ${plugin_libs})
-  ament_target_dependencies(${bt_plugin} ${dependencies})
+  target_link_libraries(${bt_plugin} ${dependencies})
   target_compile_definitions(${bt_plugin} PRIVATE BT_PLUGIN_EXPORT)
 endforeach()
 
 ament_add_gtest(bt_action_test bt_action_test.cpp)
-target_link_libraries(bt_action_test
-  ${PROJECT_NAME}
-)
-ament_target_dependencies(bt_action_test ${dependencies})
+target_link_libraries(bt_action_test ${PROJECT_NAME} ${dependencies})
 
 install(DIRECTORY ../behavior_tree
   DESTINATION share/${PROJECT_NAME}/test

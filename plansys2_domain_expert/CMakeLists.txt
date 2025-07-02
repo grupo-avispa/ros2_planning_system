@@ -14,9 +14,20 @@ find_package(plansys2_popf_plan_solver REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(lifecycle_msgs REQUIRED)
 
-
-
 set(dependencies
+    rclcpp::rclcpp
+    rclcpp_action::rclcpp_action
+    rclcpp_lifecycle::rclcpp_lifecycle
+    plansys2_pddl_parser::plansys2_pddl_parser
+    ament_index_cpp::ament_index_cpp
+    plansys2_core::plansys2_core
+    plansys2_popf_plan_solver::plansys2_popf_plan_solver
+    ${plansys2_msgs_TARGETS}
+    ${std_msgs_TARGETS}
+    ${lifecycle_msgs_TARGETS}
+)
+
+set(package_dependencies
     rclcpp
     rclcpp_action
     rclcpp_lifecycle
@@ -39,26 +50,36 @@ set(DOMAIN_EXPERT_SOURCES
 )
 
 add_library(${PROJECT_NAME} SHARED ${DOMAIN_EXPERT_SOURCES})
-ament_target_dependencies(${PROJECT_NAME} ${dependencies})
+target_include_directories(${PROJECT_NAME} PUBLIC
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>"
+  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
+target_link_libraries(${PROJECT_NAME} PUBLIC ${dependencies})
 
 add_executable(domain_expert_node
   src/domain_expert_node.cpp
 )
-ament_target_dependencies(domain_expert_node ${dependencies})
-target_link_libraries(domain_expert_node ${PROJECT_NAME})
+target_link_libraries(domain_expert_node PUBLIC ${PROJECT_NAME} ${dependencies})
 
-install(DIRECTORY include/
-  DESTINATION include/
+install(
+  DIRECTORY include/
+  DESTINATION include/${PROJECT_NAME}
 )
 
 install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
 
 install(TARGETS
-  ${PROJECT_NAME}
+  ${PROJECT_NAME} EXPORT ${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
+install(TARGETS
   domain_expert_node
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
-  RUNTIME DESTINATION lib/${PROJECT_NAME}
+  RUNTIME DESTINATION bin
 )
 
 if(BUILD_TESTING)
@@ -69,8 +90,9 @@ if(BUILD_TESTING)
   add_subdirectory(test)
 endif()
 
-ament_export_include_directories(include)
+ament_export_include_directories("include/${PROJECT_NAME}")
 ament_export_libraries(${PROJECT_NAME})
-ament_export_dependencies(${dependencies})
+ament_export_targets(${PROJECT_NAME})
+ament_export_dependencies(${package_dependencies})
 
 ament_package()

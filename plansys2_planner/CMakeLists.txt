@@ -18,8 +18,23 @@ find_package(std_msgs REQUIRED)
 find_package(lifecycle_msgs REQUIRED)
 
 
-
 set(dependencies
+  rclcpp::rclcpp
+  rclcpp_action::rclcpp_action
+  rclcpp_lifecycle::rclcpp_lifecycle
+  plansys2_core::plansys2_core
+  plansys2_pddl_parser::plansys2_pddl_parser
+  ament_index_cpp::ament_index_cpp
+  plansys2_domain_expert::plansys2_domain_expert
+  plansys2_problem_expert::plansys2_problem_expert
+  plansys2_popf_plan_solver::plansys2_popf_plan_solver
+  pluginlib::pluginlib
+  ${plansys2_msgs_TARGETS}
+  ${std_msgs_TARGETS}
+  ${lifecycle_msgs_TARGETS}
+)
+
+set(package_dependencies
   rclcpp
   rclcpp_action
   rclcpp_lifecycle
@@ -43,28 +58,39 @@ set(PLANNER_SOURCES
 )
 
 add_library(${PROJECT_NAME} SHARED ${PLANNER_SOURCES})
-ament_target_dependencies(${PROJECT_NAME} ${dependencies})
+target_include_directories(${PROJECT_NAME} PUBLIC
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>"
+  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
+target_link_libraries(${PROJECT_NAME} PUBLIC ${dependencies})
 target_compile_definitions(${PROJECT_NAME} PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
 
 add_executable(planner_node
   src/planner_node.cpp
 )
-ament_target_dependencies(planner_node ${dependencies})
 target_compile_definitions(planner_node PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
-target_link_libraries(planner_node ${PROJECT_NAME})
+target_link_libraries(planner_node PUBLIC ${PROJECT_NAME} ${dependencies})
 
-install(DIRECTORY include/
-  DESTINATION include/
+install(
+  DIRECTORY include/
+  DESTINATION include/${PROJECT_NAME}
 )
+
 
 install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
 
 install(TARGETS
-  ${PROJECT_NAME}
-  planner_node
+  ${PROJECT_NAME} EXPORT ${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME}
+)
+
+install(TARGETS
+  planner_node
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
 )
 
 if(BUILD_TESTING)
@@ -75,8 +101,9 @@ if(BUILD_TESTING)
   add_subdirectory(test)
 endif()
 
-ament_export_include_directories(include)
+ament_export_include_directories("include/${PROJECT_NAME}")
 ament_export_libraries(${PROJECT_NAME})
-ament_export_dependencies(${dependencies})
+ament_export_targets(${PROJECT_NAME})
+ament_export_dependencies(${package_dependencies})
 
 ament_package()

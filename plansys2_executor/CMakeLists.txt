@@ -23,9 +23,27 @@ find_package(behaviortree_cpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 
-
-
 set(dependencies
+    rclcpp::rclcpp
+    rclcpp_lifecycle::rclcpp_lifecycle
+    rclcpp_cascade_lifecycle::rclcpp_cascade_lifecycle
+    rclcpp_action::rclcpp_action
+    plansys2_pddl_parser::plansys2_pddl_parser
+    ament_index_cpp::ament_index_cpp
+    plansys2_core::plansys2_core
+    plansys2_domain_expert::plansys2_domain_expert
+    plansys2_problem_expert::plansys2_problem_expert
+    plansys2_planner::plansys2_planner
+    pluginlib::pluginlib
+    behaviortree_cpp::behaviortree_cpp
+    ${lifecycle_msgs_TARGETS}
+    ${plansys2_msgs_TARGETS}
+    ${std_msgs_TARGETS}
+    ${std_srvs_TARGETS}
+)
+
+
+set(package_dependencies
     eigen3_cmake_module
     Eigen3
     rclcpp
@@ -68,43 +86,58 @@ set(EXECUTOR_SOURCES
 
 
 add_library(${PROJECT_NAME} SHARED ${EXECUTOR_SOURCES})
-ament_target_dependencies(${PROJECT_NAME} ${dependencies})
-target_link_libraries(${PROJECT_NAME})
+target_include_directories(${PROJECT_NAME} PUBLIC
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>"
+  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
+target_link_libraries(${PROJECT_NAME} PUBLIC ${dependencies})
 
 add_executable(executor_node
   src/executor_node.cpp
 )
-ament_target_dependencies(executor_node ${dependencies})
-target_link_libraries(executor_node ${PROJECT_NAME})
+target_link_libraries(executor_node PUBLIC ${PROJECT_NAME} ${dependencies})
 
 add_executable(compute_bt
   src/compute_bt.cpp
 )
-ament_target_dependencies(compute_bt ${dependencies})
-target_link_libraries(compute_bt ${PROJECT_NAME})
+target_link_libraries(compute_bt PUBLIC ${PROJECT_NAME} ${dependencies})
 
-install(DIRECTORY include/
-  DESTINATION include/
+install(
+  DIRECTORY include/
+  DESTINATION include/${PROJECT_NAME}
 )
 
 add_library(bt_builder_plugins SHARED
   src/plansys2_executor/bt_builder_plugins/simple_bt_builder.cpp
   src/plansys2_executor/bt_builder_plugins/stn_bt_builder.cpp
 )
-ament_target_dependencies(bt_builder_plugins ${dependencies})
+target_link_libraries(bt_builder_plugins PUBLIC ${dependencies})
 
 pluginlib_export_plugin_description_file(plansys2_executor plugins.xml)
 
 install(DIRECTORY launch behavior_trees DESTINATION share/${PROJECT_NAME})
 
 install(TARGETS
-  ${PROJECT_NAME}
+  ${PROJECT_NAME} EXPORT ${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
+install(TARGETS
+  bt_builder_plugins EXPORT bt_builder_plugins
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
+install(TARGETS
   bt_builder_plugins
   executor_node
   compute_bt
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
-  RUNTIME DESTINATION lib/${PROJECT_NAME}
+  RUNTIME DESTINATION bin
 )
 
 if(BUILD_TESTING)
@@ -116,8 +149,8 @@ if(BUILD_TESTING)
   add_subdirectory(test)
 endif()
 
-ament_export_include_directories(include)
+ament_export_include_directories("include/${PROJECT_NAME}")
 ament_export_libraries(${PROJECT_NAME} bt_builder_plugins)
-ament_export_dependencies(${dependencies})
-
+ament_export_targets(${PROJECT_NAME} bt_builder_plugins)
+ament_export_dependencies(${package_dependencies})
 ament_package()

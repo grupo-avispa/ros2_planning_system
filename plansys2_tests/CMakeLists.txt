@@ -20,19 +20,19 @@ find_package(behaviortree_cpp REQUIRED)
 
 
 set(dependencies
-    rclcpp
-    rclcpp_lifecycle
-    lifecycle_msgs
-    rclcpp_cascade_lifecycle
-    rclcpp_action
-    plansys2_pddl_parser
-    ament_index_cpp
-    plansys2_msgs
-    plansys2_domain_expert
-    plansys2_problem_expert
-    plansys2_planner
-    plansys2_executor
-    behaviortree_cpp
+    rclcpp::rclcpp
+    rclcpp_lifecycle::rclcpp_lifecycle
+    rclcpp_cascade_lifecycle::rclcpp_cascade_lifecycle
+    rclcpp_action::rclcpp_action
+    plansys2_pddl_parser::plansys2_pddl_parser
+    ament_index_cpp::ament_index_cpp
+    plansys2_domain_expert::plansys2_domain_expert
+    plansys2_problem_expert::plansys2_problem_expert
+    plansys2_planner::plansys2_planner
+    plansys2_executor::plansys2_executor
+    behaviortree_cpp::behaviortree_cpp
+    ${plansys2_msgs_TARGETS}
+    ${lifecycle_msgs_TARGETS}
 )
 
 include_directories(include)
@@ -43,7 +43,7 @@ set(${PROJECT_NAME}_SOURCES
 )
 
 add_library(${PROJECT_NAME} SHARED ${${PROJECT_NAME}_SOURCES})
-ament_target_dependencies(${PROJECT_NAME} ${dependencies})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${dependencies})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
