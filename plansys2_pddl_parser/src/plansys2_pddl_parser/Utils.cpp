@@ -1407,12 +1407,52 @@ bool checkParamEquality(
   return first.name == second.name;
 }
 
+bool checkActionEquality(
+  const plansys2_msgs::msg::Action & first, const plansys2_msgs::msg::Action & second)
 {
   if (first.name != second.name) {
     return false;
   }
 
-  return true;
+  if (first.parameters.size() != second.parameters.size()) {
+    return false;
+  }
+
+  for (unsigned i = 0; i < first.parameters.size(); i++) {
+    if (!checkParamEquality(first.parameters[i], second.parameters[i])) {
+      return false;
+    }
+  }
+
+  return parser::pddl::checkTreeEquality(first.preconditions, second.preconditions) &&
+         parser::pddl::checkTreeEquality(first.effects, second.effects);
+}
+
+bool checkDurativeActionEquality(
+  const plansys2_msgs::msg::DurativeAction & first,
+  const plansys2_msgs::msg::DurativeAction & second)
+{
+  if (first.name != second.name) {
+    return false;
+  }  
+
+  if (first.parameters.size() != second.parameters.size()) {
+    return false;
+  }
+
+  for (unsigned i = 0; i < first.parameters.size(); i++) {
+    if (!checkParamEquality(first.parameters[i], second.parameters[i])) {
+      return false;
+    }
+  }
+
+  return parser::pddl::checkTreeEquality(
+    first.at_start_requirements, second.at_start_requirements) &&
+         parser::pddl::checkTreeEquality(
+    first.over_all_requirements, second.over_all_requirements) &&
+         parser::pddl::checkTreeEquality(first.at_end_requirements, second.at_end_requirements) &&
+         parser::pddl::checkTreeEquality(first.at_start_effects, second.at_start_effects) &&
+         parser::pddl::checkTreeEquality(first.at_end_effects, second.at_end_effects);
 }
 
 bool empty(const plansys2_msgs::msg::Tree & tree)
@@ -1433,6 +1473,23 @@ bool empty(const plansys2_msgs::msg::Tree & tree)
   }
 
   return false;
+}
+
+bool checkParamTypeEquivalence(
+  const plansys2_msgs::msg::Param & first, const plansys2_msgs::msg::Param & second)
+{
+  return first.type == "" || compare_str_case_insensitive(first.type, "object") || 
+         compare_str_case_insensitive(first.type, second.type) ||
+         std::find(first.sub_types.begin(), first.sub_types.end(), second.type) !=
+         first.sub_types.end();
+}
+
+bool compare_str_case_insensitive(const std::string& a, const std::string& b) {
+  return a.size() == b.size() &&
+      std::equal(a.begin(), a.end(), b.begin(), b.end(),
+          [](unsigned char ac, unsigned char bc) {
+              return std::tolower(ac) == std::tolower(bc);
+          });
 }
 
 }  // namespace pddl
