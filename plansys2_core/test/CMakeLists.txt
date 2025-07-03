@@ -10,6 +10,9 @@ target_link_libraries(types_test ${PROJECT_NAME})
 ament_add_gtest(node_variant_test node_variant_test.cpp)
 target_link_libraries(node_variant_test ${PROJECT_NAME})
 
+ament_add_gtest(graph_test graph_test.cpp)
+target_link_libraries(graph_test ${PROJECT_NAME})
+
 set(TEST_PDDL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/pddl)
 
 install(DIRECTORY

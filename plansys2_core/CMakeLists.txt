@@ -9,6 +9,7 @@ find_package(plansys2_pddl_parser REQUIRED)
 find_package(plansys2_msgs REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
+  src/plansys2_core/DerivedResolutionGraph.cpp
   src/plansys2_core/Action.cpp
   src/plansys2_core/Utils.cpp
   src/plansys2_core/PlanSolverBase.cpp
