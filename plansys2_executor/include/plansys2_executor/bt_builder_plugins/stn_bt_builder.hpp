@@ -483,15 +483,6 @@ protected:
   void print_arcs(const plansys2::Graph::Ptr graph) const;
 
   /**
-   * @brief Replaces all occurrences of a substring in a string.
-   *
-   * @param[in,out] str The string to modify.
-   * @param[in] from The substring to replace.
-   * @param[in] to The replacement substring.
-   */
-  void replace(std::string & str, const std::string & from, const std::string & to) const;
-
-  /**
    * @brief Checks if an edge represents the end of a durative action.
    *
    * @param[in] edge The edge to check.
