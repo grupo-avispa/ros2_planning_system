@@ -57,6 +57,12 @@ public:
    */
   Instance(const plansys2_msgs::msg::Param & instance)  // NOLINT(runtime/explicit)
   : plansys2_msgs::msg::Param(instance) {}
+
+  bool operator==(const Instance & i2) const
+  {
+    if (this == &i2) return true;
+    return parser::pddl::checkParamEquality(*this, i2);
+  }
 };
 
 /**
@@ -88,6 +94,12 @@ public:
    */
   Predicate(const plansys2_msgs::msg::Node & pred)  // NOLINT(runtime/explicit)
   : plansys2_msgs::msg::Node(pred) {}
+
+  bool operator==(const Predicate & p2) const
+  {
+    if (this == &p2) return true;
+    return parser::pddl::checkNodeEquality(*this, p2);
+  }
 };
 
 /**
