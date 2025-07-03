@@ -286,6 +286,6 @@ protected:
   bool should_send_request_;
 };
 
-}  // namespace nav2_behavior_tree
+}  // namespace plansys2
 
-#endif  // NAV2_BEHAVIOR_TREE__BT_SERVICE_NODE_HPP_
+#endif  // PLANSYS2_BT_ACTIONS__BTSERVICENODE_HPP_
