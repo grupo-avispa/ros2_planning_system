@@ -15,12 +15,11 @@
 #ifndef PLANSYS2_CORE__PLANSOLVERBASE_HPP_
 #define PLANSYS2_CORE__PLANSOLVERBASE_HPP_
 
+#include <memory>
 #include <optional>
 #include <string>
-#include <memory>
 
 #include "plansys2_msgs/msg/plan.hpp"
-
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 
@@ -52,8 +51,7 @@ public:
    * @param[in] plugin_name The name of the plugin.
    */
   virtual void configure(
-    rclcpp_lifecycle::LifecycleNode::SharedPtr lc_node,
-    const std::string & plugin_name) = 0;
+    rclcpp_lifecycle::LifecycleNode::SharedPtr lc_node, const std::string & plugin_name) = 0;
 
   /**
    * @brief Generate a plan given a PDDL domain and problem definition.
@@ -65,8 +63,7 @@ public:
    */
   virtual std::optional<plansys2_msgs::msg::Plan> getPlan(
     const std::string & domain, const std::string & problem,
-    const std::string & node_namespace = "",
-    const rclcpp::Duration solver_timeout = 15s) = 0;
+    const std::string & node_namespace = "", const rclcpp::Duration solver_timeout = 15s) = 0;
 
   /**
    * @brief Validate a PDDL domain.
@@ -75,8 +72,7 @@ public:
    * @return true if the domain is valid, false otherwise.
    */
   virtual bool isDomainValid(
-    const std::string & domain,
-    const std::string & node_namespace = "") = 0;
+    const std::string & domain, const std::string & node_namespace = "") = 0;
 
   /**
    * @brief Request cancellation of the current planning process.
@@ -91,8 +87,8 @@ public:
    * @return true if the planner executed successfully, false otherwise.
    */
   virtual bool execute_planner(
-    const std::string & command,
-    const rclcpp::Duration & solver_timeout, const std::string & plan_path);
+    const std::string & command, const rclcpp::Duration & solver_timeout,
+    const std::string & plan_path);
 
 protected:
   // Lifecycle node pointer.

@@ -15,8 +15,11 @@
 #ifndef PLANSYS2_CORE__NODEVARIANT_HPP_
 #define PLANSYS2_CORE__NODEVARIANT_HPP_
 
-#include "plansys2_core/Types.hpp"
+#include <memory>
+#include <string>
+
 #include "plansys2_core/Action.hpp"
+#include "plansys2_core/Types.hpp"
 
 namespace plansys2
 {
@@ -30,10 +33,10 @@ namespace plansys2
  * accessing the underlying node, and retrieving node-specific information such as name and type.
  *
  * The class supports hashing, equality comparison, and printing node information for debugging purposes.
- * 
- * This class uses a custom hash function and '==' operators designed specifically for enabling the 
- * resolution of derived predicates in the correct order, which might not be suitable for other uses. 
- * For example (check the unit tests for more examples): 
+ *
+ * This class uses a custom hash function and '==' operators designed specifically for enabling the
+ * resolution of derived predicates in the correct order, which might not be suitable for other uses.
+ * For example (check the unit tests for more examples):
  *  - (predA ?a) == (predA ?x)
  *
  * @note The underlying node is stored as a shared pointer to allow for efficient copying and management.
@@ -59,31 +62,30 @@ public:
       [](auto && arg) {return std::hash<std::decay_t<decltype(arg)>>{}(arg);}, *node_);
   }
 
-  bool operator==(const NodeVariant& other) const
+  bool operator==(const NodeVariant & other) const
   {
     if (this == &other) {
       return true;  // Same instance
     }
     // Check type first
-    if (this->getNodeType() != other.getNodeType())
-      return false;
+    if (this->getNodeType() != other.getNodeType()) {return false;}
 
     // Predicate case
     if (this->isPredicate()) {
-      return parser::pddl::checkNodeEquality(this->getPredicateNode(), other.getPredicateNode(), false);
+      return parser::pddl::checkNodeEquality(
+        this->getPredicateNode(), other.getPredicateNode(), false);
     }
 
     // Function case
     if (this->isFunction()) {
-      return parser::pddl::checkNodeEquality(this->getFunctionNode(), other.getFunctionNode(), false);
+      return parser::pddl::checkNodeEquality(
+        this->getFunctionNode(), other.getFunctionNode(), false);
     }
 
     return *node_ == *other.node_;
   }
 
-  bool operator!=(const NodeVariant& other) const {
-    return !(*this == other);
-  }
+  bool operator!=(const NodeVariant & other) const {return !(*this == other);}
 
   const NodeType & getNode() const {return *node_;}
 
@@ -114,22 +116,22 @@ public:
     return std::holds_alternative<plansys2::ActionVariant>(*node_) &&
            std::get<plansys2::ActionVariant>(*node_).is_action();
   }
-  
+
   bool isDurativeAction() const
   {
     return std::holds_alternative<plansys2::ActionVariant>(*node_) &&
            std::get<plansys2::ActionVariant>(*node_).is_durative_action();
   }
 
-  bool isActionVariant () const {return std::holds_alternative<plansys2::ActionVariant>(*node_);};
+  bool isActionVariant() const {return std::holds_alternative<plansys2::ActionVariant>(*node_);}
 
   plansys2::Function & getFunctionNode() const {return std::get<plansys2::Function>(*node_);}
   plansys2::Predicate getPredicateNode() const {return std::get<plansys2::Predicate>(*node_);}
   plansys2::Derived getDerivedNode() const {return std::get<plansys2::Derived>(*node_);}
-  // const plansys2::Derived& getDerivedNode() const {
-  //   return std::get<plansys2::Derived>(*node_);
-  // }
-  plansys2::ActionVariant getActionVariantNode() const {return std::get<plansys2::ActionVariant>(*node_);}
+  plansys2::ActionVariant getActionVariantNode() const
+  {
+    return std::get<plansys2::ActionVariant>(*node_);
+  }
 
   auto & getDerivedPreconditions() const
   {
@@ -154,31 +156,31 @@ public:
 
   void printNode() const
   {
-    if(isDerived()) {
+    if (isDerived()) {
       std::cout << "  Derived Predicate: " << getDerivedPredicate().name;
       for (const auto & param : getDerivedPredicate().parameters) {
         std::cout << " " << param.name;
       }
       std::cout << "\n";
     }
-    if(isPredicate()) {
+    if (isPredicate()) {
       std::cout << "  Predicate: " << getPredicateNode().name;
       for (const auto & param : getPredicateNode().parameters) {
         std::cout << " " << param.name;
       }
       std::cout << "\n";
     }
-    if(isFunction()) {
+    if (isFunction()) {
       std::cout << "  Function: " << getFunctionNode().name;
       for (const auto & param : getFunctionNode().parameters) {
         std::cout << " " << param.name;
       }
       std::cout << "\n";
     }
-    if(isAction()) {
+    if (isAction()) {
       std::cout << "  Action: " << getNodeName() << "\n";
     }
-    if(isDurativeAction()) {
+    if (isDurativeAction()) {
       std::cout << "  Durative Action: " << getNodeName() << "\n";
     }
   }
@@ -189,13 +191,14 @@ private:
   friend struct std::hash<NodeVariant>;
 };
 
-inline plansys2::NodeVariant nodeMsgToVariant(const plansys2_msgs::msg::Node& node_msg) {
+inline plansys2::NodeVariant nodeMsgToVariant(const plansys2_msgs::msg::Node & node_msg)
+{
   if (node_msg.node_type == plansys2_msgs::msg::Node::PREDICATE) {
-      return plansys2::Predicate(node_msg);
+    return plansys2::Predicate(node_msg);
   } else if (node_msg.node_type == plansys2_msgs::msg::Node::FUNCTION) {
-      return plansys2::Function(node_msg);
+    return plansys2::Function(node_msg);
   } else {
-      throw std::runtime_error("Unsupported node_type for NodeVariant conversion");
+    throw std::runtime_error("Unsupported node_type for NodeVariant conversion");
   }
 }
 
@@ -209,33 +212,31 @@ inline bool operator==(const NodeVariant & lhs, const plansys2_msgs::msg::Node &
   return false;
 }
 
-inline std::ostream& operator<<(std::ostream& os, const NodeVariant& node) {
-    os << node.getNodeType() << ":" << node.getNodeName();
+inline std::ostream & operator<<(std::ostream & os, const NodeVariant & node)
+{
+  os << node.getNodeType() << ":" << node.getNodeName();
 
-    // Print parameters, if available
-    if (node.isPredicate()) {
-        for (const auto& param : node.getPredicateNode().parameters) {
-            os << " " << param.name;
-        }
-    } else if (node.isFunction()) {
-        for (const auto& param : node.getFunctionNode().parameters) {
-            os << " " << param.name;
-        }
-    } else if (node.isDerived()) {
-        const auto& pred = node.getDerivedPredicate();
-        for (const auto& param : pred.parameters) {
-            os << " " << param.name;
-        }
-    } else if (node.isActionVariant()) {
-        // If ActionVariant has parameters (check its API)
-        const auto& action = node.getActionVariantNode();
-        // if (action.get_action_params()) {  // replace with real method if exists
-          for (const auto& param : action.get_action_params()) {
-              os << " " << param.name;
-          }
-        // }
+  // Print parameters, if available
+  if (node.isPredicate()) {
+    for (const auto & param : node.getPredicateNode().parameters) {
+      os << " " << param.name;
     }
-    return os;
+  } else if (node.isFunction()) {
+    for (const auto & param : node.getFunctionNode().parameters) {
+      os << " " << param.name;
+    }
+  } else if (node.isDerived()) {
+    const auto & pred = node.getDerivedPredicate();
+    for (const auto & param : pred.parameters) {
+      os << " " << param.name;
+    }
+  } else if (node.isActionVariant()) {
+    const auto & action = node.getActionVariantNode();
+    for (const auto & param : action.get_action_params()) {
+      os << " " << param.name;
+    }
+  }
+  return os;
 }
 
 }  // namespace plansys2
@@ -257,15 +258,13 @@ inline std::size_t hash_node_variant(const plansys2_msgs::msg::Node & node)
 template<>
 struct hash<plansys2::NodeVariant>
 {
-  std::size_t operator()(const plansys2::NodeVariant & nv) const noexcept 
+  std::size_t operator()(const plansys2::NodeVariant & nv) const noexcept
   {
-    if (nv.isPredicate())
-    {
+    if (nv.isPredicate()) {
       return hash_node_variant(nv.getPredicateNode());
-    } else if(nv.isFunction())
-    {
+    } else if (nv.isFunction()) {
       return hash_node_variant(nv.getFunctionNode());
-    } 
+    }
     return nv.hash();
   }
 };

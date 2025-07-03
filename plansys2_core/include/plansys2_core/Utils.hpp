@@ -37,9 +37,7 @@ std::vector<std::string> tokenize(const std::string & string, const std::string 
  * @return std::string A substring without empty lines.
  */
 std::string substr_without_empty_lines(
-  std::string string,
-  std::size_t init_pos,
-  std::size_t end_pos);
+  std::string string, std::size_t init_pos, std::size_t end_pos);
 
 /**
  * @brief Remove the comments from a PDDL string.

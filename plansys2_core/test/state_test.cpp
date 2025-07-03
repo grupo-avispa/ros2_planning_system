@@ -250,27 +250,28 @@ TEST(state_test, get_derived_predicates_sccs)
   auto sccs_full = state.getDerivedPredicatesSCCs();
 
   ASSERT_EQ(sccs_full.size(), 6);
-  
+
   // Helper lambda to check if a set of derived predicates (regardless of order) is in sccs_full
-  auto contains_scc = [](const std::vector<std::vector<plansys2::Derived>> &sccs,
-                         const std::vector<plansys2::Derived> &target) {
-    for (const auto &scc : sccs) {
-      if (scc.size() == target.size()) {
-        std::unordered_set<plansys2::Derived> scc_set(scc.begin(), scc.end());
-        std::unordered_set<plansys2::Derived> target_set(target.begin(), target.end());
-        if (scc_set == target_set) {
-          return true;
+  auto contains_scc = [](
+    const std::vector<std::vector<plansys2::Derived>> & sccs,
+    const std::vector<plansys2::Derived> & target) {
+      for (const auto & scc : sccs) {
+        if (scc.size() == target.size()) {
+          std::unordered_set<plansys2::Derived> scc_set(scc.begin(), scc.end());
+          std::unordered_set<plansys2::Derived> target_set(target.begin(), target.end());
+          if (scc_set == target_set) {
+            return true;
+          }
         }
       }
-    }
-    return false;
-  };
+      return false;
+    };
 
   ASSERT_TRUE(contains_scc(sccs_full, {der2, der3, der4}));
   ASSERT_TRUE(contains_scc(sccs_full, {der5, der6}));
   ASSERT_TRUE(contains_scc(sccs_full, {der1}));
 
-  plansys2::Predicate pred2 = parser::pddl::fromStringPredicate("(pred2 ?x)");;
+  plansys2::Predicate pred2 = parser::pddl::fromStringPredicate("(pred2 ?x)");
   auto sccs_pred2 = state.getDerivedPredicatesSCCs({pred2});
   ASSERT_TRUE(contains_scc(sccs_pred2, {der2, der3, der4}));
   ASSERT_TRUE(contains_scc(sccs_pred2, {der5, der6}));

@@ -15,9 +15,9 @@
 #ifndef PLANSYS2_CORE__ACTION_HPP_
 #define PLANSYS2_CORE__ACTION_HPP_
 
+#include <memory>
 #include <string>
 #include <vector>
-#include <memory>
 
 #include "plansys2_core/Types.hpp"
 #include "plansys2_msgs/msg/action.hpp"
@@ -38,7 +38,7 @@ public:
 
   bool operator==(const Action & action) const
   {
-    if (this == &action) return true;
+    if (this == &action) {return true;}
     return parser::pddl::checkActionEquality(*this, action);
   }
 };
@@ -55,7 +55,7 @@ public:
 
   bool operator==(const DurativeAction & action) const
   {
-    if (this == &action) return true;
+    if (this == &action) {return true;}
     return parser::pddl::checkDurativeActionEquality(*this, action);
   }
 };

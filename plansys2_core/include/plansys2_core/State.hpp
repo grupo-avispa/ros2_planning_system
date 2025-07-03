@@ -16,9 +16,10 @@
 #define PLANSYS2_CORE__STATE_HPP_
 
 #include <string>
-#include <utility>
+#include <tuple>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 #include "plansys2_core/DerivedResolutionGraph.hpp"
@@ -46,7 +47,7 @@ public:
     union_predicates_inferred_predicates_(predicates)
   {
   }
-  
+
   State(
     const std::unordered_set<plansys2::Instance> & instances,
     std::unordered_set<plansys2::Function> & functions,
@@ -80,10 +81,13 @@ public:
   auto & getInstances() const {return instances_;}
   auto & getFunctions() const {return functions_;}
   auto & getPredicates() const {return predicates_;}
-  auto & getInferredPredicates() const { return inferred_predicates_;}
-  auto & getUnionPredicatesInferredPredicates() const {return union_predicates_inferred_predicates_;}
+  auto & getInferredPredicates() const {return inferred_predicates_;}
+  auto & getUnionPredicatesInferredPredicates() const
+  {
+    return union_predicates_inferred_predicates_;
+  }
   auto & getDerivedPredicates() const {return derived_predicates_;}
-  
+
   /**
    * @brief Retrieves the strongly connected components (SCCs) of derived predicates.
    *
@@ -109,7 +113,7 @@ public:
    * @return std::vector<std::vector<Derived>> A vector of SCCs, each represented as a vector of Derived predicates.
    */
   std::vector<std::vector<Derived>> getDerivedPredicatesSCCs(
-    const std::vector<plansys2_msgs::msg::Node>& root_nodes) const;
+    const std::vector<plansys2_msgs::msg::Node> & root_nodes) const;
 
   /**
    * @brief Retrieves all derived predicates in the state using a depth-first traversal.
@@ -121,7 +125,7 @@ public:
    * @return std::vector<plansys2::Derived> A vector of derived predicates present in the state.
    */
   std::vector<plansys2::Derived> getDerivedPredicatesDepthFirst() const;
-  
+
   /**
    * @brief Retrieves all children derived predicates from root_nodes using a depth-first traversal.
    *
@@ -133,7 +137,7 @@ public:
    * @return A vector containing all derived predicates found during the traversal.
    */
   std::vector<plansys2::Derived> getDerivedPredicatesDepthFirst(
-    const std::vector<plansys2_msgs::msg::Node>& root_nodes) const;
+    const std::vector<plansys2_msgs::msg::Node> & root_nodes) const;
 
   auto getInstancesSize() const {return instances_.size();}
   auto getFunctionsSize() const {return functions_.size();}
@@ -142,7 +146,10 @@ public:
   auto getUnionPredicatesSize() const {return union_predicates_inferred_predicates_.size();}
   auto getDerivedPredicatesSize() const {return derived_predicates_.getEdgeNumber();}
 
-  size_t getInferredPredicateRefCount(const plansys2::Predicate & predicate) const {return inferred_predicate_refcount_.at(predicate);}
+  size_t getInferredPredicateRefCount(const plansys2::Predicate & predicate) const
+  {
+    return inferred_predicate_refcount_.at(predicate);
+  }
 
   size_t getNumberInferredFromDerived(const plansys2::Derived & derived) const;
 
@@ -157,14 +164,17 @@ public:
 
   bool addPredicate(const plansys2::Predicate & predicate)
   {
-    return predicates_.insert(predicate).second && union_predicates_inferred_predicates_.insert(predicate).second;
+    return predicates_.insert(predicate).second &&
+           union_predicates_inferred_predicates_.insert(predicate).second;
   }
   bool addPredicate(plansys2::Predicate && predicate)
   {
-    return predicates_.insert(predicate).second && union_predicates_inferred_predicates_.insert(predicate).second;
+    return predicates_.insert(predicate).second &&
+           union_predicates_inferred_predicates_.insert(predicate).second;
   }
 
-  bool addInferredPredicate(const plansys2::Derived & derived, const plansys2::Predicate & predicate);
+  bool addInferredPredicate(
+    const plansys2::Derived & derived, const plansys2::Predicate & predicate);
   bool addInferredPredicate(const plansys2::Derived & derived, plansys2::Predicate && predicate);
 
   bool addFunction(const plansys2::Function & function)
@@ -189,11 +199,13 @@ public:
   }
   bool removePredicate(const plansys2::Predicate & predicate)
   {
-    return predicates_.erase(predicate) == 1 && union_predicates_inferred_predicates_.erase(predicate) == 1;
+    return predicates_.erase(predicate) == 1 &&
+           union_predicates_inferred_predicates_.erase(predicate) == 1;
   }
   bool removePredicate(plansys2::Predicate && predicate)
   {
-    return predicates_.erase(predicate) == 1 && union_predicates_inferred_predicates_.erase(predicate) == 1;
+    return predicates_.erase(predicate) == 1 &&
+           union_predicates_inferred_predicates_.erase(predicate) == 1;
   }
 
   auto removeFunction(const std::unordered_set<plansys2::Function>::const_iterator it)
@@ -308,10 +320,11 @@ private:
   std::unordered_set<plansys2::Predicate> predicates_;
   std::unordered_set<plansys2::Predicate> inferred_predicates_;
   std::unordered_set<plansys2::Predicate> union_predicates_inferred_predicates_;
-  
-  std::unordered_map<plansys2::Derived, std::unordered_set<plansys2::Predicate>> inferred_predicates_map_;
+
+  std::unordered_map<plansys2::Derived, std::unordered_set<plansys2::Predicate>>
+  inferred_predicates_map_;
   std::unordered_map<plansys2::Predicate, size_t> inferred_predicate_refcount_;
-  
+
   plansys2::DerivedResolutionGraph derived_predicates_;
 
   void removeInferredPredicate(const plansys2::Predicate & predicate);

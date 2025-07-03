@@ -26,8 +26,7 @@ State::State(
   predicates_(predicates),
   union_predicates_inferred_predicates_(predicates)
 {
-  for (const auto& [derived, predicate] : inferred_predicates)
-  {
+  for (const auto & [derived, predicate] : inferred_predicates) {
     addInferredPredicate(derived, predicate);
   }
 }
@@ -44,8 +43,7 @@ State::State(
   union_predicates_inferred_predicates_(predicates),
   derived_predicates_(derived_predicates)
 {
-  for (const auto& [derived, predicate] : inferred_predicates)
-  {
+  for (const auto & [derived, predicate] : inferred_predicates) {
     addInferredPredicate(derived, predicate);
   }
 }
@@ -63,32 +61,34 @@ State::State(const plansys2_msgs::msg::State & state)
     plansys2::convertVectorToUnorderedSet<plansys2::Predicate, plansys2_msgs::msg::Node>(
     state.inferred_predicates);
   union_predicates_inferred_predicates_.insert(predicates_.begin(), predicates_.end());
-  union_predicates_inferred_predicates_.insert(inferred_predicates_.begin(), inferred_predicates_.end());
+  union_predicates_inferred_predicates_.insert(
+    inferred_predicates_.begin(), inferred_predicates_.end());
   derived_predicates_ = state.derived_predicates;
 }
 
 bool State::operator==(const State & state) const
 {
-  if (this == &state) return true;
-  if (this->instances_.size() != state.instances_.size()) return false;
-  if (this->functions_.size() != state.functions_.size()) return false;
-  if (this->predicates_.size() != state.predicates_.size()) return false;
-  if (this->inferred_predicates_.size() != state.inferred_predicates_.size()) return false;
-  if (this->union_predicates_inferred_predicates_.size() != state.union_predicates_inferred_predicates_.size()) return false;
-  if (this->derived_predicates_.getNodeNumber() != state.derived_predicates_.getNodeNumber()) return false;
+  if (this == &state) {return true;}
+  if (this->instances_.size() != state.instances_.size()) {return false;}
+  if (this->functions_.size() != state.functions_.size()) {return false;}
+  if (this->predicates_.size() != state.predicates_.size()) {return false;}
+  if (this->inferred_predicates_.size() != state.inferred_predicates_.size()) {return false;}
+  if (
+    this->union_predicates_inferred_predicates_.size() !=
+    state.union_predicates_inferred_predicates_.size())
+  {
+    return false;
+  }
+  if (this->derived_predicates_.getNodeNumber() != state.derived_predicates_.getNodeNumber()) {
+    return false;
+  }
   return this->instances_ == state.instances_ && this->functions_ == state.functions_ &&
          this->predicates_ == state.predicates_ &&
          this->inferred_predicates_ == state.inferred_predicates_ &&
-         this->union_predicates_inferred_predicates_ == state.union_predicates_inferred_predicates_ &&
+         this->union_predicates_inferred_predicates_ ==
+         state.union_predicates_inferred_predicates_ &&
          this->derived_predicates_ == state.derived_predicates_;
 }
-
-// std::unordered_set<plansys2::Predicate> State::getUnionPredicatesInferredPredicates() const
-// {
-//   std::unordered_set<plansys2::Predicate> result = predicates_;
-//   result.insert(inferred_predicates_.begin(), inferred_predicates_.end());
-//   return result;
-// }
 
 std::vector<std::vector<Derived>> State::getDerivedPredicatesSCCs() const
 {
@@ -98,10 +98,9 @@ std::vector<std::vector<Derived>> State::getDerivedPredicatesSCCs() const
 }
 
 std::vector<std::vector<Derived>> State::getDerivedPredicatesSCCs(
-  const std::vector<plansys2_msgs::msg::Node>& root_nodes) const
+  const std::vector<plansys2_msgs::msg::Node> & root_nodes) const
 {
-  if(root_nodes.empty())
-  {
+  if (root_nodes.empty()) {
     auto sccs = derived_predicates_.computeSCCsTarjanDerivedPredicates();
     std::reverse(sccs.begin(), sccs.end());
     return sccs;
@@ -109,10 +108,10 @@ std::vector<std::vector<Derived>> State::getDerivedPredicatesSCCs(
 
   std::vector<plansys2::NodeVariant> root_nodes_variant;
   root_nodes_variant.reserve(root_nodes.size());
-  for (const auto& n : root_nodes) {
+  for (const auto & n : root_nodes) {
     root_nodes_variant.push_back(nodeMsgToVariant(n));
   }
-  
+
   auto sub_graph = derived_predicates_.getSubGraphFromNodes(root_nodes_variant);
   auto sccs = sub_graph.computeSCCsTarjanDerivedPredicates();
   std::reverse(sccs.begin(), sccs.end());
@@ -124,12 +123,12 @@ std::vector<plansys2::Derived> State::getDerivedPredicatesDepthFirst() const
   std::vector<plansys2_msgs::msg::Node> root_nodes;
   return derived_predicates_.getDerivedPredicatesDepthFirst();
 }
-  
+
 std::vector<plansys2::Derived> State::getDerivedPredicatesDepthFirst(
-  const std::vector<plansys2_msgs::msg::Node>& root_nodes) const
+  const std::vector<plansys2_msgs::msg::Node> & root_nodes) const
 {
   std::vector<plansys2::NodeVariant> root_nodes_variant;
-  for (const auto& n : root_nodes) {
+  for (const auto & n : root_nodes) {
     root_nodes_variant.push_back(nodeMsgToVariant(n));
   }
   return derived_predicates_.getDerivedPredicatesDepthFirst(root_nodes_variant);
@@ -144,7 +143,8 @@ size_t State::getNumberInferredFromDerived(const plansys2::Derived & derived) co
   return it->second.size();
 }
 
-bool State::addInferredPredicate(const plansys2::Derived & derived, const plansys2::Predicate & predicate)
+bool State::addInferredPredicate(
+  const plansys2::Derived & derived, const plansys2::Predicate & predicate)
 {
   auto res = inferred_predicates_.emplace(predicate);
   auto pred_it = res.first;
@@ -157,7 +157,8 @@ bool State::addInferredPredicate(const plansys2::Derived & derived, const plansy
   return res.second;
 }
 
-bool State::addInferredPredicate(const plansys2::Derived & derived, plansys2::Predicate && predicate)
+bool State::addInferredPredicate(
+  const plansys2::Derived & derived, plansys2::Predicate && predicate)
 {
   auto res = inferred_predicates_.emplace(std::move(predicate));
   auto pred_it = res.first;
@@ -214,7 +215,7 @@ void State::removeInferredPredicate(const plansys2::Predicate & predicate)
   inferred_predicate_refcount_.erase(predicate);
 }
 
-bool State::ungroundSingleDerivedPredicate(const plansys2::Derived& derived)
+bool State::ungroundSingleDerivedPredicate(const plansys2::Derived & derived)
 {
   bool removed = false;
   auto it = inferred_predicates_map_.find(derived);
@@ -222,11 +223,11 @@ bool State::ungroundSingleDerivedPredicate(const plansys2::Derived& derived)
     return false;
   }
 
-  for (const auto& predicate : it->second) {
+  for (const auto & predicate : it->second) {
     auto rc_it = inferred_predicate_refcount_.find(predicate);
     if (rc_it != inferred_predicate_refcount_.end()) {
       if (--(rc_it->second) == 0) {
-        removeInferredPredicate(predicate); // Remove only when last reference is gone
+        removeInferredPredicate(predicate);  // Remove only when last reference is gone
         removed = true;
       }
     }
@@ -235,14 +236,15 @@ bool State::ungroundSingleDerivedPredicate(const plansys2::Derived& derived)
   return removed;
 }
 
-std::unordered_set<plansys2::Derived> State::ungroundDerivedPredicate(const plansys2::Derived & derived)
+std::unordered_set<plansys2::Derived> State::ungroundDerivedPredicate(
+  const plansys2::Derived & derived)
 {
   std::unordered_set<plansys2::Derived> derived_removed;
   derived_predicates_.depthFirstTraverse(
     derived, [&](const plansys2::NodeVariant & node) {
       if (node.isDerived()) {
-        const auto &d = node.getDerivedNode();
-        if(ungroundSingleDerivedPredicate(d)) {
+        const auto & d = node.getDerivedNode();
+        if (ungroundSingleDerivedPredicate(d)) {
           derived_removed.emplace(std::move(d));
         }
       }
