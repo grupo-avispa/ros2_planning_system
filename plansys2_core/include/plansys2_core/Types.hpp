@@ -328,6 +328,12 @@ public:
    */
   Function(const plansys2_msgs::msg::Node & func)  // NOLINT(runtime/explicit)
   : plansys2_msgs::msg::Node(func) {}
+
+  bool operator==(const Function & f2) const 
+  {
+    if (this == &f2) return true;
+    return parser::pddl::checkNodeEquality(*this, f2);
+  }
 };
 
 /**
