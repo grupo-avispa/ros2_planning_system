@@ -19,7 +19,9 @@
 #include <string>
 
 #include "behaviortree_cpp/action_node.h"
+#include "behaviortree_cpp/json_export.h"
 #include "plansys2_bt_actions/BTUtils.hpp"
+#include "plansys2_bt_actions/JSONUtils.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
