@@ -4,6 +4,9 @@ target_link_libraries(utils_test
   ament_index_cpp::ament_index_cpp
 )
 
+ament_add_gtest(types_test types_test.cpp)
+target_link_libraries(types_test ${PROJECT_NAME})
+
 set(TEST_PDDL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/pddl)
 
 install(DIRECTORY
