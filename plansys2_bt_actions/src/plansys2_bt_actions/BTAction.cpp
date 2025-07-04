@@ -26,6 +26,7 @@
 #include "behaviortree_cpp/utils/shared_library.h"
 #include "std_msgs/msg/header.hpp"
 #include "plansys2_bt_actions/BTAction.hpp"
+#include "plansys2_bt_actions/BTUtils.hpp"
 #include "plansys2_bt_actions/JSONUtils.hpp"
 
 namespace plansys2

@@ -23,6 +23,24 @@ namespace BT
 {
 
 /**
+ * @brief Parse XML string to std::chrono::milliseconds
+ * @param key XML string
+ * @return std::chrono::milliseconds
+ */
+template<>
+inline std::chrono::milliseconds convertFromString<std::chrono::milliseconds>(const StringView key)
+{
+  // if string starts with "json:{", try to parse it as json
+  if (StartWith(key, "json:")) {
+    auto new_key = key;
+    new_key.remove_prefix(5);
+    return convertFromJSON<std::chrono::milliseconds>(new_key);
+  }
+
+  return std::chrono::milliseconds(std::stoul(key.data()));
+}
+
+/**
  * @brief Try reading an import port first, and if that doesn't work
  * fallback to reading directly the blackboard.
  * The blackboard must be passed explicitly because config() is private in BT.CPP 4.X

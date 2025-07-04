@@ -113,8 +113,15 @@ public:
     if (service_new != service_name_ || !service_client_) {
       service_name_ = service_new;
       node_ = config().blackboard->template get<rclcpp_lifecycle::LifecycleNode::SharedPtr>("node");
-      service_client_ =
-        node_->create_client<ServiceT>(service_name_);
+
+      callback_group_ = node_->create_callback_group(
+        rclcpp::CallbackGroupType::MutuallyExclusive, false);
+
+      callback_group_executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+      callback_group_executor_->add_callback_group(
+        callback_group_, node_->get_node_base_interface());
+      service_client_ = node_->create_client<ServiceT>(
+        service_name_, rclcpp::ServicesQoS(), callback_group_);
     }
   }
 
@@ -169,7 +176,7 @@ public:
         return BT::NodeStatus::FAILURE;
       }
 
-      future_result_ = service_client_->async_send_request(request_).future;
+      future_result_ = service_client_->async_send_request(request_).share();
       sent_time_ = node_->now();
       request_sent_ = true;
     }
@@ -216,8 +223,7 @@ public:
     if (remaining > std::chrono::milliseconds(0)) {
       auto timeout = remaining > max_timeout_ ? max_timeout_ : remaining;
 
-      rclcpp::FutureReturnCode rc;
-      rc = rclcpp::spin_until_future_complete(node_, future_result_, timeout);
+      auto rc = callback_group_executor_->spin_until_future_complete(future_result_, timeout);
       if (rc == rclcpp::FutureReturnCode::SUCCESS) {
         request_sent_ = false;
         BT::NodeStatus status = on_completion(future_result_.get());
@@ -266,6 +272,8 @@ protected:
 
   // The node that will be used for any ROS operations
   rclcpp_lifecycle::LifecycleNode::SharedPtr node_;
+  rclcpp::CallbackGroup::SharedPtr callback_group_{nullptr};
+  rclcpp::executors::SingleThreadedExecutor::SharedPtr callback_group_executor_;
 
   // The timeout value while to use in the tick loop while waiting for
   // a result from the server

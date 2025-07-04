@@ -46,4 +46,24 @@ BT_JSON_CONVERTER(std_msgs::msg::Header, msg)
 
 }  // namespace std_msgs::msg
 
+namespace std
+{
+
+inline void from_json(const nlohmann::json & js, std::chrono::milliseconds & dest)
+{
+  if (js.contains("ms")) {
+    dest = std::chrono::milliseconds(js.at("ms").get<int>());
+  } else {
+    throw std::runtime_error("Invalid JSON for std::chrono::milliseconds");
+  }
+}
+
+inline void to_json(nlohmann::json & js, const std::chrono::milliseconds & src)
+{
+  js["__type"] = "std::chrono::milliseconds";
+  js["ms"] = src.count();
+}
+
+}  // namespace std
+
 #endif  // PLANSYS2_BT_ACTIONS__JSONUTILS_HPP_
