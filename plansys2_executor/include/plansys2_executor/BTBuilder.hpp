@@ -99,6 +99,28 @@ struct Graph
   std::list<Node::Ptr> nodes;
 };
 
+inline std::string add_tabs(int level)
+{
+  return std::string(level * 2, ' ');
+}
+
+/**
+ * @brief Replaces all occurrences of a substring in a string.
+ *
+ * @param[in,out] str The string to modify.
+ * @param[in] from The substring to replace.
+ * @param[in] to The replacement substring.
+ */
+inline void replace(std::string & str, const std::string & from, const std::string & to)
+{
+  if (from.empty()) {return;}
+  size_t start_pos = 0;
+  while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
+    str.replace(start_pos, from.length(), to);
+    start_pos += to.length();
+  }
+}
+
 /**
  * @class plansys2::BTBuilder
  * @brief Interface for behavior tree builder implementations.
