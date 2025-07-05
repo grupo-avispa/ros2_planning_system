@@ -66,14 +66,14 @@ class MoveAction : public plansys2::ActionExecutorClient
 {
 public:
   using Ptr = std::shared_ptr<MoveAction>;
-  static Ptr make_shared(const std::string & node_name, const std::chrono::nanoseconds & rate)
+  static Ptr make_shared(const std::string & node_name)
   {
-    return std::make_shared<MoveAction>(node_name, rate);
+    return std::make_shared<MoveAction>(node_name);
   }
 
 
-  MoveAction(const std::string & id, const std::chrono::nanoseconds & rate)
-  : ActionExecutorClient(id, rate)
+  explicit MoveAction(const std::string & id)
+  : ActionExecutorClient(id)
   {
     executions_ = 0;
     cycles_ = 0;
@@ -114,7 +114,7 @@ TEST(action_execution, protocol_basic)
 {
   auto test_node = rclcpp::Node::make_shared("test_node");
   auto test_lf_node = rclcpp_lifecycle::LifecycleNode::make_shared("test_lf_node");
-  auto move_action_node = std::make_shared<MoveAction>("move_action", 1s);
+  auto move_action_node = std::make_shared<MoveAction>("move_action");
   auto move_action_executor = plansys2::ActionExecutor::make_shared(
     "(move r2d2 steering_wheels_zone assembly_zone)", test_lf_node);
 
@@ -124,6 +124,7 @@ TEST(action_execution, protocol_basic)
   ASSERT_EQ(move_action_executor->get_action_params()[2], "assembly_zone");
 
   move_action_node->set_parameter({"action_name", "move"});
+  move_action_node->set_parameter({"rate", 1.0});
 
   rclcpp::experimental::executors::EventsExecutor exe;
 
@@ -229,7 +230,7 @@ TEST(action_execution, protocol_cancelation)
 {
   auto test_node = rclcpp::Node::make_shared("test_node");
   auto test_lf_node = rclcpp_lifecycle::LifecycleNode::make_shared("test_lf_node");
-  auto move_action_node = std::make_shared<MoveAction>("move_action", 1s);
+  auto move_action_node = std::make_shared<MoveAction>("move_action");
   auto move_action_executor = plansys2::ActionExecutor::make_shared(
     "(move r2d2 steering_wheels_zone assembly_zone)", test_lf_node);
 
@@ -239,6 +240,7 @@ TEST(action_execution, protocol_cancelation)
   ASSERT_EQ(move_action_executor->get_action_params()[2], "assembly_zone");
 
   move_action_node->set_parameter({"action_name", "move"});
+  move_action_node->set_parameter({"rate", 1.0});
 
   rclcpp::experimental::executors::EventsExecutor exe;
 

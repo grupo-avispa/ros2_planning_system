@@ -84,11 +84,23 @@ class MoveAction : public plansys2::ActionExecutorClient
 {
 public:
   using Ptr = std::shared_ptr<MoveAction>;
+  static Ptr make_shared(const std::string & node_name)
+  {
+    return std::make_shared<MoveAction>(node_name);
+  }
+
   static Ptr make_shared(const std::string & node_name, const std::chrono::nanoseconds & rate)
   {
     return std::make_shared<MoveAction>(node_name, rate);
   }
 
+  explicit MoveAction(const std::string & id)
+  : ActionExecutorClient(id),
+    executions_(0),
+    cycles_(0),
+    runtime_(0)
+  {
+  }
 
   MoveAction(const std::string & id, const std::chrono::nanoseconds & rate)
   : ActionExecutorClient(id, rate),
@@ -162,12 +174,23 @@ public:
 class TransportAction : public plansys2::ActionExecutorClient
 {
 public:
-  using Ptr = std::shared_ptr<MoveAction>;
-  static Ptr make_shared(const std::string & node_name, const std::chrono::nanoseconds & rate)
+  using Ptr = std::shared_ptr<TransportAction>;
+  static Ptr make_shared(const std::string & node_name)
   {
-    return std::make_shared<MoveAction>(node_name, rate);
+    return std::make_shared<TransportAction>(node_name);
   }
 
+  static Ptr make_shared(const std::string & node_name, const std::chrono::nanoseconds & rate)
+  {
+    return std::make_shared<TransportAction>(node_name, rate);
+  }
+
+  explicit TransportAction(const std::string & id)
+  : ActionExecutorClient(id)
+  {
+    executions_ = 0;
+    cycles_ = 0;
+  }
 
   TransportAction(const std::string & id, const std::chrono::nanoseconds & rate)
   : ActionExecutorClient(id, rate)
@@ -220,6 +243,110 @@ void clean_up_action_map(
 }
 
 TEST(executor, action_executor_client)
+{
+  auto test_node = rclcpp_lifecycle::LifecycleNode::make_shared("test_node");
+  auto aux_node = rclcpp_lifecycle::LifecycleNode::make_shared("aux_node");
+
+  auto move_action_1_node = MoveAction::make_shared("move_node_1");
+  auto move_action_2_node = MoveAction::make_shared("move_node_2");
+  auto transport_action_node = TransportAction::make_shared("transport_node");
+
+  move_action_1_node->set_parameter({"action_name", "move"});
+  move_action_1_node->set_parameter({"rate", 10.0});
+  move_action_2_node->set_parameter({"action_name", "move"});
+  move_action_2_node->set_parameter({"rate", 10.0});
+  transport_action_node->set_parameter({"action_name", "transport"});
+  transport_action_node->set_parameter({"rate", 20.0});
+
+  move_action_1_node->set_parameter(
+    {"specialized_arguments", std::vector<std::string>({"robot1"})});
+  move_action_2_node->set_parameter(
+    {"specialized_arguments", std::vector<std::string>({"robot2"})});
+
+  test_node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_CONFIGURE);
+  aux_node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_CONFIGURE);
+  move_action_1_node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_CONFIGURE);
+  move_action_2_node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_CONFIGURE);
+  transport_action_node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_CONFIGURE);
+
+  test_node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_ACTIVATE);
+  aux_node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_ACTIVATE);
+
+  rclcpp::experimental::executors::EventsExecutor exe;
+
+  exe.add_node(test_node->get_node_base_interface());
+  exe.add_node(aux_node->get_node_base_interface());
+  exe.add_node(move_action_1_node->get_node_base_interface());
+  exe.add_node(move_action_2_node->get_node_base_interface());
+  exe.add_node(transport_action_node->get_node_base_interface());
+
+  std::vector<plansys2_msgs::msg::ActionExecution> history_msgs;
+  bool confirmed = false;
+  auto actions_sub = aux_node->create_subscription<plansys2_msgs::msg::ActionExecution>(
+    "actions_hub",
+    rclcpp::QoS(100).reliable(), [&](plansys2_msgs::msg::ActionExecution::UniquePtr msg) {
+      history_msgs.push_back(*msg);
+    });
+
+  bool finish = false;
+  std::thread t([&]() {
+      while (!finish) {exe.spin_some();}
+    });
+
+
+  std::string bt_xml_tree =
+    R"(
+    <root BTCPP_format="4" main_tree_to_execute = "MainTree" >
+      <BehaviorTree ID="MainTree">
+        <Sequence name="root_sequence">
+          <Parallel success_count="2" failure_count="1">
+            <ExecuteAction    action="(move robot1 wheels_zone assembly_zone):5"/>
+            <ExecuteAction    action="(move robot1 steering_wheels_zone assembly_zone):5"/>
+          </Parallel>
+          <ExecuteAction    action="(transport robot2 steering_wheels_zone assembly_zone):10"/>
+          <ExecuteAction    action="(move robot2 wheels_zone assembly_zone):15"/>
+          <ExecuteAction    action="(transport robot2 steering_wheels_zone assembly_zone):20"/>
+          <ExecuteAction    action="(move robot1 wheels_zone assembly_zone):25"/>
+          <ExecuteAction    action="(transport robot2 steering_wheels_zone assembly_zone):30"/>
+          <ExecuteAction    action="(move robot1 steering_wheels_zone assembly_zone):35"/>
+       </Sequence>
+      </BehaviorTree>
+    </root>
+  )";
+
+  auto blackboard = BT::Blackboard::create();
+
+  auto action_map = std::make_shared<std::map<std::string, plansys2::ActionExecutionInfo>>();
+  blackboard->set("action_map", action_map);
+  blackboard->set("node", test_node);
+
+  BT::BehaviorTreeFactory factory;
+  factory.registerNodeType<plansys2::ExecuteAction>("ExecuteAction");
+  factory.registerNodeType<plansys2::WaitAction>("WaitAction");
+
+  auto tree = factory.createTreeFromText(bt_xml_tree, blackboard);
+
+
+  auto status = BT::NodeStatus::RUNNING;
+  while (status != BT::NodeStatus::SUCCESS) {
+    status = tree.tickOnce();
+  }
+
+  ASSERT_EQ(status, BT::NodeStatus::SUCCESS);
+  ASSERT_EQ(move_action_1_node->executions_, 4);
+  ASSERT_EQ(move_action_1_node->cycles_, 20);
+  ASSERT_EQ(move_action_2_node->executions_, 1);
+  ASSERT_EQ(move_action_2_node->cycles_, 5);
+  ASSERT_EQ(transport_action_node->executions_, 3);
+  ASSERT_EQ(transport_action_node->cycles_, 15);
+  // ASSERT_EQ(history_msgs.size(), 64);
+
+
+  finish = true;
+  t.join();
+}
+
+TEST(executor, action_executor_client_old_constructor)
 {
   auto test_node = rclcpp_lifecycle::LifecycleNode::make_shared("test_node");
   auto aux_node = rclcpp_lifecycle::LifecycleNode::make_shared("aux_node");
@@ -677,8 +804,9 @@ TEST(executor, action_real_action_1)
   auto problem_node = std::make_shared<plansys2::ProblemExpertNode>();
   auto planner_node = std::make_shared<plansys2::PlannerNode>();
 
-  auto move_action_node = MoveAction::make_shared("move_action_performer", 100ms);
+  auto move_action_node = MoveAction::make_shared("move_action_performer");
   move_action_node->set_parameter({"action_name", "move"});
+  move_action_node->set_parameter({"rate", 10.0});
 
   auto domain_client = std::make_shared<plansys2::DomainExpertClient>();
   auto problem_client = std::make_shared<plansys2::ProblemExpertClient>();
@@ -932,8 +1060,9 @@ TEST(executor, action_real_action_1_with_restore)
   auto problem_node = std::make_shared<plansys2::ProblemExpertNode>();
   auto planner_node = std::make_shared<plansys2::PlannerNode>();
 
-  auto move_action_node = MoveAction::make_shared("move_action_performer", 100ms);
+  auto move_action_node = MoveAction::make_shared("move_action_performer");
   move_action_node->set_parameter({"action_name", "move"});
+  move_action_node->set_parameter({"rate", 10.0});
 
   auto domain_client = std::make_shared<plansys2::DomainExpertClient>();
   auto problem_client = std::make_shared<plansys2::ProblemExpertClient>();
@@ -1206,8 +1335,9 @@ TEST(executor, action_real_action_2)
   auto problem_node = std::make_shared<plansys2::ProblemExpertNode>();
   auto planner_node = std::make_shared<plansys2::PlannerNode>();
 
-  auto move_action_node = MoveAction::make_shared("move_action_performer", 100ms);
+  auto move_action_node = MoveAction::make_shared("move_action_performer");
   move_action_node->set_parameter({"action_name", "move"});
+  move_action_node->set_parameter({"rate", 10.0});
 
   auto domain_client = std::make_shared<plansys2::DomainExpertClient>();
   auto problem_client = std::make_shared<plansys2::ProblemExpertClient>();
@@ -1465,8 +1595,9 @@ TEST(executor, cancel_bt_execution)
   auto problem_node = std::make_shared<plansys2::ProblemExpertNode>();
   auto planner_node = std::make_shared<plansys2::PlannerNode>();
 
-  auto move_action_node = MoveAction::make_shared("move_action_performer", 100ms);
+  auto move_action_node = MoveAction::make_shared("move_action_performer");
   move_action_node->set_parameter({"action_name", "move"});
+  move_action_node->set_parameter({"rate", 10.0});
 
   auto domain_client = std::make_shared<plansys2::DomainExpertClient>();
   auto problem_client = std::make_shared<plansys2::ProblemExpertClient>();
@@ -1666,8 +1797,9 @@ TEST(executor, executor_client_execute_plan)
   auto planner_node = std::make_shared<plansys2::PlannerNode>();
   auto executor_node = std::make_shared<ExecutorNodeTest>();
 
-  auto move_action_node = MoveAction::make_shared("move_action_performer", 100ms);
+  auto move_action_node = MoveAction::make_shared("move_action_performer");
   move_action_node->set_parameter({"action_name", "move"});
+  move_action_node->set_parameter({"rate", 10.0});
 
   auto domain_client = std::make_shared<plansys2::DomainExpertClient>();
   auto problem_client = std::make_shared<plansys2::ProblemExpertClient>();
@@ -1815,7 +1947,8 @@ TEST(executor, executor_client_execute_plan_2)
   auto planner_node = std::make_shared<plansys2::PlannerNode>();
   auto executor_node = std::make_shared<ExecutorNodeTest>();
 
-  auto move_action_node = MoveAction::make_shared("move_action_performer", 100ms);
+  auto move_action_node = MoveAction::make_shared("move_action_performer");
+  move_action_node->set_parameter({"rate", 10.0});
   move_action_node->set_parameter({"action_name", "move"});
 
   auto domain_client = std::make_shared<plansys2::DomainExpertClient>();
@@ -1961,7 +2094,8 @@ TEST(executor, executor_client_execute_plan_3)
   auto planner_node = std::make_shared<plansys2::PlannerNode>();
   auto executor_node = std::make_shared<ExecutorNodeTest>();
 
-  auto move_action_node = MoveAction::make_shared("move_action_performer", 100ms);
+  auto move_action_node = MoveAction::make_shared("move_action_performer");
+  move_action_node->set_parameter({"rate", 10.0});
   move_action_node->set_parameter({"action_name", "move"});
   move_action_node->set_runtime(2.0);
 
@@ -2096,8 +2230,9 @@ TEST(executor, executor_client_execute_plan_two_plans)
   auto planner_node = std::make_shared<plansys2::PlannerNode>();
   auto executor_node = std::make_shared<ExecutorNodeTest>();
 
-  auto move_action_node = MoveAction::make_shared("move_action_performer", 100ms);
+  auto move_action_node = MoveAction::make_shared("move_action_performer");
   move_action_node->set_parameter({"action_name", "move"});
+  move_action_node->set_parameter({"rate", 10.0});
   move_action_node->set_runtime(2.0);
 
   auto domain_client = std::make_shared<plansys2::DomainExpertClient>();
@@ -2265,8 +2400,9 @@ TEST(executor, executor_client_execute_plan_replan)
   auto planner_node = std::make_shared<plansys2::PlannerNode>();
   auto executor_node = std::make_shared<ExecutorNodeTest>();
 
-  auto move_action_node = MoveAction::make_shared("move_action_performer", 100ms);
+  auto move_action_node = MoveAction::make_shared("move_action_performer");
   move_action_node->set_parameter({"action_name", "move"});
+  move_action_node->set_parameter({"rate", 10.0});
   move_action_node->set_runtime(2.0);
 
   auto domain_client = std::make_shared<plansys2::DomainExpertClient>();
@@ -2424,14 +2560,17 @@ TEST(executor, executor_client_execute_plan_multi_replan)
   auto planner_node = std::make_shared<plansys2::PlannerNode>();
   auto executor_node = std::make_shared<ExecutorNodeTest>();
 
-  auto move_action_node_1 = MoveAction::make_shared("move_action_performer_1", 100ms);
+  auto move_action_node_1 = MoveAction::make_shared("move_action_performer_1");
   move_action_node_1->set_parameter({"action_name", "move"});
+  move_action_node_1->set_parameter({"rate", 10.0});
   move_action_node_1->set_runtime(2.0);
-  auto move_action_node_2 = MoveAction::make_shared("move_action_performer_2", 100ms);
+  auto move_action_node_2 = MoveAction::make_shared("move_action_performer_2");
   move_action_node_2->set_parameter({"action_name", "move"});
+  move_action_node_2->set_parameter({"rate", 10.0});
   move_action_node_2->set_runtime(2.0);
-  auto move_action_node_3 = MoveAction::make_shared("move_action_performer_3", 100ms);
+  auto move_action_node_3 = MoveAction::make_shared("move_action_performer_3");
   move_action_node_3->set_parameter({"action_name", "move"});
+  move_action_node_3->set_parameter({"rate", 10.0});
   move_action_node_3->set_runtime(2.0);
 
   auto domain_client = std::make_shared<plansys2::DomainExpertClient>();
@@ -2598,14 +2737,14 @@ class PatrolAction : public plansys2::ActionExecutorClient
 {
 public:
   using Ptr = std::shared_ptr<PatrolAction>;
-  static Ptr make_shared(const std::string & node_name, const std::chrono::nanoseconds & rate)
+  static Ptr make_shared(const std::string & node_name)
   {
-    return std::make_shared<PatrolAction>(node_name, rate);
+    return std::make_shared<PatrolAction>(node_name);
   }
 
 
-  PatrolAction(const std::string & id, const std::chrono::nanoseconds & rate)
-  : ActionExecutorClient(id, rate)
+  explicit PatrolAction(const std::string & id)
+  : ActionExecutorClient(id)
   {
     executions_ = 0;
     cycles_ = 0;
@@ -2654,11 +2793,13 @@ TEST(executor, executor_client_ordered_sub_goals)
   auto planner_node = std::make_shared<plansys2::PlannerNode>();
   auto executor_node = std::make_shared<ExecutorNodeTest>();
 
-  auto move_action_node = MoveAction::make_shared("move_action_performer", 100ms);
+  auto move_action_node = MoveAction::make_shared("move_action_performer");
   move_action_node->set_parameter({"action_name", "move"});
+  move_action_node->set_parameter({"rate", 10.0});
 
-  auto patrol_action_node = PatrolAction::make_shared("patrol_action_performer", 100ms);
+  auto patrol_action_node = PatrolAction::make_shared("patrol_action_performer");
   patrol_action_node->set_parameter({"action_name", "patrol"});
+  move_action_node->set_parameter({"rate", 10.0});
 
   auto domain_client = std::make_shared<plansys2::DomainExpertClient>();
   auto problem_client = std::make_shared<plansys2::ProblemExpertClient>();
@@ -2806,8 +2947,9 @@ TEST(executor, executor_client_cancel_plan)
   auto planner_node = std::make_shared<plansys2::PlannerNode>();
   auto executor_node = std::make_shared<ExecutorNodeTest>();
 
-  auto move_action_node = MoveAction::make_shared("move_action_performer", 1s);
+  auto move_action_node = MoveAction::make_shared("move_action_performer");
   move_action_node->set_parameter({"action_name", "move"});
+  move_action_node->set_parameter({"rate", 1.0});
 
   auto domain_client = std::make_shared<plansys2::DomainExpertClient>();
   auto problem_client = std::make_shared<plansys2::ProblemExpertClient>();
@@ -2939,8 +3081,9 @@ TEST(executor, action_timeout)
   auto planner_node = std::make_shared<plansys2::PlannerNode>();
   auto executor_node = std::make_shared<ExecutorNodeTest>();
 
-  auto move_action_node = MoveAction::make_shared("move_action_performer", 100ms);
+  auto move_action_node = MoveAction::make_shared("move_action_performer");
   move_action_node->set_parameter({"action_name", "move"});
+  move_action_node->set_parameter({"rate", 10.0});
   move_action_node->set_runtime(10.0);
 
   auto domain_client = std::make_shared<plansys2::DomainExpertClient>();

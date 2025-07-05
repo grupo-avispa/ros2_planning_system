@@ -19,6 +19,9 @@
 #include <string>
 
 #include "behaviortree_cpp/action_node.h"
+#include "behaviortree_cpp/json_export.h"
+#include "plansys2_bt_actions/BTUtils.hpp"
+#include "plansys2_bt_actions/JSONUtils.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
@@ -55,7 +58,9 @@ public:
     }
 
     // Get the required items from the blackboard
-    server_timeout_ = 5s;
+    getInputOrBlackboard("server_timeout", server_timeout_);
+    wait_for_service_timeout_ =
+      config().blackboard->get<std::chrono::milliseconds>("wait_for_service_timeout");
 
     // Initialize the input and output messages
     goal_ = typename ActionT::Goal();
@@ -88,13 +93,13 @@ public:
     // Make sure the server is actually there before continuing
     RCLCPP_INFO(node_->get_logger(), "Waiting for \"%s\" action server", action_name.c_str());
 
-    bool success_waiting = action_client_->wait_for_action_server(server_timeout_);
+    bool success_waiting = action_client_->wait_for_action_server(wait_for_service_timeout_);
 
     if (!success_waiting) {
       RCLCPP_ERROR(
         node_->get_logger(),
         "Timeout (%ld secs) waiting for \"%s\" action server",
-        server_timeout_.count() * 1000,
+        wait_for_service_timeout_.count() * 1000,
         action_name.c_str());
     }
 
@@ -194,15 +199,6 @@ public:
           RCLCPP_DEBUG(node_->get_logger(), "%s IDLE", node_->get_name());
           assert((status() == BT::NodeStatus::IDLE));
 
-          double server_timeout = 5.0;
-          if (!getInput("server_timeout", server_timeout)) {
-            RCLCPP_INFO(
-              node_->get_logger(),
-              "Missing input port [server_timeout], "
-              "using default value of 5s");
-          }
-          server_timeout_ = std::chrono::milliseconds(static_cast<int>(server_timeout * 1000.0));
-
           if (!createActionClient(action_name_)) {
             RCLCPP_ERROR(node_->get_logger(), "Failed to create action client");
             return BT::NodeStatus::FAILURE;
@@ -231,8 +227,7 @@ public:
             if (!goal_handle_) {
               RCLCPP_ERROR(
                 node_->get_logger(),
-                "Goal was rejected by action server %s",
-                action_name_.c_str());
+                "Goal was rejected by action server %s", action_name_.c_str());
               state_ = GOAL_FAILURE;
               return BT::NodeStatus::FAILURE;
             } else {
@@ -243,8 +238,7 @@ public:
             if ((node_->now() - goal_sent_ts_) > server_timeout_) {
               RCLCPP_ERROR(
                 node_->get_logger(),
-                "Failed to send goal to action server %s",
-                action_name_.c_str());
+                "Failed to send goal to action server %s", action_name_.c_str());
               state_ = GOAL_FAILURE;
               return BT::NodeStatus::FAILURE;
             } else {
@@ -457,6 +451,9 @@ protected:
   // The timeout value while waiting for response from a server when a
   // new action goal is sent or canceled
   std::chrono::milliseconds server_timeout_;
+
+  // The timeout value for waiting for a service to response
+  std::chrono::milliseconds wait_for_service_timeout_;
 
   static const int IDLE = 0;
   static const int GOAL_SENT = 1;

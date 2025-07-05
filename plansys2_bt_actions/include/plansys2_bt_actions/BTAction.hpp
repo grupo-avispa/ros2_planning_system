@@ -46,9 +46,17 @@ public:
    * @brief Constructor for the BTAction.
    *
    * @param[in] action Name of the action this executor handles.
+   */
+  explicit BTAction(const std::string & action);
+
+  /**
+   * @brief Constructor for the BTAction.
+   *
+   * @param[in] action Name of the action this executor handles.
    * @param[in] rate Execution rate for the action.
    */
-  explicit BTAction(const std::string & action, const std::chrono::nanoseconds & rate);
+  [[deprecated("Use BTAction(const std::string & action) instead")]]
+  BTAction(const std::string & action, const std::chrono::nanoseconds & rate);
 
   /**
    * @brief Get the name of the action.
@@ -146,6 +154,15 @@ private:
   std::unique_ptr<BT::MinitraceLogger> bt_minitrace_logger_;
   // Groot2 monitor
   std::unique_ptr<BT::Groot2Publisher> groot_monitor_;
+
+  // Default timeout value while waiting for response from a server
+  std::chrono::milliseconds default_server_timeout_;
+
+  // The timeout value for waiting for a service to response
+  std::chrono::milliseconds wait_for_service_timeout_;
+
+  // Duration for each iteration of BT execution
+  std::chrono::milliseconds bt_loop_duration_;
 };
 
 }  // namespace plansys2

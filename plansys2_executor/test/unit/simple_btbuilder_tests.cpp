@@ -286,13 +286,14 @@ TEST(simple_btbuilder_tests, test_plan_1)
       predicates.begin(), predicates.end(),
       std::bind(
         &parser::pddl::checkNodeEquality, std::placeholders::_1,
-        parser::pddl::fromStringPredicate("(robot_at leia entrance)"))), predicates.end());
+        parser::pddl::fromStringPredicate("(robot_at leia entrance)"), true)), predicates.end());
   ASSERT_EQ(
     std::find_if(
       predicates.begin(), predicates.end(),
       std::bind(
         &parser::pddl::checkNodeEquality, std::placeholders::_1,
-        parser::pddl::fromStringPredicate("(robot_at leia chargingroom)"))), predicates.end());
+        parser::pddl::fromStringPredicate("(robot_at leia chargingroom)"), true)),
+        predicates.end());
 
   plansys2::apply(
     action_sequence[0].action.get_at_start_effects(),
@@ -306,13 +307,15 @@ TEST(simple_btbuilder_tests, test_plan_1)
       predicates.begin(), predicates.end(),
       std::bind(
         &parser::pddl::checkNodeEquality, std::placeholders::_1,
-        parser::pddl::fromStringPredicate("(robot_at leia entrance)"))), predicates.end());
+        parser::pddl::fromStringPredicate("(robot_at leia entrance)"), true)),
+        predicates.end());
   ASSERT_NE(
     std::find_if(
       predicates.begin(), predicates.end(),
       std::bind(
         &parser::pddl::checkNodeEquality, std::placeholders::_1,
-        parser::pddl::fromStringPredicate("(robot_at leia chargingroom)"))), predicates.end());
+        parser::pddl::fromStringPredicate("(robot_at leia chargingroom)"), true)),
+        predicates.end());
 
   ASSERT_TRUE(btbuilder->is_action_executable(action_sequence[1], predicates, functions));
   ASSERT_FALSE(btbuilder->is_action_executable(action_sequence[2], predicates, functions));
@@ -369,7 +372,7 @@ TEST(simple_btbuilder_tests, test_plan_1)
       predicates.begin(), predicates.end(),
       std::bind(
         &parser::pddl::checkNodeEquality, std::placeholders::_1,
-        parser::pddl::fromStringPredicate("(robot_at leia bathroom)"))), predicates.end());
+        parser::pddl::fromStringPredicate("(robot_at leia bathroom)"), true)), predicates.end());
 
   finish = true;
   t.join();
@@ -542,20 +545,22 @@ TEST(simple_btbuilder_tests, test_plan_2)
       predicates.begin(), predicates.end(),
       std::bind(
         &parser::pddl::checkNodeEquality, std::placeholders::_1,
-        parser::pddl::fromStringPredicate("(robot_at robot1 body_car_zone)"))), predicates.end());
+        parser::pddl::fromStringPredicate("(robot_at robot1 body_car_zone)"), true)),
+        predicates.end());
   ASSERT_NE(
     std::find_if(
       predicates.begin(), predicates.end(),
       std::bind(
         &parser::pddl::checkNodeEquality, std::placeholders::_1,
-        parser::pddl::fromStringPredicate("(robot_at robot2 steering_wheels_zone)"))),
-    predicates.end());
+        parser::pddl::fromStringPredicate("(robot_at robot2 steering_wheels_zone)"), true)),
+        predicates.end());
   ASSERT_NE(
     std::find_if(
       predicates.begin(), predicates.end(),
       std::bind(
         &parser::pddl::checkNodeEquality, std::placeholders::_1,
-        parser::pddl::fromStringPredicate("(robot_at robot3 wheels_zone)"))), predicates.end());
+        parser::pddl::fromStringPredicate("(robot_at robot3 wheels_zone)"), true)),
+        predicates.end());
 
   tree.nodes.clear();
   parser::pddl::fromString(

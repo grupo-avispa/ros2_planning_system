@@ -126,3 +126,260 @@ TEST(PDDLParserTestCase, open_door_test)
   ASSERT_EQ(str_c, "(and (not_door_open))");
   ASSERT_EQ(str_e, "(and (door_open)(not (not_door_open)))");
 }
+
+TEST(PDDLParserTestCase, from_string_hyphen)
+{
+  auto predicate_hyphen = parser::pddl::fromStringPredicate("(predicate-hyphen ?x ?y)");
+  auto expression_sub = parser::pddl::fromString("( - 3 4)");
+
+  ASSERT_EQ(predicate_hyphen.node_type, plansys2_msgs::msg::Node::PREDICATE);
+  ASSERT_EQ(predicate_hyphen.name, "predicate-hyphen");
+  ASSERT_EQ(predicate_hyphen.parameters.size(), 2);
+  ASSERT_EQ(predicate_hyphen.parameters[0].name, "?x");
+  ASSERT_EQ(predicate_hyphen.parameters[1].name, "?y");
+
+  ASSERT_EQ(expression_sub.nodes[0].node_type, plansys2_msgs::msg::Node::EXPRESSION);
+  ASSERT_EQ(expression_sub.nodes[0].expression_type, plansys2_msgs::msg::Node::ARITH_SUB);
+  ASSERT_EQ(expression_sub.nodes[0].children.size(), 2);
+  ASSERT_EQ(expression_sub.nodes[1].node_type, plansys2_msgs::msg::Node::NUMBER);
+  ASSERT_EQ(expression_sub.nodes[1].value, 3.0);
+  ASSERT_EQ(expression_sub.nodes[2].node_type, plansys2_msgs::msg::Node::NUMBER);
+  ASSERT_EQ(expression_sub.nodes[2].value, 4.0);
+}
+
+TEST(PDDLParserTestCase, test_remove_operators_before_parenthesis)
+{
+  std::string expr = "and (predicateA ?a)(predicateB ?b)";
+  parser::pddl::removeOperatorBeforeParenthesis(expr);
+  ASSERT_EQ(expr, "(predicateA ?a)(predicateB ?b)");
+
+  expr = "or (predicateA ?a) (predicateB ?b)";
+  parser::pddl::removeOperatorBeforeParenthesis(expr);
+  ASSERT_EQ(expr, "(predicateA ?a) (predicateB ?b)");
+
+  expr = "exists (?b) (and (predicateA ?a)(predicateB ?b))";
+  parser::pddl::removeOperatorBeforeParenthesis(expr);
+  ASSERT_EQ(expr, "(and (predicateA ?a)(predicateB ?b))");
+
+  expr = "    exists (?b) (and (predicateA ?a)(predicateB ?b))";
+  parser::pddl::removeOperatorBeforeParenthesis(expr);
+  ASSERT_EQ(expr, "(and (predicateA ?a)(predicateB ?b))");
+
+  expr = "= 3 5";
+  parser::pddl::removeOperatorBeforeParenthesis(expr);
+  ASSERT_EQ(expr, "3 5");
+
+  expr = " = ?a a";
+  parser::pddl::removeOperatorBeforeParenthesis(expr);
+  ASSERT_EQ(expr, "?a a");
+
+  expr = "+ ?a b";
+  parser::pddl::removeOperatorBeforeParenthesis(expr);
+  ASSERT_EQ(expr, "?a b");
+
+  expr = "?s k";
+  parser::pddl::removeOperatorBeforeParenthesis(expr);
+  ASSERT_EQ(expr, "?s k");
+}
+
+TEST(PDDLParserTestCase, get_sub_expr)
+{
+  std::string expr =
+    "(and (predicateA ?a)"
+    "(exists (?b) (and (inferredA ?a)(inferredB ?b)(inferredAB ?a ?b)(not(=?a ?b)))))";
+  std::vector<std::string> subexprs = parser::pddl::getSubExpr(expr);
+  ASSERT_EQ(subexprs.size(), 2);
+  ASSERT_EQ(subexprs[0], "(predicateA ?a)");
+  ASSERT_EQ(
+    subexprs[1], "(exists (?b) (and (inferredA ?a)(inferredB ?b)(inferredAB ?a ?b)(not(=?a ?b))))");
+
+  subexprs = parser::pddl::getSubExpr(subexprs[1]);
+  ASSERT_EQ(subexprs.size(), 1);
+  ASSERT_EQ(subexprs[0], "(and (inferredA ?a)(inferredB ?b)(inferredAB ?a ?b)(not(=?a ?b)))");
+
+  expr = "(= 3 5)";
+  subexprs = parser::pddl::getSubExpr(expr);
+  ASSERT_EQ(subexprs.size(), 2);
+  ASSERT_EQ(subexprs[0], "3");
+  ASSERT_EQ(subexprs[1], "5");
+
+  expr = "(= ?a a)";
+  subexprs = parser::pddl::getSubExpr(expr);
+  ASSERT_EQ(subexprs.size(), 2);
+  ASSERT_EQ(subexprs[0], "?a");
+  ASSERT_EQ(subexprs[1], "a");
+
+  expr = "(+ ?a b)";
+  subexprs = parser::pddl::getSubExpr(expr);
+  ASSERT_EQ(subexprs.size(), 2);
+  ASSERT_EQ(subexprs[0], "?a");
+  ASSERT_EQ(subexprs[1], "b");
+
+  expr = "(?s k)";
+  subexprs = parser::pddl::getSubExpr(expr);
+  ASSERT_EQ(subexprs.size(), 2);
+  ASSERT_EQ(subexprs[0], "?s");
+  ASSERT_EQ(subexprs[1], "k");
+
+  expr = "(- b ?sas)";
+  subexprs = parser::pddl::getSubExpr(expr);
+  ASSERT_EQ(subexprs.size(), 2);
+  ASSERT_EQ(subexprs[0], "b");
+  ASSERT_EQ(subexprs[1], "?sas");
+}
+
+TEST(PDDLParserTestCase, from_string)
+{
+  std::string expr = "(not(=?a ?b))";
+  plansys2_msgs::msg::Tree tree = parser::pddl::fromString(expr);
+  ASSERT_EQ(tree.nodes.size(), 4);
+  ASSERT_EQ(tree.nodes[0].node_type, plansys2_msgs::msg::Node::NOT);
+  ASSERT_EQ(tree.nodes[0].node_id, 0);
+  ASSERT_EQ(tree.nodes[0].children, std::vector<unsigned int>({1}));
+  ASSERT_EQ(tree.nodes[1].node_type, plansys2_msgs::msg::Node::EXPRESSION);
+  ASSERT_EQ(tree.nodes[1].node_id, 1);
+  ASSERT_EQ(tree.nodes[1].expression_type, plansys2_msgs::msg::Node::COMP_EQ);
+  ASSERT_EQ(tree.nodes[1].children, std::vector<unsigned int>({2, 3}));
+  ASSERT_EQ(tree.nodes[2].node_type, plansys2_msgs::msg::Node::PARAMETER);
+  ASSERT_EQ(tree.nodes[2].node_id, 2);
+  ASSERT_EQ(tree.nodes[2].parameters.size(), 1);
+  ASSERT_EQ(tree.nodes[2].parameters[0].name, "?a");
+  ASSERT_EQ(tree.nodes[3].node_type, plansys2_msgs::msg::Node::PARAMETER);
+  ASSERT_EQ(tree.nodes[3].node_id, 3);
+  ASSERT_EQ(tree.nodes[3].parameters.size(), 1);
+  ASSERT_EQ(tree.nodes[3].parameters[0].name, "?b");
+
+  expr =
+    "(and (predicateA ?a) (exists (?b) (and (inferredA ?a)(inferredB ?b)(inferredAB ?a ?b)(not(=?a "
+    "?b)))))";
+  tree = parser::pddl::fromString(expr);
+  ASSERT_EQ(tree.nodes.size(), 11);
+  ASSERT_EQ(tree.nodes[0].node_type, plansys2_msgs::msg::Node::AND);
+  ASSERT_EQ(tree.nodes[0].node_id, 0);
+  ASSERT_EQ(tree.nodes[0].children, std::vector<unsigned int>({1, 2}));
+
+  ASSERT_EQ(tree.nodes[1].node_type, plansys2_msgs::msg::Node::PREDICATE);
+  ASSERT_EQ(tree.nodes[1].node_id, 1);
+  ASSERT_EQ(tree.nodes[1].name, "predicateA");
+  ASSERT_EQ(tree.nodes[1].parameters.size(), 1);
+  ASSERT_EQ(tree.nodes[1].parameters[0].name, "?a");
+
+  ASSERT_EQ(tree.nodes[2].node_type, plansys2_msgs::msg::Node::EXISTS);
+  ASSERT_EQ(tree.nodes[2].node_id, 2);
+  ASSERT_EQ(tree.nodes[2].parameters.size(), 1);
+  ASSERT_EQ(tree.nodes[2].parameters[0].name, "?b");
+  ASSERT_EQ(tree.nodes[2].children, std::vector<unsigned int>({3}));
+
+  ASSERT_EQ(tree.nodes[3].node_type, plansys2_msgs::msg::Node::AND);
+  ASSERT_EQ(tree.nodes[3].node_id, 3);
+  ASSERT_EQ(tree.nodes[3].children, std::vector<unsigned int>({4, 5, 6, 7}));
+
+  ASSERT_EQ(tree.nodes[4].node_type, plansys2_msgs::msg::Node::PREDICATE);
+  ASSERT_EQ(tree.nodes[4].node_id, 4);
+  ASSERT_EQ(tree.nodes[4].name, "inferredA");
+  ASSERT_EQ(tree.nodes[4].parameters.size(), 1);
+  ASSERT_EQ(tree.nodes[4].parameters[0].name, "?a");
+
+  ASSERT_EQ(tree.nodes[5].node_type, plansys2_msgs::msg::Node::PREDICATE);
+  ASSERT_EQ(tree.nodes[5].node_id, 5);
+  ASSERT_EQ(tree.nodes[5].name, "inferredB");
+  ASSERT_EQ(tree.nodes[5].parameters.size(), 1);
+  ASSERT_EQ(tree.nodes[5].parameters[0].name, "?b");
+
+  ASSERT_EQ(tree.nodes[6].node_type, plansys2_msgs::msg::Node::PREDICATE);
+  ASSERT_EQ(tree.nodes[6].node_id, 6);
+  ASSERT_EQ(tree.nodes[6].name, "inferredAB");
+  ASSERT_EQ(tree.nodes[6].parameters.size(), 2);
+  ASSERT_EQ(tree.nodes[6].parameters[0].name, "?a");
+  ASSERT_EQ(tree.nodes[6].parameters[1].name, "?b");
+
+  ASSERT_EQ(tree.nodes[7].node_type, plansys2_msgs::msg::Node::NOT);
+  ASSERT_EQ(tree.nodes[7].node_id, 7);
+  ASSERT_EQ(tree.nodes[7].children, std::vector<unsigned int>({8}));
+
+  ASSERT_EQ(tree.nodes[8].node_type, plansys2_msgs::msg::Node::EXPRESSION);
+  ASSERT_EQ(tree.nodes[8].node_id, 8);
+  ASSERT_EQ(tree.nodes[8].expression_type, plansys2_msgs::msg::Node::COMP_EQ);
+  ASSERT_EQ(tree.nodes[8].children, std::vector<unsigned int>({9, 10}));
+
+  ASSERT_EQ(tree.nodes[9].node_type, plansys2_msgs::msg::Node::PARAMETER);
+  ASSERT_EQ(tree.nodes[9].node_id, 9);
+  ASSERT_EQ(tree.nodes[9].parameters.size(), 1);
+  ASSERT_EQ(tree.nodes[9].parameters[0].name, "?a");
+
+  ASSERT_EQ(tree.nodes[10].node_type, plansys2_msgs::msg::Node::PARAMETER);
+  ASSERT_EQ(tree.nodes[10].node_id, 10);
+  ASSERT_EQ(tree.nodes[10].parameters.size(), 1);
+  ASSERT_EQ(tree.nodes[10].parameters[0].name, "?b");
+
+  expr = "(+ ?a b)";
+  tree = parser::pddl::fromString(expr);
+  ASSERT_EQ(tree.nodes.size(), 3);
+  ASSERT_EQ(tree.nodes[0].node_type, plansys2_msgs::msg::Node::EXPRESSION);
+  ASSERT_EQ(tree.nodes[0].node_id, 0);
+  ASSERT_EQ(tree.nodes[0].expression_type, plansys2_msgs::msg::Node::ARITH_ADD);
+  ASSERT_EQ(tree.nodes[0].children, std::vector<unsigned int>({1, 2}));
+
+  ASSERT_EQ(tree.nodes[1].node_type, plansys2_msgs::msg::Node::PARAMETER);
+  ASSERT_EQ(tree.nodes[1].node_id, 1);
+  ASSERT_EQ(tree.nodes[1].parameters.size(), 1);
+  ASSERT_EQ(tree.nodes[1].parameters[0].name, "?a");
+
+  // Should it be a function or a constant? IMO, it could be both.
+  ASSERT_EQ(tree.nodes[2].node_type, plansys2_msgs::msg::Node::FUNCTION);
+  ASSERT_EQ(tree.nodes[2].node_id, 2);
+
+  expr = "(= 3 5)";
+  tree = parser::pddl::fromString(expr);
+  ASSERT_EQ(tree.nodes.size(), 3);
+  ASSERT_EQ(tree.nodes[0].node_type, plansys2_msgs::msg::Node::EXPRESSION);
+  ASSERT_EQ(tree.nodes[0].node_id, 0);
+  ASSERT_EQ(tree.nodes[0].expression_type, plansys2_msgs::msg::Node::COMP_EQ);
+  ASSERT_EQ(tree.nodes[0].children, std::vector<unsigned int>({1, 2}));
+
+  ASSERT_EQ(tree.nodes[1].node_type, plansys2_msgs::msg::Node::NUMBER);
+  ASSERT_EQ(tree.nodes[1].node_id, 1);
+  ASSERT_EQ(tree.nodes[1].value, 3.0);
+
+  ASSERT_EQ(tree.nodes[2].node_type, plansys2_msgs::msg::Node::NUMBER);
+  ASSERT_EQ(tree.nodes[2].node_id, 2);
+  ASSERT_EQ(tree.nodes[2].value, 5.0);
+
+  expr = "(or (predicateA ?a) (predicateB ?b))";
+  tree = parser::pddl::fromString(expr);
+  ASSERT_EQ(tree.nodes.size(), 3);
+  ASSERT_EQ(tree.nodes[0].node_type, plansys2_msgs::msg::Node::OR);
+  ASSERT_EQ(tree.nodes[0].node_id, 0);
+  ASSERT_EQ(tree.nodes[0].children, std::vector<unsigned int>({1, 2}));
+
+  ASSERT_EQ(tree.nodes[1].node_type, plansys2_msgs::msg::Node::PREDICATE);
+  ASSERT_EQ(tree.nodes[1].node_id, 1);
+  ASSERT_EQ(tree.nodes[1].name, "predicateA");
+  ASSERT_EQ(tree.nodes[1].parameters.size(), 1);
+  ASSERT_EQ(tree.nodes[1].parameters[0].name, "?a");
+
+  ASSERT_EQ(tree.nodes[2].node_type, plansys2_msgs::msg::Node::PREDICATE);
+  ASSERT_EQ(tree.nodes[2].node_id, 2);
+  ASSERT_EQ(tree.nodes[2].name, "predicateB");
+  ASSERT_EQ(tree.nodes[2].parameters.size(), 1);
+  ASSERT_EQ(tree.nodes[2].parameters[0].name, "?b");
+}
+
+TEST(PDDLParserTestCase, get_node_type)
+{
+  ASSERT_EQ(
+    parser::pddl::getNodeType("(and (predicateA ?a) (predicateB ?b))"),
+    plansys2_msgs::msg::Node::AND);
+  ASSERT_EQ(
+    parser::pddl::getNodeType("(or (predicateA ?a) (predicateB ?b))"),
+    plansys2_msgs::msg::Node::OR);
+  ASSERT_EQ(parser::pddl::getNodeType("(not (predicateA ?a))"), plansys2_msgs::msg::Node::NOT);
+  ASSERT_EQ(
+    parser::pddl::getNodeType("(exists (?b) (and (predicateA ?a)(predicateB ?b)))"),
+    plansys2_msgs::msg::Node::EXISTS);
+  ASSERT_EQ(parser::pddl::getNodeType("(= 3 5)"), plansys2_msgs::msg::Node::EXPRESSION);
+  ASSERT_EQ(parser::pddl::getNodeType("(+ ?a b)"), plansys2_msgs::msg::Node::EXPRESSION);
+  ASSERT_EQ(parser::pddl::getNodeType("(- b ?sas)"), plansys2_msgs::msg::Node::EXPRESSION);
+  ASSERT_EQ(parser::pddl::getNodeType("?a"), plansys2_msgs::msg::Node::PARAMETER);
+  ASSERT_EQ(parser::pddl::getNodeType("3"), plansys2_msgs::msg::Node::NUMBER);
+}
