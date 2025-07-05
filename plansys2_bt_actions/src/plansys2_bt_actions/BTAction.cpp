@@ -26,10 +26,24 @@
 #include "behaviortree_cpp/utils/shared_library.h"
 #include "std_msgs/msg/header.hpp"
 #include "plansys2_bt_actions/BTAction.hpp"
+#include "plansys2_bt_actions/BTUtils.hpp"
 #include "plansys2_bt_actions/JSONUtils.hpp"
 
 namespace plansys2
 {
+
+BTAction::BTAction(const std::string & action)
+: ActionExecutorClient(action)
+{
+  declare_parameter<std::string>("bt_xml_file", "");
+  declare_parameter<std::vector<std::string>>("plugins", std::vector<std::string>({}));
+  declare_parameter<bool>("bt_file_logging", false);
+  declare_parameter<bool>("bt_minitrace_logging", false);
+  declare_parameter<bool>("enable_groot_monitoring", false);
+  declare_parameter<int>("server_port", -1);
+  declare_parameter<int>("server_timeout", 20);
+  declare_parameter<int>("wait_for_service_timeout", 1000);
+}
 
 BTAction::BTAction(const std::string & action, const std::chrono::nanoseconds & rate)
 : ActionExecutorClient(action, rate)
@@ -40,6 +54,8 @@ BTAction::BTAction(const std::string & action, const std::chrono::nanoseconds & 
   declare_parameter<bool>("bt_minitrace_logging", false);
   declare_parameter<bool>("enable_groot_monitoring", false);
   declare_parameter<int>("server_port", -1);
+  declare_parameter<int>("server_timeout", 20);
+  declare_parameter<int>("wait_for_service_timeout", 1000);
 }
 
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
@@ -56,14 +72,29 @@ BTAction::on_configure(const rclcpp_lifecycle::State & previous_state)
     RCLCPP_INFO_STREAM(get_logger(), "plugin: [" << plugin << "]");
   }
 
+  int default_server_timeout;
+  get_parameter("server_timeout", default_server_timeout);
+  default_server_timeout_ = std::chrono::milliseconds(default_server_timeout);
+  int wait_for_service_timeout;
+  get_parameter("wait_for_service_timeout", wait_for_service_timeout);
+  wait_for_service_timeout_ = std::chrono::milliseconds(wait_for_service_timeout);
+  bt_loop_duration_ = std::chrono::duration_cast<std::chrono::milliseconds>(period_);
+
   BT::SharedLibrary loader;
 
   for (auto plugin : plugin_lib_names) {
     factory_.registerFromPlugin(loader.getOSName(plugin));
   }
 
+  // Create the blackboard that will be shared by all of the nodes in the tree
   blackboard_ = BT::Blackboard::create();
-  blackboard_->set("node", shared_from_this());
+
+  // Put items in the blackboard
+  blackboard_->set<rclcpp_lifecycle::LifecycleNode::SharedPtr>("node", shared_from_this());
+  blackboard_->set<std::chrono::milliseconds>("server_timeout", default_server_timeout_);
+  blackboard_->set<std::chrono::milliseconds>(
+    "wait_for_service_timeout", wait_for_service_timeout_);
+  blackboard_->set<std::chrono::milliseconds>("bt_loop_duration", bt_loop_duration_);
 
   return ActionExecutorClient::on_configure(previous_state);
 }
@@ -71,6 +102,8 @@ BTAction::on_configure(const rclcpp_lifecycle::State & previous_state)
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
 BTAction::on_cleanup(const rclcpp_lifecycle::State & previous_state)
 {
+  plugin_list_.clear();
+  blackboard_.reset();
   return ActionExecutorClient::on_cleanup(previous_state);
 }
 

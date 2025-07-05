@@ -360,7 +360,7 @@ ComputeBT::computeBTCallback(
   bool enable_groot_monitoring = get_parameter("enable_groot_monitoring").as_bool();
   int server_port = get_parameter("server_port").as_int();
   if (enable_groot_monitoring) {
-    RCLCPP_INFO(get_logger(), "Enabling Groot2 monitoring on port: %d", get_name(), server_port);
+    RCLCPP_INFO(get_logger(), "Enabling Groot2 monitoring on port: %i", server_port);
     addGrootMonitoring(&tree, server_port);
   }
 

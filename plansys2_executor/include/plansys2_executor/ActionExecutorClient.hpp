@@ -32,6 +32,9 @@
 namespace plansys2
 {
 
+using CallbackReturnT =
+  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
+
 /**
  * @class plansys2::ActionExecutorClient
  * @brief Base class for implementing action executors in the planning system.
@@ -49,13 +52,19 @@ public:
    * @brief Factory method to create a shared pointer to an ActionExecutorClient.
    *
    * @param[in] node_name Name for the ROS node.
-   * @param[in] rate Execution rate for the action.
    * @return Shared pointer to the newly created ActionExecutorClient.
    */
-  static Ptr make_shared(const std::string & node_name, const std::chrono::nanoseconds & rate)
+  static Ptr make_shared(const std::string & node_name)
   {
-    return std::make_shared<ActionExecutorClient>(node_name, rate);
+    return std::make_shared<ActionExecutorClient>(node_name);
   }
+
+  /**
+   * @brief Constructor for the ActionExecutorClient.
+   *
+   * @param[in] node_name Name for the ROS node.
+   */
+  explicit ActionExecutorClient(const std::string & node_name);
 
   /**
    * @brief Constructor for the ActionExecutorClient.
@@ -63,6 +72,7 @@ public:
    * @param[in] node_name Name for the ROS node.
    * @param[in] rate Execution rate for periodic work.
    */
+  [[deprecated("Use ActionExecutorClient(const std::string & node_name) instead")]]
   ActionExecutorClient(const std::string & node_name, const std::chrono::nanoseconds & rate);
 
   /**
@@ -103,9 +113,6 @@ protected:
    * @return std::stringThe action name.
    */
   const std::string get_action_name() const {return action_managed_;}
-
-  using CallbackReturnT =
-    rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
 
   /**
    * @brief Configures the node.
@@ -182,9 +189,10 @@ protected:
    */
   void finish(bool success, float completion, const std::string & status = "");
 
-  std::chrono::nanoseconds rate_;
+  // Period for the timer to call do_work
+  std::chrono::nanoseconds period_;
   std::string action_managed_;
-  bool commited_;
+  bool committed_;
 
   std::vector<std::string> current_arguments_;
   std::vector<std::string> specialized_arguments_;
