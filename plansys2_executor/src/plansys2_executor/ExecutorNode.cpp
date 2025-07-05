@@ -649,7 +649,7 @@ ExecutorNode::print_execution_info(
         fprintf(stderr, "\tFAILURE\n");
         break;
     }
-    if (action_info.second.action_info.action.index() == std::variant_npos) {
+    if (action_info.second.action_info.is_empty()) {
       fprintf(stderr, "\tWith no action info\n");
     }
 

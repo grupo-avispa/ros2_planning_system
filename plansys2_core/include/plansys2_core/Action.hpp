@@ -131,9 +131,18 @@ struct hash<plansys2::DurativeAction>
 namespace plansys2
 {
 
+/**
+ * @brief Structure that holds either an Action or DurativeAction message.
+ *
+ * This struct provides a type-safe container for different action types and
+ * offers a unified interface to access their properties regardless of type.
+ */
 class ActionVariant
 {
 public:
+  /**
+   * @brief Variant that holds either an Action or DurativeAction.
+   */
   using ActionVariantType = std::variant<plansys2::Action, plansys2::DurativeAction>;
 
   ActionVariant() {}

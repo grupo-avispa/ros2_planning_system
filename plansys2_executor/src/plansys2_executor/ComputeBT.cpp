@@ -270,10 +270,10 @@ ComputeBT::computeBTCallback(
     auto actions = domain_client_->getActions();
     std::string action_name_ = get_action_name(plan_item.action);
     if (std::find(actions.begin(), actions.end(), action_name_) != actions.end()) {
-      (*action_map)[index].action_info.action = domain_client_->getAction(
+      (*action_map)[index].action_info = domain_client_->getAction(
         action_name_, get_action_params(plan_item.action));
     } else {
-      (*action_map)[index].action_info.action = domain_client_->getDurativeAction(
+      (*action_map)[index].action_info = domain_client_->getDurativeAction(
         action_name_, get_action_params(plan_item.action));
     }
 
