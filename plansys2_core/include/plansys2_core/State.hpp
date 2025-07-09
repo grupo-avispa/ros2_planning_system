@@ -32,6 +32,16 @@
 namespace plansys2
 {
 
+/**
+ * @class State
+ * @brief Represents a PDDL state as S = <O, Pred, InfPred, Der, Func>
+ *
+ *  This class is used to model a PDDL state as S = <O, Pred, InfPred, Der, Func>.
+ *  Where O denotes the objects (i.e., instances), Pred the grounded predicates in the state,
+ *  InfPred the grounded predicates inferred from the derived predicates, Der the derived
+ *  predicates resolution graph, and Func the grounded functions. Furthermore, this class provides
+ *  methods to manipulate and read the state, for example, to add new predicates, instances etc.
+ */
 class State
 {
 public:
@@ -146,11 +156,28 @@ public:
   auto getUnionPredicatesSize() const {return union_predicates_inferred_predicates_.size();}
   auto getDerivedPredicatesSize() const {return derived_predicates_.getEdgeNumber();}
 
+
+  /**
+   * @brief Retrieves the reference count for a given inferred predicate.
+   *
+   * This function returns the number of references associated with the specified
+   * inferred predicate in the internal reference count map. That is, from how many
+   * derived predicates the inferred predicates was inferred from.
+   *
+   * @param predicate The predicate whose reference count is to be retrieved.
+   * @return The reference count of the specified inferred predicate.
+   */
   size_t getInferredPredicateRefCount(const plansys2::Predicate & predicate) const
   {
     return inferred_predicate_refcount_.at(predicate);
   }
 
+  /**
+   * @brief Returns the number of inferred predicates inferred from a given derived predicate.
+   *
+   * @param derived The derived predicate whose inferred predicates count is to be retrieved.
+   * @return The number of inferred predicates generated from the specified derived predicate.
+   */
   size_t getNumberInferredFromDerived(const plansys2::Derived & derived) const;
 
   bool addInstance(const plansys2::Instance & instance)
@@ -306,12 +333,62 @@ public:
   void resetInferredPredicates();
   void initInferredPredicates();
 
+  /**
+   * @brief Attempts to unground a single derived predicate.
+   *
+   * This method attempts to unground the inferred predicates inferred from the given derived
+   * predicate. First, this method decreases the reference count of the inferred predicates,
+   * and if the reference count reaches zero, it ungrounds the inferred predicate.
+   *
+   *
+   * @param derived The derived predicate to be ungrounded.
+   * @return true if the ungrounding was successful, false otherwise.
+   */
   bool ungroundSingleDerivedPredicate(const plansys2::Derived & derived);
+
+  /**
+   * @brief Attempts to unground the given derived predicate and all its children.
+   *
+   * This method attempts to unground the inferred predicates inferred from the given derived
+   * predicate and all its children. It leverages the ungroundSingleDerivedPredicate method
+   * to unground each individual derived predicate. It returns an unorded set containing
+   * all the derived predicates that were ungrounded.
+   *
+   * @param derived The parent derived predicate to start ungrouding from.
+   * @return std::unordered_set<plansys2::Derived> Set of ungrounded derived predicates.
+   */
   std::unordered_set<plansys2::Derived> ungroundDerivedPredicate(const plansys2::Derived & derived);
 
+  /**
+   * @brief Converts the current state to a ROS 2 message.
+   *
+   * This method serializes the internal representation of the state into a
+   * plansys2_msgs::msg::State message, which can be published or transmitted
+   * over ROS 2 communication channels.
+   *
+   * @return A plansys2_msgs::msg::State message representing the current state.
+   */
   plansys2_msgs::msg::State getAsMsg();
 
+  /**
+   * @brief Adds actions to the derived resolution graph and prunes the graph.
+   *
+   * This function takes a vector of ActionVariant objects, adds them to the derived resolution
+   * graph, and prunes the graph to contain only nodes that the actions depend on.
+   *
+   * @param actions A vector of ActionVariant objects to be added to the derived resolution graph.
+   */
   void addActionsAndPruneDerived(const std::vector<plansys2::ActionVariant> & actions);
+  /**
+   * @brief Prunes the derived resolution graph to contain only nodes that the actions depend on.
+   *
+   * This function analyzes the provided list of actions and prunes any derived predicates
+   * from the state that are not referenced or required by those actions. This helps to
+   * optimize the state representation by keeping only relevant derived predicates.
+   *
+   * @param actions A vector of ActionVariant objects representing the actions whose required
+   *                derived predicates should be retained in the state.
+   */
   void pruneDerivedPredicatesToActions(const std::vector<plansys2::ActionVariant> & actions);
 
 private:

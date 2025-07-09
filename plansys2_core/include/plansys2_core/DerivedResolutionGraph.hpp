@@ -38,6 +38,39 @@
 namespace plansys2
 {
 
+/**
+ * @class DerivedResolutionGraph
+ * @brief Represents a directed graph structure for managing derived predicates and their
+ * dependencies in a planning system.
+ *
+ * This class is used to model and resolve derived predicates and its dependencies.
+ * Check issue #328 for a more detailed explanation.
+ * It provides methods for graph construction, traversal (DFS, backtracking), subgraph
+ * extraction, and computing the graph's strongly connected components (SCC).
+ * In this graph, nodes in the upper layer (depth 0) represent predicates, functions, or
+ * instances. Nodes in the lower layers (depth one or more) represent derived predicates.
+ * Nodes in the last layer represent actions.
+ * The edges indicate dependencies between the nodes, with arrows pointing from parent to
+ * child nodes.
+ * More specifically, the graph nodes are instances of the NodeVariant class, which can
+ * hold plansys2::Predicate, plansys2::Function, plansys2::Derived, or
+ * plansys2::ActionVariant.
+ * This definition allows derived predicates to depend on other derived predicates,
+ * including recursive self-dependencies, and allows negated derived predicates in their
+ * preconditions, provided that such negation does not occur within a recursive cycle.
+ *
+ * Key Features:
+ * - Construction from various collections of derived predicates.
+ * - Methods to add nodes and edges, including from action preconditions.
+ * - Multiple traversal strategies (depth-first, backtracking, SCC detection).
+ * - Extraction of subgraphs and pruning based on actions.
+ * - Query functions for nodes, edges, roots, predicates, functions, and actions.
+ * - Export capability to DOT format for visualization.
+ * - Equality operator for graph comparison.
+ *
+ * @note NodeVariant, Derived, Predicate, Function, and ActionVariant are types defined in
+ * the plansys2 namespace.
+ */
 class DerivedResolutionGraph
 {
 public:
@@ -58,27 +91,101 @@ public:
   void addNode(const NodeVariant & node);
 
   void addEdge(const NodeVariant & u, const NodeVariant & v);
+
+  /**
+   * @brief Adds edges to the resolution graph based on the preconditions of a given node.
+   *
+   * This method analyzes the preconditions specified in the provided tree and creates
+   * corresponding edges in the derived resolution graph, originating from the given node.
+   *
+   * @param node The node from which edges will be added, represented as a NodeVariant.
+   * @param tree The tree structure containing the preconditions to be analyzed.
+   */
   void addEdgeFromPreconditions(const NodeVariant & node, const plansys2_msgs::msg::Tree & tree);
 
-  // DFS from a given start node
+  /**
+   * @brief Performs a depth first traverse from a given Node and applies func to each node.
+   *
+   * This method Performs a depth first traverse from a given Node, applies func to each node,
+   * and adds each visited node to the visisted vector to avoid visiting the same node multiple
+   * times. When check_dependencies is true, it only expands a node when all its parents were
+   * already visited.
+   *
+   * @param start The node from which the traverse should start.
+   * @param func The function to apply to each node.
+   * @param visited unordered_set containing all nodes that were already visisted
+   * @param check_dependencies whether to only expand a node if the parents were visisted
+   */
   void depthFirstTraverse(
     const NodeVariant & start, const std::function<void(const NodeVariant &)> & func,
     std::unordered_set<NodeVariant> & visited, bool check_dependencies = false) const;
 
+  /**
+   * @brief Performs a depth first traverse from a given Node and applies func to each node.
+   *
+   * This method Performs a depth first traverse from a given Node and applies func to each node.
+   * When check_dependencies is true, it only expands a node when all its parents were
+   * already visited.
+   *
+   * @param start The node from which the traverse should start.
+   * @param func The function to apply to each node.
+   * @param check_dependencies whether to only expand a node if the parents were visisted
+   */
   void depthFirstTraverse(
     const NodeVariant & start, const std::function<void(const NodeVariant &)> & func,
     bool check_dependencies = false) const;
 
+  /**
+   * @brief Performs depth first traverse from a given set of Nodes and applies func to each node.
+   *
+   * This method performs a depth first traverse from a given set of Nodes and applies func to
+   * each node.
+   * When check_dependencies is true, it only expands a node when all its parents were
+   * already visited.
+   *
+   * @param start_nodes Vector containing the nodes from which the traverse should start.
+   * @param func The function to apply to each node.
+   * @param check_dependencies whether to only expand a node if the parents were visisted
+   */
   void depthFirstTraverseFromNodes(
     const std::function<void(const NodeVariant &)> & func, bool check_dependencies = false,
-    const std::vector<NodeVariant> & start_nodes = {}, bool check_visited = true) const;
+    const std::vector<NodeVariant> & start_nodes = {}) const;
 
+  /**
+   * @brief Performs depth first traverse from all root Nodes and applies func to each node.
+   *
+   * This method Performs a depth first traverse from all root Nodes and applies func to each node.
+   * When check_dependencies is true, it only expands a node when all its parents were
+   * already visited.
+   *
+   * @param func The function to apply to each node.
+   * @param check_dependencies whether to only expand a node if the parents were visisted
+   */
   void depthFirstTraverseAll(
     const std::function<void(const NodeVariant &)> & func, bool check_dependencies = false) const;
 
+  /**
+   * @brief Retrieves a list of derived predicates using a depth-first traversal.
+   *
+   * This method performs a depth-first search starting from the specified nodes (if any),
+   * collecting all reachable derived predicates in the order they are discovered.
+   *
+   * @param start_nodes Optional vector of starting nodes for the traversal. If empty, the
+   *        traversal will start from all root nodes in the graph.
+   * @return std::vector<plansys2::Derived> A vector containing the derived predicates
+   *        found during traversal.
+   */
   std::vector<plansys2::Derived> getDerivedPredicatesDepthFirst(
     const std::vector<NodeVariant> & start_nodes = {}) const;
 
+  /**
+   * @brief Retrieves a list of derived predicates that given actions depend on.
+   *
+   * This method returns the derived predicates that the given actions depend on.
+   *
+   * @param actions A vector containing the action variants to be analyzed.
+   * @return A deque of Derived objects representing the derived predicates the actions depend on.
+   */
   std::deque<plansys2::Derived> getDerivedPredicatesFromActions(
     const std::vector<plansys2::ActionVariant> & actions) const;
 
@@ -89,15 +196,53 @@ public:
     const NodeVariant & node, std::unordered_set<NodeVariant> & visited,
     const std::function<void(const NodeVariant &)> & func) const;
 
+  /**
+   * @brief Extracts a subgraph from the current DerivedResolutionGraph using the specified nodes.
+   *
+   * This method creates and returns a new DerivedResolutionGraph that contains the nodes
+   * provided in the input vector and its children nodes.
+   *
+   * @param nodes A vector of NodeVariant objects representing the root nodes to obtain the
+   *              subgraph from.
+   * @return A DerivedResolutionGraph object representing the subgraph obtained from the
+   *         input nodes.
+   */
   DerivedResolutionGraph getSubGraphFromNodes(const std::vector<NodeVariant> & nodes) const;
 
+  /**
+   * @brief Prunes the graph to include only nodes the specified actions depend on.
+   *
+   * This function takes a list of actions and returns a new DerivedResolutionGraph
+   * that contains only the nodes and edges relevant to those actions. It is useful
+   * for focusing the resolution graph on a subset of actions, potentially improving
+   * performance.s.
+   *
+   * @param actions A vector of ActionVariant objects representing the actions to retain
+   *                in the pruned graph.
+   * @return A new DerivedResolutionGraph containing only the nodes the specified actions
+   *         depend on.
+   */
   plansys2::DerivedResolutionGraph pruneGraphToActions(
     const std::vector<plansys2::ActionVariant> & actions);
 
   void appendActions(const std::vector<plansys2::ActionVariant> & actions);
   void appendAction(const plansys2::ActionVariant & action);
 
+  /**
+   * @brief Computes the strongly connected components (SCCs) of the graph.
+   *
+   * This function returns the SCCs of the graph using Tarjan's algorithm.
+   * It only includes derived predicates in the SCCs.
+   *
+   * @return std::vector<std::vector<Derived>> A vector of SCCs, each represented as a
+   * vector of Derived predicates.
+   */
   std::vector<std::vector<Derived>> computeSCCsTarjanDerivedPredicates() const;
+
+  /**
+   * @brief Helper function to compute SCCs
+   *
+   */
   void strongConnect(
     const Derived & node, int & current_index, std::unordered_map<Derived, int> & index,
     std::unordered_map<Derived, int> & lowlink, std::unordered_set<Derived> & on_stack,

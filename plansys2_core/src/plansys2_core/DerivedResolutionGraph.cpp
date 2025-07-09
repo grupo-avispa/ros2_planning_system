@@ -195,7 +195,7 @@ void DerivedResolutionGraph::depthFirstTraverse(
 
 void DerivedResolutionGraph::depthFirstTraverseFromNodes(
   const std::function<void(const NodeVariant &)> & func, bool check_dependencies,
-  const std::vector<NodeVariant> & start_nodes, bool check_visited) const
+  const std::vector<NodeVariant> & start_nodes) const
 {
   std::unordered_set<NodeVariant> visited;
   std::vector<NodeVariant> stack =
