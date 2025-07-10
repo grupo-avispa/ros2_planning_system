@@ -316,6 +316,7 @@ public:
       case GOAL_FINISHED:
         {
           RCLCPP_DEBUG(node_->get_logger(), "%s GOAL_FINISHED", node_->get_name());
+          state_ = IDLE;
           return BT::NodeStatus::SUCCESS;
         }
         break;
@@ -323,6 +324,7 @@ public:
       case GOAL_FAILURE:
         {
           RCLCPP_DEBUG(node_->get_logger(), "%s GOAL_FAILURE", node_->get_name());
+          state_ = IDLE;
           return BT::NodeStatus::FAILURE;
         }
         break;
