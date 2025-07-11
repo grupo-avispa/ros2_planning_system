@@ -54,7 +54,7 @@ BTAction::BTAction(const std::string & action, const std::chrono::nanoseconds & 
   declare_parameter<bool>("bt_minitrace_logging", false);
   declare_parameter<bool>("enable_groot_monitoring", false);
   declare_parameter<int>("server_port", -1);
-  declare_parameter<int>("server_timeout", 20);
+  declare_parameter<int>("server_timeout", 250);
   declare_parameter<int>("wait_for_service_timeout", 1000);
 }
 

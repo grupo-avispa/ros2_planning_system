@@ -124,10 +124,10 @@ public:
   {
     BT::PortsList basic = {
       BT::InputPort<std::string>("server_name", "Action server name"),
-      BT::InputPort<double>(
+      BT::InputPort<std::chrono::milliseconds>(
         "server_timeout",
-        5.0,
-        "The amount of time to wait for a response from the action server, in seconds")
+        5000,
+        "The amount of time to wait for a response from the action server, in milliseconds")
     };
     // The user defined ports are added to the basic ports
     basic.insert(addition.begin(), addition.end());

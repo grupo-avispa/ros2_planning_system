@@ -152,8 +152,9 @@ TEST_F(BTActionsTestCase, load_plugins)
 
   auto blackboard = BT::Blackboard::create();
   blackboard->set("node", node);
-  blackboard->set<std::chrono::milliseconds>("server_timeout", 20ms);
+  blackboard->set<std::chrono::milliseconds>("server_timeout", 250ms);
   blackboard->set<std::chrono::milliseconds>("wait_for_service_timeout", 10ms);
+  blackboard->set<std::chrono::milliseconds>("bt_loop_duration", 100ms);
   BT::Tree tree = factory.createTreeFromFile(xml_file, blackboard);
 
   rclcpp::Rate rate(10);
@@ -191,8 +192,9 @@ TEST_F(BTActionsTestCase, on_tick_failure)
   BT::assignDefaultRemapping<plansys2_bt_tests::OnTickFail>(config);
   auto bb = BT::Blackboard::create();
   bb->set("node", node);
-  bb->set<std::chrono::milliseconds>("server_timeout", 20ms);
+  bb->set<std::chrono::milliseconds>("server_timeout", 250ms);
   bb->set<std::chrono::milliseconds>("wait_for_service_timeout", 10ms);
+  bb->set<std::chrono::milliseconds>("bt_loop_duration", 100ms);
   config.blackboard = bb;
 
   plansys2_bt_tests::OnTickFail failure_node("OnTickFail", "move", config);
@@ -234,8 +236,9 @@ TEST_F(BTActionsTestCase, on_feedback_failure)
   BT::assignDefaultRemapping<plansys2_bt_tests::OnFeedbackFail>(config);
   auto bb = BT::Blackboard::create();
   bb->set("node", node);
-  bb->set<std::chrono::milliseconds>("server_timeout", 20ms);
+  bb->set<std::chrono::milliseconds>("server_timeout", 250ms);
   bb->set<std::chrono::milliseconds>("wait_for_service_timeout", 10ms);
+  bb->set<std::chrono::milliseconds>("bt_loop_duration", 100ms);
   config.blackboard = bb;
 
   plansys2_bt_tests::OnFeedbackFail failure_node("OnFeedbackFail",
