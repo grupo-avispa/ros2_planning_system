@@ -469,7 +469,7 @@ ExecutorNode::get_tree_from_plan(PlanRuntineInfo & runtime_info)
   bool enable_groot_monitoring = get_parameter("enable_groot_monitoring").as_bool();
   int server_port = get_parameter("server_port").as_int();
   if (enable_groot_monitoring) {
-    RCLCPP_INFO(get_logger(), "Enabling Groot2 monitoring on port: %d", get_name(), server_port);
+    RCLCPP_INFO(get_logger(), "Enabling Groot2 monitoring on port: %d", server_port);
     addGrootMonitoring(&runtime_info.current_tree->tree, server_port);
   }
 
