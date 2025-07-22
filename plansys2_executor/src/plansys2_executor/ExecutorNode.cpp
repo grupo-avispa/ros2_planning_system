@@ -461,6 +461,10 @@ ExecutorNode::get_tree_from_plan(PlanRuntineInfo & runtime_info)
   blackboard->set("domain_client", domain_client_);
   blackboard->set("problem_client", problem_client_);
   blackboard->set("bt_builder", bt_builder);
+  // Added blackboard keys for compatibility with other nodes
+  blackboard->set("bt_loop_duration", std::chrono::milliseconds(200));
+  blackboard->set("server_timeout", std::chrono::milliseconds(250));
+  blackboard->set("wait_for_service_timeout", std::chrono::milliseconds(1000));
 
   runtime_info.current_tree = std::make_shared<TreeInfo>();
   *runtime_info.current_tree = {
