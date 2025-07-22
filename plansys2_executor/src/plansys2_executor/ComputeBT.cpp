@@ -41,6 +41,8 @@
 #include "plansys2_executor/behavior_tree/apply_atstart_effect_node.hpp"
 #include "plansys2_executor/behavior_tree/restore_atstart_effect_node.hpp"
 #include "plansys2_executor/behavior_tree/apply_atend_effect_node.hpp"
+#include "plansys2_executor/BTUtils.hpp"
+#include "plansys2_executor/JSONUtils.hpp"
 
 namespace plansys2
 {
@@ -426,6 +428,10 @@ void ComputeBT::addGrootMonitoring(BT::Tree * tree, uint16_t server_port)
 {
   // This logger publish status changes using Groot2
   groot_monitor_ = std::make_unique<BT::Groot2Publisher>(*tree, server_port);
+
+  // Register common types JSON definitions
+  BT::RegisterJsonDefinition<builtin_interfaces::msg::Time>();
+  BT::RegisterJsonDefinition<std_msgs::msg::Header>();
 }
 
 void ComputeBT::resetGrootMonitor()
