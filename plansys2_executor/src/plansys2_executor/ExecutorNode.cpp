@@ -34,6 +34,7 @@
 #include "plansys2_msgs/msg/plan.hpp"
 
 #include "ament_index_cpp/get_package_share_directory.hpp"
+#include "yaml-cpp/yaml.h"
 
 #include "behaviortree_cpp/behavior_tree.h"
 #include "behaviortree_cpp/bt_factory.h"
@@ -69,6 +70,9 @@ ExecutorNode::ExecutorNode(const rclcpp::NodeOptions & options)
   this->declare_parameter<std::string>("default_action_bt_xml_filename", "");
   this->declare_parameter<std::string>("default_start_action_bt_xml_filename", "");
   this->declare_parameter<std::string>("default_end_action_bt_xml_filename", "");
+  this->declare_parameter<std::string>("predicate_bt_paths", "");
+  this->declare_parameter<std::vector<std::string>>(
+    "predicate_plugins", std::vector<std::string>({}));
   this->declare_parameter<std::string>("bt_builder_plugin", "");
   this->declare_parameter<int>("action_time_precision", 3);
   this->declare_parameter<bool>("enable_dotgraph_legend", true);
@@ -187,6 +191,18 @@ ExecutorNode::on_configure(const rclcpp_lifecycle::State & state)
 
   end_action_bt_xml_.assign(
     std::istreambuf_iterator<char>(end_action_bt_ifs), std::istreambuf_iterator<char>());
+
+  predicate_bt_paths_ = this->get_parameter("predicate_bt_paths").as_string();
+  if (predicate_bt_paths_.empty()) {
+    RCLCPP_INFO(
+      get_logger(),
+      "No predicates behavior tree path specified, only symbolic predicates will be used");
+  }
+
+  predicate_plugin_list_ = get_parameter("predicate_plugins").as_string_array();
+  for (auto plugin : predicate_plugin_list_) {
+    RCLCPP_INFO_STREAM(get_logger(), "plugin: [" << plugin << "]");
+  }
 
   dotgraph_pub_ = this->create_publisher<std_msgs::msg::String>("dot_graph", 1);
   execution_info_pub_ = create_publisher<plansys2_msgs::msg::ActionExecutionInfo>(
@@ -490,6 +506,15 @@ ExecutorNode::get_tree_from_plan(PlanRuntineInfo & runtime_info)
   blackboard->set("bt_loop_duration", std::chrono::milliseconds(200));
   blackboard->set("server_timeout", std::chrono::milliseconds(250));
   blackboard->set("wait_for_service_timeout", std::chrono::milliseconds(1000));
+
+  // Set the map of predicates to behavior tree XML templates
+  // This map is used to execute predicates in the behavior tree
+  // And set the plugins for predicate execution
+  std::unordered_map<std::string, std::string> predicate_bt_map;
+  if (load_predicate_bt_map(predicate_bt_paths_, predicate_bt_map)) {
+    blackboard->set("predicate_bt_map", predicate_bt_map);
+    blackboard->set("predicate_plugin_list", predicate_plugin_list_);
+  }
 
   // If a new tree is created, than the Groot2 Publisher must be destroyed
   reset_groot_monitor();
@@ -911,6 +936,24 @@ ExecutorNode::execution_cycle()
   }
 }
 
+bool ExecutorNode::load_predicate_bt_map(
+  const std::string & yaml_path, std::unordered_map<std::string, std::string> & predicate_bt_map)
+{
+  try {
+    YAML::Node config = YAML::LoadFile(yaml_path);
+    if (config["predicate_bt_paths"]) {
+      for (const auto & item : config["predicate_bt_paths"]) {
+        predicate_bt_map[item.first.as<std::string>()] = item.second.as<std::string>();
+      }
+    }
+  } catch (const YAML::Exception & e) {
+    RCLCPP_ERROR(get_logger(), "Error reading file [%s]", yaml_path.c_str());
+    return false;
+  }
+
+  return true;
+}
+
 void ExecutorNode::add_groot_monitoring(BT::Tree * tree, uint16_t server_port)
 {
   // This logger publish status changes using Groot2
@@ -919,6 +962,7 @@ void ExecutorNode::add_groot_monitoring(BT::Tree * tree, uint16_t server_port)
   // Register common types JSON definitions
   BT::RegisterJsonDefinition<builtin_interfaces::msg::Time>();
   BT::RegisterJsonDefinition<std_msgs::msg::Header>();
+  BT::RegisterJsonDefinition<std::unordered_map<std::string, std::string>>();
 }
 
 void ExecutorNode::reset_groot_monitor()

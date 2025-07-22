@@ -20,6 +20,7 @@
 #include <string>
 #include <map>
 #include <tuple>
+#include <unordered_map>
 #include <list>
 
 #include "plansys2_domain_expert/DomainExpertClient.hpp"
@@ -319,9 +320,21 @@ protected:
    */
   void reset_groot_monitor();
 
+  /**
+   * @brief Loads a mapping of predicates to behavior tree XML templates from a YAML file.
+   *
+   * @param[in] yaml_path Path to the YAML file containing predicate mappings.
+   * @param[out] std::unordered_map<std::string, std::string> Mapping of predicate names to XML templates.
+   * @return Whether the loading was successful.
+   */
+  bool load_predicate_bt_map(
+    const std::string & yaml_path, std::unordered_map<std::string, std::string> & predicate_bt_map);
+
   std::string action_bt_xml_;
   std::string start_action_bt_xml_;
   std::string end_action_bt_xml_;
+  std::string predicate_bt_paths_;
+  std::vector<std::string> predicate_plugin_list_;
   pluginlib::ClassLoader<plansys2::BTBuilder> bt_builder_loader_;
 
   std::shared_ptr<plansys2::DomainExpertClient> domain_client_;
