@@ -50,6 +50,8 @@
 #include "plansys2_executor/behavior_tree/apply_atstart_effect_node.hpp"
 #include "plansys2_executor/behavior_tree/restore_atstart_effect_node.hpp"
 #include "plansys2_executor/behavior_tree/apply_atend_effect_node.hpp"
+#include "plansys2_executor/BTUtils.hpp"
+#include "plansys2_executor/JSONUtils.hpp"
 
 namespace plansys2
 {
@@ -218,6 +220,7 @@ ExecutorNode::on_deactivate(const rclcpp_lifecycle::State & state)
   dotgraph_pub_->on_deactivate();
   executing_plan_pub_->on_deactivate();
   remaining_plan_pub_->on_deactivate();
+  reset_groot_monitor();
   RCLCPP_INFO(get_logger(), "[%s] Deactivated", get_name());
 
   return CallbackReturnT::SUCCESS;
@@ -461,6 +464,13 @@ ExecutorNode::get_tree_from_plan(PlanRuntineInfo & runtime_info)
   blackboard->set("domain_client", domain_client_);
   blackboard->set("problem_client", problem_client_);
   blackboard->set("bt_builder", bt_builder);
+  // Added blackboard keys for compatibility with other nodes
+  blackboard->set("bt_loop_duration", std::chrono::milliseconds(200));
+  blackboard->set("server_timeout", std::chrono::milliseconds(250));
+  blackboard->set("wait_for_service_timeout", std::chrono::milliseconds(1000));
+
+  // If a new tree is created, than the Groot2 Publisher must be destroyed
+  reset_groot_monitor();
 
   runtime_info.current_tree = std::make_shared<TreeInfo>();
   *runtime_info.current_tree = {
@@ -469,8 +479,8 @@ ExecutorNode::get_tree_from_plan(PlanRuntineInfo & runtime_info)
   bool enable_groot_monitoring = get_parameter("enable_groot_monitoring").as_bool();
   int server_port = get_parameter("server_port").as_int();
   if (enable_groot_monitoring) {
-    RCLCPP_INFO(get_logger(), "Enabling Groot2 monitoring on port: %d", get_name(), server_port);
-    addGrootMonitoring(&runtime_info.current_tree->tree, server_port);
+    RCLCPP_INFO(get_logger(), "Enabling Groot2 monitoring on port: %d", server_port);
+    add_groot_monitoring(&runtime_info.current_tree->tree, server_port);
   }
 
   return runtime_info.current_tree != nullptr;
@@ -867,13 +877,17 @@ ExecutorNode::execution_cycle()
   }
 }
 
-void ExecutorNode::addGrootMonitoring(BT::Tree * tree, uint16_t server_port)
+void ExecutorNode::add_groot_monitoring(BT::Tree * tree, uint16_t server_port)
 {
   // This logger publish status changes using Groot2
   groot_monitor_ = std::make_unique<BT::Groot2Publisher>(*tree, server_port);
+
+  // Register common types JSON definitions
+  BT::RegisterJsonDefinition<builtin_interfaces::msg::Time>();
+  BT::RegisterJsonDefinition<std_msgs::msg::Header>();
 }
 
-void ExecutorNode::resetGrootMonitor()
+void ExecutorNode::reset_groot_monitor()
 {
   if (groot_monitor_) {
     groot_monitor_.reset();

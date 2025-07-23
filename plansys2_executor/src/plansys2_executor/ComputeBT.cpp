@@ -41,6 +41,8 @@
 #include "plansys2_executor/behavior_tree/apply_atstart_effect_node.hpp"
 #include "plansys2_executor/behavior_tree/restore_atstart_effect_node.hpp"
 #include "plansys2_executor/behavior_tree/apply_atend_effect_node.hpp"
+#include "plansys2_executor/BTUtils.hpp"
+#include "plansys2_executor/JSONUtils.hpp"
 
 namespace plansys2
 {
@@ -178,6 +180,7 @@ ComputeBT::on_cleanup(const rclcpp_lifecycle::State & state)
 {
   RCLCPP_INFO(get_logger(), "[%s] Cleaning up...", get_name());
   dotgraph_pub_.reset();
+  reset_groot_monitor();
   RCLCPP_INFO(get_logger(), "[%s] Cleaned up", get_name());
   return CallbackReturnT::SUCCESS;
 }
@@ -347,6 +350,9 @@ ComputeBT::computeBTCallback(
   (*action_map)[":0"].at_start_effects_applied_time = now();
   (*action_map)[":0"].at_end_effects_applied_time = now();
 
+  // If a new tree is created, than the Groot2 Publisher must be destroyed
+  reset_groot_monitor();
+
   auto blackboard = BT::Blackboard::create();
   blackboard->set("action_map", action_map);
   blackboard->set("action_graph", action_graph);
@@ -361,7 +367,7 @@ ComputeBT::computeBTCallback(
   int server_port = get_parameter("server_port").as_int();
   if (enable_groot_monitoring) {
     RCLCPP_INFO(get_logger(), "Enabling Groot2 monitoring on port: %i", server_port);
-    addGrootMonitoring(&tree, server_port);
+    add_groot_monitoring(&tree, server_port);
   }
 
   finish = true;
@@ -422,13 +428,17 @@ ComputeBT::saveDotGraph(const std::string & dotgraph, const std::string & filena
   }
 }
 
-void ComputeBT::addGrootMonitoring(BT::Tree * tree, uint16_t server_port)
+void ComputeBT::add_groot_monitoring(BT::Tree * tree, uint16_t server_port)
 {
   // This logger publish status changes using Groot2
   groot_monitor_ = std::make_unique<BT::Groot2Publisher>(*tree, server_port);
+
+  // Register common types JSON definitions
+  BT::RegisterJsonDefinition<builtin_interfaces::msg::Time>();
+  BT::RegisterJsonDefinition<std_msgs::msg::Header>();
 }
 
-void ComputeBT::resetGrootMonitor()
+void ComputeBT::reset_groot_monitor()
 {
   if (groot_monitor_) {
     groot_monitor_.reset();

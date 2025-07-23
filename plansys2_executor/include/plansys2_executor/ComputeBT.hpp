@@ -169,12 +169,12 @@ private:
    * @param tree BT to monitor
    * @param server_port Groot2 Server port, first of the pair (server_port, publisher_port)
    */
-  void addGrootMonitoring(BT::Tree * tree, uint16_t server_port);
+  void add_groot_monitoring(BT::Tree * tree, uint16_t server_port);
 
   /**
    * @brief Reset Groot2 monitor
    */
-  void resetGrootMonitor();
+  void reset_groot_monitor();
 
   std::string action_bt_xml_;
   std::string start_action_bt_xml_;

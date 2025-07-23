@@ -56,11 +56,19 @@ public:
     if (!config().blackboard->get("node", node_)) {
       RCLCPP_ERROR(node_->get_logger(), "Failed to get 'node' from the blackboard");
     }
+    callback_group_ = node_->create_callback_group(
+      rclcpp::CallbackGroupType::MutuallyExclusive, false);
+    callback_group_executor_.add_callback_group(callback_group_, node_->get_node_base_interface());
 
     // Get the required items from the blackboard
+    auto bt_loop_duration =
+      config().blackboard->template get<std::chrono::milliseconds>("bt_loop_duration");
     getInputOrBlackboard("server_timeout", server_timeout_);
     wait_for_service_timeout_ =
       config().blackboard->get<std::chrono::milliseconds>("wait_for_service_timeout");
+
+    // Timeout should be less than bt_loop_duration to be able to finish the current tick
+    max_timeout_ = std::chrono::duration_cast<std::chrono::milliseconds>(bt_loop_duration * 0.5);
 
     // Initialize the input and output messages
     goal_ = typename ActionT::Goal();
@@ -88,7 +96,7 @@ public:
   bool createActionClient(const std::string & action_name)
   {
     // Now that we have the ROS node to use, create the action client for this BT action
-    action_client_ = rclcpp_action::create_client<ActionT>(node_, action_name);
+    action_client_ = rclcpp_action::create_client<ActionT>(node_, action_name, callback_group_);
 
     // Make sure the server is actually there before continuing
     RCLCPP_INFO(node_->get_logger(), "Waiting for \"%s\" action server", action_name.c_str());
@@ -116,10 +124,10 @@ public:
   {
     BT::PortsList basic = {
       BT::InputPort<std::string>("server_name", "Action server name"),
-      BT::InputPort<double>(
+      BT::InputPort<std::chrono::milliseconds>(
         "server_timeout",
-        5.0,
-        "The amount of time to wait for a response from the action server, in seconds")
+        5000,
+        "The amount of time to wait for a response from the action server, in milliseconds")
     };
     // The user defined ports are added to the basic ports
     basic.insert(addition.begin(), addition.end());
@@ -221,14 +229,15 @@ public:
       case GOAL_SENT:
         {
           RCLCPP_DEBUG(node_->get_logger(), "%s GOAL_SENT", node_->get_name());
-          if (future_goal_handle_.valid()) {
-            goal_handle_ = future_goal_handle_.get();
-
-            if (!goal_handle_) {
+          if (future_goal_handle_) {
+            auto elapsed =
+              (node_->now() - goal_sent_ts_).template to_chrono<std::chrono::milliseconds>();
+            if (!is_future_goal_handle_complete(elapsed)) {
               RCLCPP_ERROR(
                 node_->get_logger(),
                 "Goal was rejected by action server %s", action_name_.c_str());
               state_ = GOAL_FAILURE;
+              future_goal_handle_.reset();
               return BT::NodeStatus::FAILURE;
             } else {
               state_ = GOAL_EXECUTING;
@@ -240,6 +249,7 @@ public:
                 node_->get_logger(),
                 "Failed to send goal to action server %s", action_name_.c_str());
               state_ = GOAL_FAILURE;
+              future_goal_handle_.reset();
               return BT::NodeStatus::FAILURE;
             } else {
               return BT::NodeStatus::RUNNING;
@@ -266,6 +276,8 @@ public:
             on_new_goal_received();
             state_ = GOAL_SENT;
           }
+
+          callback_group_executor_.spin_some();
 
           if (goal_result_available_) {
             state_ = GOAL_FINISHING;
@@ -308,6 +320,7 @@ public:
               node_->get_logger(),
               "Failed to cancel action server for %s", action_name_.c_str());
             state_ = GOAL_FAILURE;
+            future_goal_handle_.reset();
             return BT::NodeStatus::FAILURE;
           }
         }
@@ -316,6 +329,7 @@ public:
       case GOAL_FINISHED:
         {
           RCLCPP_DEBUG(node_->get_logger(), "%s GOAL_FINISHED", node_->get_name());
+          state_ = IDLE;
           return BT::NodeStatus::SUCCESS;
         }
         break;
@@ -323,6 +337,7 @@ public:
       case GOAL_FAILURE:
         {
           RCLCPP_DEBUG(node_->get_logger(), "%s GOAL_FAILURE", node_->get_name());
+          state_ = IDLE;
           return BT::NodeStatus::FAILURE;
         }
         break;
@@ -331,6 +346,7 @@ public:
         break;
     }
 
+    goal_handle_.reset();
     return BT::NodeStatus::RUNNING;
   }
 
@@ -355,8 +371,15 @@ protected:
    */
   void cancel_goal()
   {
-    if (goal_handle_ == nullptr) {
+    if (!goal_handle_) {
       future_cancer_handle_ = action_client_->async_cancel_goal(goal_handle_);
+      if (callback_group_executor_.spin_until_future_complete(future_cancer_handle_,
+          server_timeout_) != rclcpp::FutureReturnCode::SUCCESS)
+      {
+        RCLCPP_ERROR(
+          node_->get_logger(), "Failed to cancel action server for %s", action_name_.c_str());
+      }
+
     } else {
       if (!createActionClient(action_name_)) {
         RCLCPP_ERROR(node_->get_logger(), "Failed to create action client");
@@ -380,6 +403,7 @@ protected:
       return true;
     }
 
+    callback_group_executor_.spin_some();
     auto status = goal_handle_->get_status();
 
     // Check if the goal is still executing
@@ -411,12 +435,50 @@ protected:
       };
 
     RCLCPP_INFO(
-      node_->get_logger(),
-      "Sending goal to action server %s",
-      action_name_.c_str());
+      node_->get_logger(), "Sending goal to action server %s", action_name_.c_str());
 
-    future_goal_handle_ = action_client_->async_send_goal(goal_, send_goal_options);
+    future_goal_handle_ = std::make_shared<
+      std::shared_future<typename rclcpp_action::ClientGoalHandle<ActionT>::SharedPtr>>(
+      action_client_->async_send_goal(goal_, send_goal_options));
     goal_sent_ts_ = node_->now();
+  }
+
+/**
+   * @brief Function to check if the action server acknowledged a new goal
+   * @param elapsed Duration since the last goal was sent and future goal handle has not completed.
+   * After waiting for the future to complete, this value is incremented with the timeout value.
+   * @return boolean True if future_goal_handle_ returns SUCCESS, False otherwise
+   */
+  bool is_future_goal_handle_complete(std::chrono::milliseconds & elapsed)
+  {
+    auto remaining = server_timeout_ - elapsed;
+
+    // server has already timed out, no need to sleep
+    if (remaining <= std::chrono::milliseconds(0)) {
+      future_goal_handle_.reset();
+      return false;
+    }
+
+    auto timeout = remaining > max_timeout_ ? max_timeout_ : remaining;
+    auto result =
+      callback_group_executor_.spin_until_future_complete(*future_goal_handle_, timeout);
+    elapsed += timeout;
+
+    if (result == rclcpp::FutureReturnCode::INTERRUPTED) {
+      future_goal_handle_.reset();
+      throw std::runtime_error("send_goal failed");
+    }
+
+    if (result == rclcpp::FutureReturnCode::SUCCESS) {
+      goal_handle_ = future_goal_handle_->get();
+      future_goal_handle_.reset();
+      if (!goal_handle_) {
+        throw std::runtime_error("Goal was rejected by the action server");
+      }
+      return true;
+    }
+
+    return false;
   }
 
   /**
@@ -437,7 +499,7 @@ protected:
   typename ActionT::Goal goal_;
   bool goal_updated_{false};
   bool goal_result_available_{false};
-  std::shared_future<typename rclcpp_action::ClientGoalHandle<ActionT>::SharedPtr>
+  std::shared_ptr<std::shared_future<typename rclcpp_action::ClientGoalHandle<ActionT>::SharedPtr>>
   future_goal_handle_;
   std::shared_future<typename ActionT::Impl::CancelGoalService::Response::SharedPtr>
   future_cancer_handle_;
@@ -447,10 +509,15 @@ protected:
 
   // The node that will be used for any ROS operations
   rclcpp_lifecycle::LifecycleNode::SharedPtr node_;
+  rclcpp::CallbackGroup::SharedPtr callback_group_;
+  rclcpp::executors::SingleThreadedExecutor callback_group_executor_;
 
   // The timeout value while waiting for response from a server when a
   // new action goal is sent or canceled
   std::chrono::milliseconds server_timeout_;
+
+  // The timeout value for BT loop execution
+  std::chrono::milliseconds max_timeout_;
 
   // The timeout value for waiting for a service to response
   std::chrono::milliseconds wait_for_service_timeout_;
