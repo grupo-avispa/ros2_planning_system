@@ -111,7 +111,7 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
 BTAction::on_activate(const rclcpp_lifecycle::State & previous_state)
 {
   // If a new tree is created, than the Groot2 Publisher must be destroyed
-  resetGrootMonitor();
+  reset_groot_monitor();
 
   try {
     tree_ = factory_.createTreeFromFile(bt_xml_file_, blackboard_);
@@ -171,7 +171,7 @@ BTAction::on_activate(const rclcpp_lifecycle::State & previous_state)
       RCLCPP_WARN(get_logger(), "Groot2 monitoring port not provided, disabling it");
     } else {
       RCLCPP_INFO(get_logger(), "Enabling Groot2 monitoring on port: %d", server_port);
-      addGrootMonitoring(&tree_, server_port);
+      add_groot_monitoring(&tree_, server_port);
     }
   }
 
@@ -185,7 +185,7 @@ BTAction::on_deactivate(const rclcpp_lifecycle::State & previous_state)
   bt_minitrace_logger_.reset();
   bt_file_logger_.reset();
   tree_.haltTree();
-  resetGrootMonitor();
+  reset_groot_monitor();
 
   return ActionExecutorClient::on_deactivate(previous_state);
 }
@@ -222,7 +222,7 @@ void BTAction::do_work()
   }
 }
 
-void BTAction::addGrootMonitoring(BT::Tree * tree, uint16_t server_port)
+void BTAction::add_groot_monitoring(BT::Tree * tree, uint16_t server_port)
 {
   // This logger publish status changes using Groot2
   groot_monitor_ = std::make_unique<BT::Groot2Publisher>(*tree, server_port);
@@ -232,7 +232,7 @@ void BTAction::addGrootMonitoring(BT::Tree * tree, uint16_t server_port)
   BT::RegisterJsonDefinition<std_msgs::msg::Header>();
 }
 
-void BTAction::resetGrootMonitor()
+void BTAction::reset_groot_monitor()
 {
   if (groot_monitor_) {
     groot_monitor_.reset();

@@ -220,6 +220,7 @@ ExecutorNode::on_deactivate(const rclcpp_lifecycle::State & state)
   dotgraph_pub_->on_deactivate();
   executing_plan_pub_->on_deactivate();
   remaining_plan_pub_->on_deactivate();
+  reset_groot_monitor();
   RCLCPP_INFO(get_logger(), "[%s] Deactivated", get_name());
 
   return CallbackReturnT::SUCCESS;
@@ -468,6 +469,9 @@ ExecutorNode::get_tree_from_plan(PlanRuntineInfo & runtime_info)
   blackboard->set("server_timeout", std::chrono::milliseconds(250));
   blackboard->set("wait_for_service_timeout", std::chrono::milliseconds(1000));
 
+  // If a new tree is created, than the Groot2 Publisher must be destroyed
+  reset_groot_monitor();
+
   runtime_info.current_tree = std::make_shared<TreeInfo>();
   *runtime_info.current_tree = {
     factory.createTreeFromText(bt_xml_tree, blackboard), blackboard, bt_builder};
@@ -476,7 +480,7 @@ ExecutorNode::get_tree_from_plan(PlanRuntineInfo & runtime_info)
   int server_port = get_parameter("server_port").as_int();
   if (enable_groot_monitoring) {
     RCLCPP_INFO(get_logger(), "Enabling Groot2 monitoring on port: %d", server_port);
-    addGrootMonitoring(&runtime_info.current_tree->tree, server_port);
+    add_groot_monitoring(&runtime_info.current_tree->tree, server_port);
   }
 
   return runtime_info.current_tree != nullptr;
@@ -873,7 +877,7 @@ ExecutorNode::execution_cycle()
   }
 }
 
-void ExecutorNode::addGrootMonitoring(BT::Tree * tree, uint16_t server_port)
+void ExecutorNode::add_groot_monitoring(BT::Tree * tree, uint16_t server_port)
 {
   // This logger publish status changes using Groot2
   groot_monitor_ = std::make_unique<BT::Groot2Publisher>(*tree, server_port);
@@ -883,7 +887,7 @@ void ExecutorNode::addGrootMonitoring(BT::Tree * tree, uint16_t server_port)
   BT::RegisterJsonDefinition<std_msgs::msg::Header>();
 }
 
-void ExecutorNode::resetGrootMonitor()
+void ExecutorNode::reset_groot_monitor()
 {
   if (groot_monitor_) {
     groot_monitor_.reset();
