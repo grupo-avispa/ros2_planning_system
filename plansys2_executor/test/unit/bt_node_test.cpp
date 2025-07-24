@@ -113,9 +113,8 @@ TEST(problem_expert, wait_overall_req_test)
     plansys2::get_action_name("(move robot1 wheels_zone assembly_zone)"),
     plansys2::get_action_params("(move robot1 wheels_zone assembly_zone)"));
 
-  ASSERT_NE(
-    (*action_map)["(move robot1 wheels_zone assembly_zone):5"].action_info.action.index(),
-    std::variant_npos);
+  ASSERT_FALSE(
+    (*action_map)["(move robot1 wheels_zone assembly_zone):5"].action_info.is_empty());
 
   std::string bt_xml_tree =
     R"(
@@ -227,9 +226,8 @@ TEST(problem_expert, wait_atstart_req_test)
     plansys2::get_action_name("(move robot1 wheels_zone assembly_zone)"),
     plansys2::get_action_params("(move robot1 wheels_zone assembly_zone)"));
 
-  ASSERT_NE(
-    (*action_map)["(move robot1 wheels_zone assembly_zone):5"].action_info.action.index(),
-    std::variant_npos);
+  ASSERT_FALSE(
+    (*action_map)["(move robot1 wheels_zone assembly_zone):5"].action_info.is_empty());
 
   std::string bt_xml_tree =
     R"(
@@ -343,9 +341,8 @@ TEST(problem_expert, wait_atend_req_test)
     plansys2::get_action_name("(move robot1 wheels_zone assembly_zone)"),
     plansys2::get_action_params("(move robot1 wheels_zone assembly_zone)"));
 
-  ASSERT_NE(
-    (*action_map)["(move robot1 wheels_zone assembly_zone):5"].action_info.action.index(),
-    std::variant_npos);
+  ASSERT_FALSE(
+    (*action_map)["(move robot1 wheels_zone assembly_zone):5"].action_info.is_empty());
 
   std::string bt_xml_tree =
     R"(
@@ -457,9 +454,8 @@ TEST(problem_expert, at_start_effect_test)
     plansys2::get_action_name("(move robot1 wheels_zone assembly_zone)"),
     plansys2::get_action_params("(move robot1 wheels_zone assembly_zone)"));
 
-  ASSERT_NE(
-    (*action_map)["(move robot1 wheels_zone assembly_zone):5"].action_info.action.index(),
-    std::variant_npos);
+  ASSERT_FALSE(
+    (*action_map)["(move robot1 wheels_zone assembly_zone):5"].action_info.is_empty());
 
   std::string bt_xml_tree =
     R"(
@@ -576,9 +572,8 @@ TEST(problem_expert, at_start_effect_retore_test)
     plansys2::get_action_name("(move robot1 wheels_zone assembly_zone)"),
     plansys2::get_action_params("(move robot1 wheels_zone assembly_zone)"));
 
-  ASSERT_NE(
-    (*action_map)["(move robot1 wheels_zone assembly_zone):5"].action_info.action.index(),
-    std::variant_npos);
+  ASSERT_FALSE(
+    (*action_map)["(move robot1 wheels_zone assembly_zone):5"].action_info.is_empty());
 
   std::string bt_xml_tree =
     R"(
@@ -697,9 +692,8 @@ TEST(problem_expert, at_end_effect_test)
     plansys2::get_action_name("(move robot1 wheels_zone assembly_zone)"),
     plansys2::get_action_params("(move robot1 wheels_zone assembly_zone)"));
 
-  ASSERT_NE(
-    (*action_map)["(move robot1 wheels_zone assembly_zone):5"].action_info.action.index(),
-    std::variant_npos);
+  ASSERT_FALSE(
+    (*action_map)["(move robot1 wheels_zone assembly_zone):5"].action_info.is_empty());
 
   std::string bt_xml_tree =
     R"(

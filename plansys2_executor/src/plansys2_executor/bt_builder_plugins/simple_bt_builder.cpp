@@ -824,11 +824,11 @@ SimpleBTBuilder::get_plan_actions(const plansys2_msgs::msg::Plan & plan)
     action_stamped.duration = item.duration;
     auto actions = domain_client_->getActions();
     if (std::find(actions.begin(), actions.end(), get_action_name(item.action)) != actions.end()) {
-      action_stamped.action.action =
+      action_stamped.action =
         domain_client_->getAction(
         get_action_name(item.action), get_action_params(item.action));
     } else {
-      action_stamped.action.action =
+      action_stamped.action =
         domain_client_->getDurativeAction(
         get_action_name(item.action), get_action_params(item.action));
     }
