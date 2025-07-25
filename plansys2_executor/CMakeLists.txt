@@ -26,8 +26,6 @@ find_package(pluginlib REQUIRED)
 find_package(behaviortree_cpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
-find_package(yaml_cpp_vendor REQUIRED)
-find_package(yaml-cpp REQUIRED)
 
 set(EXECUTOR_SOURCES
   src/plansys2_executor/ExecutorClient.cpp
@@ -72,7 +70,6 @@ target_link_libraries(${PROJECT_NAME}
   ${std_srvs_TARGETS}
   PRIVATE
   ament_index_cpp::ament_index_cpp
-  yaml-cpp::yaml-cpp
 )
 
 add_executable(executor_node
@@ -180,7 +177,5 @@ ament_export_dependencies(
   behaviortree_cpp
   std_msgs
   std_srvs
-  yaml_cpp_vendor
-  yaml-cpp
 )
 ament_package()

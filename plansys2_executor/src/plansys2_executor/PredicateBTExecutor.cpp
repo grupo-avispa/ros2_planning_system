@@ -30,8 +30,8 @@ PredicateBTExecutor::PredicateBTExecutor(BT::Blackboard::Ptr blackboard)
   problem_client_ =
     blackboard_->get<std::shared_ptr<plansys2::ProblemExpertClient>>("problem_client");
   predicate_bt_map_ =
-    blackboard_->get<std::unordered_map<std::string, std::string>>("predicate_bt_map");
-  predicate_plugin_list_ = blackboard_->get<std::vector<std::string>>("predicate_plugin_list");
+    blackboard_->get<std::unordered_map<std::string, std::string>>("predicates_bt_xml");
+  predicate_plugin_list_ = blackboard_->get<std::vector<std::string>>("predicate_plugins");
 
   // Register the plugins for the behavior tree factory
   BT::SharedLibrary loader;
