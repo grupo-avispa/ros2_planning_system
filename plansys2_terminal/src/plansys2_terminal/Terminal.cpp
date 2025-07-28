@@ -447,7 +447,7 @@ Terminal::process_get_model(std::vector<std::string> & command, std::ostringstre
 
       os << "Derived predicates: " << predicates.size() << std::endl;
       for (const auto & predicate : predicates) {
-        os << "\t" << predicate.name << std::endl;
+        os << "\t" << predicate.predicate.name << std::endl;
       }
     } else if (command[0] == "functions") {
       auto functions = domain_client_->getFunctions();
