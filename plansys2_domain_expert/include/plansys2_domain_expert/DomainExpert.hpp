@@ -20,6 +20,8 @@
 #include <vector>
 #include <memory>
 
+#include "plansys2_core/State.hpp"
+
 #include "plansys2_msgs/msg/action.hpp"
 #include "plansys2_msgs/msg/derived.hpp"
 #include "plansys2_msgs/msg/durative_action.hpp"
@@ -112,13 +114,19 @@ public:
    */
   std::optional<plansys2::Function> getFunction(const std::string & function);
 
+  plansys2_msgs::msg::Derived getDerivedFromDomain(
+    unsigned int i, const std::vector<std::string> & params = {});
+
+  /// Get the derived predicates existing in the domain.
   /**
    * @brief Get the derived predicates defined in the domain.
    *
    * @return std::vector<plansys2::Predicate> Vector containing the derived predicates
    *         defined in the domain.
    */
-  std::vector<plansys2::Predicate> getDerivedPredicates();
+  std::vector<plansys2_msgs::msg::Derived> getDerivedPredicates();
+
+  plansys2::DerivedResolutionGraph getDerivedResolutionGraph();
 
   /**
    * @brief Get the details of a derived predicate defined in the domain.
