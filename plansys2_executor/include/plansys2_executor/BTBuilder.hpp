@@ -22,6 +22,7 @@
 #include <memory>
 #include <string>
 
+#include "plansys2_core/Action.hpp"
 #include "plansys2_executor/ActionExecutor.hpp"
 #include "plansys2_msgs/msg/plan.hpp"
 #include "plansys2_pddl_parser/Utils.hpp"
