@@ -20,7 +20,7 @@
 #include <vector>
 #include <memory>
 
-#include "plansys2_core/State.hpp"
+#include "plansys2_core/DerivedResolutionGraph.hpp"
 
 #include "plansys2_msgs/msg/action.hpp"
 #include "plansys2_msgs/msg/derived.hpp"
