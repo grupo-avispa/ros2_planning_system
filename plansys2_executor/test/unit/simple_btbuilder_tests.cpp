@@ -281,18 +281,18 @@ TEST(simple_btbuilder_tests, test_plan_1)
   ASSERT_FALSE(btbuilder->is_action_executable(action_sequence[4], predicates, functions));
   ASSERT_FALSE(btbuilder->is_action_executable(action_sequence[5], predicates, functions));
 
-  ASSERT_NE(
+  EXPECT_TRUE(
     std::find_if(
       predicates.begin(), predicates.end(),
       std::bind(
         &parser::pddl::checkNodeEquality, std::placeholders::_1,
-        parser::pddl::fromStringPredicate("(robot_at leia entrance)"), true)), predicates.end());
-  ASSERT_EQ(
+        parser::pddl::fromStringPredicate("(robot_at leia entrance)"), true)) != predicates.end());
+  EXPECT_TRUE(
     std::find_if(
       predicates.begin(), predicates.end(),
       std::bind(
         &parser::pddl::checkNodeEquality, std::placeholders::_1,
-        parser::pddl::fromStringPredicate("(robot_at leia chargingroom)"), true)),
+        parser::pddl::fromStringPredicate("(robot_at leia chargingroom)"), true)) ==
         predicates.end());
 
   plansys2::apply(
@@ -302,19 +302,19 @@ TEST(simple_btbuilder_tests, test_plan_1)
     action_sequence[0].action.get_at_end_effects(),
     predicates, functions);
 
-  ASSERT_EQ(
+  EXPECT_TRUE(
     std::find_if(
       predicates.begin(), predicates.end(),
       std::bind(
         &parser::pddl::checkNodeEquality, std::placeholders::_1,
-        parser::pddl::fromStringPredicate("(robot_at leia entrance)"), true)),
+        parser::pddl::fromStringPredicate("(robot_at leia entrance)"), true)) ==
         predicates.end());
-  ASSERT_NE(
+  EXPECT_TRUE(
     std::find_if(
       predicates.begin(), predicates.end(),
       std::bind(
         &parser::pddl::checkNodeEquality, std::placeholders::_1,
-        parser::pddl::fromStringPredicate("(robot_at leia chargingroom)"), true)),
+        parser::pddl::fromStringPredicate("(robot_at leia chargingroom)"), true)) !=
         predicates.end());
 
   ASSERT_TRUE(btbuilder->is_action_executable(action_sequence[1], predicates, functions));
@@ -367,12 +367,12 @@ TEST(simple_btbuilder_tests, test_plan_1)
     action_sequence[5].action.get_at_end_effects(),
     predicates, functions);
 
-  ASSERT_NE(
+  EXPECT_TRUE(
     std::find_if(
       predicates.begin(), predicates.end(),
       std::bind(
         &parser::pddl::checkNodeEquality, std::placeholders::_1,
-        parser::pddl::fromStringPredicate("(robot_at leia bathroom)"), true)), predicates.end());
+        parser::pddl::fromStringPredicate("(robot_at leia bathroom)"), true)) != predicates.end());
 
   finish = true;
   t.join();
@@ -540,26 +540,26 @@ TEST(simple_btbuilder_tests, test_plan_2)
       predicates, functions);
   }
 
-  ASSERT_NE(
+  EXPECT_TRUE(
     std::find_if(
       predicates.begin(), predicates.end(),
       std::bind(
         &parser::pddl::checkNodeEquality, std::placeholders::_1,
-        parser::pddl::fromStringPredicate("(robot_at robot1 body_car_zone)"), true)),
+        parser::pddl::fromStringPredicate("(robot_at robot1 body_car_zone)"), true)) !=
         predicates.end());
-  ASSERT_NE(
+  EXPECT_TRUE(
     std::find_if(
       predicates.begin(), predicates.end(),
       std::bind(
         &parser::pddl::checkNodeEquality, std::placeholders::_1,
-        parser::pddl::fromStringPredicate("(robot_at robot2 steering_wheels_zone)"), true)),
+        parser::pddl::fromStringPredicate("(robot_at robot2 steering_wheels_zone)"), true)) !=
         predicates.end());
-  ASSERT_NE(
+  EXPECT_TRUE(
     std::find_if(
       predicates.begin(), predicates.end(),
       std::bind(
         &parser::pddl::checkNodeEquality, std::placeholders::_1,
-        parser::pddl::fromStringPredicate("(robot_at robot3 wheels_zone)"), true)),
+        parser::pddl::fromStringPredicate("(robot_at robot3 wheels_zone)"), true)) !=
         predicates.end());
 
   tree.nodes.clear();
@@ -567,7 +567,7 @@ TEST(simple_btbuilder_tests, test_plan_2)
     tree, "(robot_at robot1 body_car_zone)", false,
     plansys2_msgs::msg::Node::AND);
   auto node_satisfy_1 = btbuilder->get_node_satisfy(tree, *roots.begin(), nullptr);
-  ASSERT_NE(node_satisfy_1, nullptr);
+  EXPECT_TRUE(node_satisfy_1 != nullptr);
   ASSERT_EQ(node_satisfy_1->action.action.get_action_name(), "move");
   ASSERT_EQ(node_satisfy_1->action.action.get_action_params().size(), 3u);
   ASSERT_EQ(node_satisfy_1->action.action.get_action_params()[0].name, "robot1");
@@ -576,12 +576,12 @@ TEST(simple_btbuilder_tests, test_plan_2)
 
   auto it = roots.begin();
   it++;
-  ASSERT_EQ(btbuilder->get_node_satisfy(tree, *it, nullptr), nullptr);
+  EXPECT_TRUE(btbuilder->get_node_satisfy(tree, *it, nullptr) == nullptr);
   it++;
-  ASSERT_EQ(btbuilder->get_node_satisfy(tree, *it, nullptr), nullptr);
+  EXPECT_TRUE(btbuilder->get_node_satisfy(tree, *it, nullptr) == nullptr);
 
   auto graph = btbuilder->get_graph(plan.value());
-  ASSERT_NE(graph, nullptr);
+  EXPECT_TRUE(graph != nullptr);
 
   btbuilder->print_graph(graph);
 
