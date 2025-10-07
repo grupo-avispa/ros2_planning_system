@@ -312,7 +312,7 @@ public:
       case GOAL_CANCELLING:
         {
           RCLCPP_DEBUG(node_->get_logger(), "%s GOAL_CANCELLING", node_->get_name());
-          if (future_cancer_handle_.valid()) {
+          if (future_cancel_handle_.valid()) {
             state_ = GOAL_FINISHED;
             return BT::NodeStatus::SUCCESS;
           } else {
@@ -365,25 +365,33 @@ public:
 
 protected:
   /**
-   * @brief Function to cancel the current goal
-   * If the goal handle is not set, it will cancel the goal using the action client.
-   * If the goal handle is set, it will create a new action client and cancel the goal.
+   * @brief Function to cancel the current goal.
    */
   void cancel_goal()
   {
-    if (!goal_handle_) {
-      future_cancer_handle_ = action_client_->async_cancel_goal(goal_handle_);
-      if (callback_group_executor_.spin_until_future_complete(future_cancer_handle_,
+    if (goal_handle_) {
+      future_cancel_handle_ = action_client_->async_cancel_goal(goal_handle_);
+      if (callback_group_executor_.spin_until_future_complete(future_cancel_handle_,
           server_timeout_) != rclcpp::FutureReturnCode::SUCCESS)
       {
         RCLCPP_ERROR(
           node_->get_logger(), "Failed to cancel action server for %s", action_name_.c_str());
       }
 
-    } else {
-      if (!createActionClient(action_name_)) {
-        RCLCPP_ERROR(node_->get_logger(), "Failed to create action client");
+      auto future_result = action_client_->async_get_result(goal_handle_);
+      if (callback_group_executor_.spin_until_future_complete(future_result, server_timeout_) !=
+        rclcpp::FutureReturnCode::SUCCESS)
+      {
+        RCLCPP_ERROR(
+        node_->get_logger(),
+        "Failed to get result for %s in node halt!", action_name_.c_str());
       }
+
+      on_cancelled();
+    } else {
+      RCLCPP_WARN(
+        node_->get_logger(),
+        "Cannot cancel goal for %s: goal handle is null", action_name_.c_str());
     }
   }
 
@@ -398,9 +406,9 @@ protected:
       return false;
     }
 
-    // Goal handle has dissapear
-    if (goal_handle_ == nullptr) {
-      return true;
+    // No need to cancel the goal if goal handle is invalid
+    if (!goal_handle_) {
+      return false;
     }
 
     callback_group_executor_.spin_some();
@@ -502,7 +510,7 @@ protected:
   std::shared_ptr<std::shared_future<typename rclcpp_action::ClientGoalHandle<ActionT>::SharedPtr>>
   future_goal_handle_;
   std::shared_future<typename ActionT::Impl::CancelGoalService::Response::SharedPtr>
-  future_cancer_handle_;
+  future_cancel_handle_;
   rclcpp::Time goal_sent_ts_;
   typename rclcpp_action::ClientGoalHandle<ActionT>::SharedPtr goal_handle_;
   typename rclcpp_action::ClientGoalHandle<ActionT>::WrappedResult result_;
