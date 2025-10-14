@@ -3,11 +3,11 @@
 <package format="3">
   <name>plansys2_support_py</name>
   <version>2.0.18</version>
-  
+
   <description>This package contains modules for developing PlanSys components in Python</description>
 
   <maintainer email="fmrico@gmail.com">Francisco Martin Rico</maintainer>
- 
+
   <license>Apache License, Version 2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
