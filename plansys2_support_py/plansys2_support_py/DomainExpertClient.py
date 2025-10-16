@@ -65,7 +65,7 @@ class DomainExpertClient(Node):
         # Setup namespace prefix
         self._namespace_prefix = f'/{namespace}' if namespace else ''
 
-        self.get_logger().info(f'Domain Expert Client "{node_name}" initialized')
+        self.get_logger().debug(f'Domain Expert Client "{node_name}" initialized')
 
     def _create_and_call_service(self, service_type, service_name: str, request):
         """
@@ -111,7 +111,7 @@ class DomainExpertClient(Node):
 
         response = self._create_and_call_service(GetDomain, service_name, request)
         if response and response.success:
-            self.get_logger().info('Successfully retrieved domain')
+            self.get_logger().debug('Successfully retrieved domain')
             return response.domain
         else:
             error_msg = response.error_info if response else 'Service call failed'
@@ -130,7 +130,7 @@ class DomainExpertClient(Node):
 
         response = self._create_and_call_service(GetDomainName, service_name, request)
         if response and response.success:
-            self.get_logger().info(f'Successfully retrieved domain name: {response.name}')
+            self.get_logger().debug(f'Successfully retrieved domain name: {response.name}')
             return response.name
         else:
             error_msg = response.error_info if response else 'Service call failed'
@@ -149,7 +149,7 @@ class DomainExpertClient(Node):
 
         response = self._create_and_call_service(GetDomainTypes, service_name, request)
         if response and response.success:
-            self.get_logger().info(f'Successfully retrieved {len(response.types)} domain types')
+            self.get_logger().debug(f'Successfully retrieved {len(response.types)} domain types')
             return list(response.types)
         else:
             error_msg = response.error_info if response else 'Service call failed'
@@ -172,7 +172,7 @@ class DomainExpertClient(Node):
 
         response = self._create_and_call_service(GetDomainConstants, service_name, request)
         if response and response.success:
-            self.get_logger().info(
+            self.get_logger().debug(
                 f'Successfully retrieved {len(response.constants)} constants for type: {type_name}'
             )
             return list(response.constants)
@@ -193,7 +193,7 @@ class DomainExpertClient(Node):
 
         response = self._create_and_call_service(GetStates, service_name, request)
         if response and response.success:
-            self.get_logger().info(
+            self.get_logger().debug(
                 f'Successfully retrieved {len(response.states)} domain predicates')
             return response.states
         else:
@@ -213,7 +213,7 @@ class DomainExpertClient(Node):
 
         response = self._create_and_call_service(GetStates, service_name, request)
         if response and response.success:
-            self.get_logger().info(
+            self.get_logger().debug(
                 f'Successfully retrieved {len(response.states)} domain functions')
             return response.states
         else:
@@ -233,7 +233,7 @@ class DomainExpertClient(Node):
 
         response = self._create_and_call_service(GetStates, service_name, request)
         if response and response.success:
-            self.get_logger().info(
+            self.get_logger().debug(
                 f'Successfully retrieved {len(response.states)} derived predicates'
             )
             return response.states
@@ -261,7 +261,7 @@ class DomainExpertClient(Node):
         response = self._create_and_call_service(
             GetDomainDerivedPredicateDetails, service_name, request)
         if response and response.success:
-            self.get_logger().info(
+            self.get_logger().debug(
                 f'Successfully retrieved details for derived predicate: {predicate_name}')
             return response.predicates
         else:
@@ -282,7 +282,7 @@ class DomainExpertClient(Node):
 
         response = self._create_and_call_service(GetDomainActions, service_name, request)
         if response and response.success:
-            self.get_logger().info(
+            self.get_logger().debug(
                 f'Successfully retrieved {len(response.actions)} domain actions'
             )
             return list(response.actions)
@@ -303,7 +303,7 @@ class DomainExpertClient(Node):
 
         response = self._create_and_call_service(GetDomainActions, service_name, request)
         if response and response.success:
-            self.get_logger().info(
+            self.get_logger().debug(
                 f'Successfully retrieved {len(response.actions)} durative actions')
             return response.actions
         else:
@@ -327,7 +327,7 @@ class DomainExpertClient(Node):
 
         response = self._create_and_call_service(GetNodeDetails, service_name, request)
         if response and response.success:
-            self.get_logger().info(
+            self.get_logger().debug(
                 f'Successfully retrieved details for predicate: {predicate_name}')
             return response.node
         else:
@@ -352,9 +352,9 @@ class DomainExpertClient(Node):
 
         response = self._create_and_call_service(GetNodeDetails, service_name, request)
         if response and response.success:
-            self.get_logger().info(
+            self.get_logger().debug(
                 f'Successfully retrieved details for function: {function_name}')
-            return response.function
+            return response.node
         else:
             error_msg = response.error_info if response else 'Service call failed'
             self.get_logger().error(
@@ -382,7 +382,7 @@ class DomainExpertClient(Node):
 
         response = self._create_and_call_service(GetDomainActionDetails, service_name, request)
         if response and response.success:
-            self.get_logger().info(f'Successfully retrieved details for action: {action_name}')
+            self.get_logger().debug(f'Successfully retrieved details for action: {action_name}')
             return response.action
         else:
             error_msg = response.error_info if response else 'Service call failed'
@@ -412,7 +412,7 @@ class DomainExpertClient(Node):
             GetDomainDurativeActionDetails, service_name, request
         )
         if response and response.success:
-            self.get_logger().info(
+            self.get_logger().debug(
                 f'Successfully retrieved durative action details: {action_name}'
             )
             return response.durative_action

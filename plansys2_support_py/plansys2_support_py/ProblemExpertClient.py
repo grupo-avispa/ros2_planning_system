@@ -64,7 +64,7 @@ class ProblemExpertClient(Node):
         """
         super().__init__(node_name)
         self._namespace_prefix = f'/{namespace}' if namespace else ''
-        self.get_logger().info(f'Problem Expert Client "{node_name}" initialized')
+        self.get_logger().debug(f'Problem Expert Client "{node_name}" initialized')
 
     def _create_and_call_service(self, service_type, service_name: str, request):
         """
@@ -110,7 +110,7 @@ class ProblemExpertClient(Node):
 
         response = self._create_and_call_service(AddProblem, service_name, request)
         if response and response.success:
-            self.get_logger().info('Successfully added problem')
+            self.get_logger().debug('Successfully added problem')
             return True
         else:
             error_msg = response.error_info if response else 'Service call failed'
@@ -133,7 +133,7 @@ class ProblemExpertClient(Node):
 
         response = self._create_and_call_service(AddProblemGoal, service_name, request)
         if response and response.success:
-            self.get_logger().info(f'Successfully added problem goal: {goal}')
+            self.get_logger().debug(f'Successfully added problem goal: {goal}')
             return True
         else:
             error_msg = response.error_info if response else 'Service call failed'
@@ -156,7 +156,7 @@ class ProblemExpertClient(Node):
 
         response = self._create_and_call_service(AffectParam, service_name, request)
         if response and response.success:
-            self.get_logger().info(f'Successfully added problem instance: {instance}')
+            self.get_logger().debug(f'Successfully added problem instance: {instance}')
             return True
         else:
             error_msg = response.error_info if response else 'Service call failed'
@@ -179,7 +179,7 @@ class ProblemExpertClient(Node):
 
         response = self._create_and_call_service(AffectNode, service_name, request)
         if response and response.success:
-            self.get_logger().info(f'Successfully added problem predicate: {predicate}')
+            self.get_logger().debug(f'Successfully added problem predicate: {predicate}')
             return True
         else:
             error_msg = response.error_info if response else 'Service call failed'
@@ -202,7 +202,7 @@ class ProblemExpertClient(Node):
 
         response = self._create_and_call_service(AffectNode, service_name, request)
         if response and response.success:
-            self.get_logger().info(f'Successfully added problem function: {function}')
+            self.get_logger().debug(f'Successfully added problem function: {function}')
             return True
         else:
             error_msg = response.error_info if response else 'Service call failed'
@@ -221,7 +221,7 @@ class ProblemExpertClient(Node):
 
         response = self._create_and_call_service(GetProblemGoal, service_name, request)
         if response and response.success:
-            self.get_logger().info(f'Successfully retrieved the problem goal {response.tree}')
+            self.get_logger().debug(f'Successfully retrieved the problem goal {response.tree}')
             return response.tree
         else:
             error_msg = response.error_info if response else 'Service call failed'
@@ -244,7 +244,7 @@ class ProblemExpertClient(Node):
 
         response = self._create_and_call_service(GetProblemInstanceDetails, service_name, request)
         if response and response.success:
-            self.get_logger().info(
+            self.get_logger().debug(
                 f'Successfully retrieved problem instance {response.instance}')
             return response.instance
         else:
@@ -264,7 +264,7 @@ class ProblemExpertClient(Node):
 
         response = self._create_and_call_service(GetProblemInstances, service_name, request)
         if response and response.success:
-            self.get_logger().info(
+            self.get_logger().debug(
                 f'Successfully retrieved {len(response.instances)} problem instances')
             return response.instances
         else:
@@ -288,7 +288,7 @@ class ProblemExpertClient(Node):
 
         response = self._create_and_call_service(GetNodeDetails, service_name, request)
         if response and response.success:
-            self.get_logger().info(
+            self.get_logger().debug(
                 f'Successfully retrieved the problem predicate {response.node}')
             return response.node
         else:
@@ -308,7 +308,7 @@ class ProblemExpertClient(Node):
 
         response = self._create_and_call_service(GetStates, service_name, request)
         if response and response.success:
-            self.get_logger().info(
+            self.get_logger().debug(
                 f'Successfully retrieved {len(response.states)} problem predicates')
             return list(response.states)
         else:
@@ -332,7 +332,7 @@ class ProblemExpertClient(Node):
 
         response = self._create_and_call_service(GetNodeDetails, service_name, request)
         if response and response.success:
-            self.get_logger().info(
+            self.get_logger().debug(
                 f'Successfully retrieved the problem function {response.node}')
             return response.node
         else:
@@ -352,7 +352,7 @@ class ProblemExpertClient(Node):
 
         response = self._create_and_call_service(GetStates, service_name, request)
         if response and response.success:
-            self.get_logger().info(
+            self.get_logger().debug(
                 f'Successfully retrieved {len(response.states)} problem functions')
             return list(response.states)
         else:
@@ -372,7 +372,7 @@ class ProblemExpertClient(Node):
 
         response = self._create_and_call_service(GetProblem, service_name, request)
         if response and response.success:
-            self.get_logger().info('Successfully retrieved problem')
+            self.get_logger().debug('Successfully retrieved problem')
             return response.problem
         else:
             error_msg = response.error_info if response else 'Service call failed'
@@ -391,7 +391,7 @@ class ProblemExpertClient(Node):
 
         response = self._create_and_call_service(RemoveProblemGoal, service_name, request)
         if response and response.success:
-            self.get_logger().info('Successfully removed the current problem goal')
+            self.get_logger().debug('Successfully removed the current problem goal')
             return True
         else:
             error_msg = response.error_info if response else 'Service call failed'
@@ -410,7 +410,7 @@ class ProblemExpertClient(Node):
 
         response = self._create_and_call_service(ClearProblemKnowledge, service_name, request)
         if response and response.success:
-            self.get_logger().info('Successfully cleared problem knowledge')
+            self.get_logger().debug('Successfully cleared problem knowledge')
             return True
         else:
             error_msg = response.error_info if response else 'Service call failed'
@@ -434,7 +434,7 @@ class ProblemExpertClient(Node):
 
         response = self._create_and_call_service(AffectParam, service_name, request)
         if response and response.success:
-            self.get_logger().info(f'Successfully removed problem instance: {instance}')
+            self.get_logger().debug(f'Successfully removed problem instance: {instance}')
             return True
         else:
             error_msg = response.error_info if response else 'Service call failed'
@@ -457,7 +457,7 @@ class ProblemExpertClient(Node):
 
         response = self._create_and_call_service(AffectNode, service_name, request)
         if response and response.success:
-            self.get_logger().info(f'Successfully removed problem predicate: {predicate}')
+            self.get_logger().debug(f'Successfully removed problem predicate: {predicate}')
             return True
         else:
             error_msg = response.error_info if response else 'Service call failed'
@@ -480,7 +480,7 @@ class ProblemExpertClient(Node):
 
         response = self._create_and_call_service(AffectNode, service_name, request)
         if response and response.success:
-            self.get_logger().info(f'Successfully removed problem function: {function}')
+            self.get_logger().debug(f'Successfully removed problem function: {function}')
             return True
         else:
             error_msg = response.error_info if response else 'Service call failed'
@@ -503,7 +503,7 @@ class ProblemExpertClient(Node):
 
         response = self._create_and_call_service(ExistNode, service_name, request)
         if response is not None:
-            self.get_logger().info(f'Problem goal exists: {response.exist}')
+            self.get_logger().debug(f'Problem goal exists: {response.exist}')
             return response.exist
         else:
             self.get_logger().error('Failed to check if problem goal exists')
@@ -525,7 +525,7 @@ class ProblemExpertClient(Node):
 
         response = self._create_and_call_service(ExistNode, service_name, request)
         if response is not None:
-            self.get_logger().info(f'Problem goal exists: {response.exist}')
+            self.get_logger().debug(f'Problem goal exists: {response.exist}')
             return response.exist
         else:
             self.get_logger().error('Failed to check if problem goal exists')
@@ -547,7 +547,7 @@ class ProblemExpertClient(Node):
 
         response = self._create_and_call_service(AffectNode, service_name, request)
         if response is not None:
-            self.get_logger().info('Problem goal updated')
+            self.get_logger().debug('Problem goal updated')
             return True
         else:
             self.get_logger().error('Failed to update problem goal')
@@ -566,7 +566,7 @@ class ProblemExpertClient(Node):
 
         response = self._create_and_call_service(IsProblemGoalSatisfied, service_name, request)
         if response is not None:
-            self.get_logger().info(f'Problem goal satisfied: {response.satisfied}')
+            self.get_logger().debug(f'Problem goal satisfied: {response.satisfied}')
             return response.satisfied
         else:
             self.get_logger().error('Failed to check if problem goal is satisfied')
