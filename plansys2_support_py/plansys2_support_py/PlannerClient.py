@@ -50,7 +50,7 @@ class PlannerClient(Node):
         # Setup namespace prefix
         self._namespace_prefix = f'/{namespace}' if namespace else ''
 
-        self.get_logger().info(f'Domain Expert Client "{node_name}" initialized')
+        self.get_logger().debug(f'Domain Expert Client "{node_name}" initialized')
 
     def _create_and_call_service(self, service_type, service_name: str, request):
         """
@@ -102,7 +102,7 @@ class PlannerClient(Node):
 
         response = self._create_and_call_service(GetPlan, service_name, request)
         if response and response.success:
-            self.get_logger().info('Successfully generated plan')
+            self.get_logger().debug('Successfully generated plan')
             return response.plan
         else:
             error_msg = response.error_info if response else 'Service call failed'
@@ -127,7 +127,7 @@ class PlannerClient(Node):
 
         response = self._create_and_call_service(GetPlanArray, service_name, request)
         if response and response.success:
-            self.get_logger().info('Successfully retrieved plan array')
+            self.get_logger().debug('Successfully retrieved plan array')
             return response.plan_array
         else:
             error_msg = response.error_info if response else 'Service call failed'
@@ -150,7 +150,7 @@ class PlannerClient(Node):
 
         response = self._create_and_call_service(ValidateDomain, service_name, request)
         if response and response.success:
-            self.get_logger().info('Successfully validated domain')
+            self.get_logger().debug('Successfully validated domain')
             return True
         else:
             error_msg = response.error_info if response else 'Service call failed'
