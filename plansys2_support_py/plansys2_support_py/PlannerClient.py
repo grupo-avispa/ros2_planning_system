@@ -19,7 +19,7 @@ PlanSys2 Planner Client.
 This module provides specific classes for interacting with PlanSys2 services.
 """
 
-from typing import List, Optional
+from typing import Optional
 import rclpy
 from rclpy.client import Client
 from rclpy.node import Node

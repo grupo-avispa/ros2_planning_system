@@ -49,7 +49,7 @@ class ExecutorClient(Node):
         # Setup namespace prefix
         self._namespace_prefix = f'/{namespace}' if namespace else ''
 
-        self.get_logger().info(f'Executor Client "{node_name}" initialized')
+        self.get_logger().debug(f'Executor Client "{node_name}" initialized')
 
     def _create_and_call_service(self, service_type, service_name: str, request):
         """
@@ -98,7 +98,7 @@ class ExecutorClient(Node):
 
         response = self._create_and_call_service(GetOrderedSubGoals, service_name, request)
         if response and response.success:
-            self.get_logger().info('Successfully retrieved ordered sub-goals')
+            self.get_logger().debug('Successfully retrieved ordered sub-goals')
             return response.sub_goals
         else:
             error_msg = response.error_info if response else 'Service call failed'
@@ -121,7 +121,7 @@ class ExecutorClient(Node):
 
         response = self._create_and_call_service(GetPlan, service_name, request)
         if response and response.success:
-            self.get_logger().info('Successfully retrieved current plan')
+            self.get_logger().debug('Successfully retrieved current plan')
             return response.plan
         else:
             error_msg = response.error_info if response else 'Service call failed'
@@ -145,7 +145,7 @@ class ExecutorClient(Node):
 
         response = self._create_and_call_service(GetPlan, service_name, request)
         if response and response.success:
-            self.get_logger().info('Successfully retrieved remaining plan')
+            self.get_logger().debug('Successfully retrieved remaining plan')
             return response.plan
         else:
             error_msg = response.error_info if response else 'Service call failed'
@@ -166,7 +166,7 @@ class ExecutorClient(Node):
         if sub_goals:
             print(f'Ordered Sub-Goals ({len(sub_goals)}):')
             for i, goal in enumerate(sub_goals):
-                print(f'  [{i+1}] {goal}')
+                print(f'  [{i + 1}] {goal}')
         else:
             print('No sub-goals available')
 
@@ -177,7 +177,7 @@ class ExecutorClient(Node):
             for i, item in enumerate(current_plan.items):
                 action = item.action if hasattr(item, 'action') else 'N/A'
                 duration = item.duration if hasattr(item, 'duration') else 0.0
-                print(f'  [{i+1}] Action: {action}, Duration: {duration:.2f}s')
+                print(f'  [{i + 1}] Action: {action}, Duration: {duration:.2f}s')
         else:
             print('\nNo current plan available')
 
@@ -188,7 +188,7 @@ class ExecutorClient(Node):
             for i, item in enumerate(remaining_plan.items):
                 action = item.action if hasattr(item, 'action') else 'N/A'
                 duration = item.duration if hasattr(item, 'duration') else 0.0
-                print(f'  [{i+1}] Action: {action}, Duration: {duration:.2f}s')
+                print(f'  [{i + 1}] Action: {action}, Duration: {duration:.2f}s')
 
             # Calculate progress
             if current_plan and len(current_plan.items) > 0:

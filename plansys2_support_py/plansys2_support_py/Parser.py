@@ -16,7 +16,7 @@
 """Parser utilities for PlanSys2 PDDL structures."""
 
 import re
-from typing import List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from plansys2_msgs.msg import Node, Param, Tree
 
@@ -306,7 +306,7 @@ class Parser:
             node.name = tokens[0]
             for token in tokens[1:]:
                 param = Parser.param_from_string(token)
-                node.parameters.append(param)
+                node.parameters.append(param)  # type: ignore[union-attr]
 
         node.value = 0.0
         return node
@@ -334,7 +334,7 @@ class Parser:
             # Extract parameters
             for match in re.finditer(name_pattern, temp):
                 param = Parser.param_from_string(match.group())
-                node.parameters.append(param)
+                node.parameters.append(param)  # type: ignore[union-attr]
 
             # Extract value if present
             match = re.search(number_pattern, temp)
@@ -386,7 +386,7 @@ class Parser:
                     param = Parser.param_from_string(parts[0].strip(), parts[1].strip())
                 else:
                     param = Parser.param_from_string(tokens[i].strip())
-                node.parameters.append(param)
+                node.parameters.append(param)  # type: ignore[union-attr]
 
         node.value = 0.0
         return node
@@ -425,7 +425,7 @@ class Parser:
             return None
 
         # Determine default node type based on parent
-        default_node_type = Node.UNKNOWN
+        default_node_type: int = Node.UNKNOWN
         if parent in [Node.AND, Node.OR, Node.NOT]:
             default_node_type = Node.PREDICATE
         elif parent in [Node.EXPRESSION, Node.FUNCTION_MODIFIER]:
@@ -438,13 +438,13 @@ class Parser:
             node.node_type = node_type
             node.node_id = len(tree.nodes)
             node.negate = negate
-            tree.nodes.append(node)
+            tree.nodes.append(node)  # type: ignore[union-attr]
 
             subexprs = Parser.get_sub_expr(wexpr)
             for subexpr in subexprs:
                 child = Parser._from_string_recursive(tree, subexpr, negate, node_type)
                 if child:
-                    tree.nodes[node.node_id].children.append(child.node_id)
+                    tree.nodes[node.node_id].children.append(child.node_id)  # type: ignore[index]
 
             return node
 
@@ -453,13 +453,13 @@ class Parser:
             node.node_type = node_type
             node.node_id = len(tree.nodes)
             node.negate = negate
-            tree.nodes.append(node)
+            tree.nodes.append(node)  # type: ignore[union-attr]
 
             subexprs = Parser.get_sub_expr(wexpr)
             for subexpr in subexprs:
                 child = Parser._from_string_recursive(tree, subexpr, negate, node_type)
                 if child:
-                    tree.nodes[node.node_id].children.append(child.node_id)
+                    tree.nodes[node.node_id].children.append(child.node_id)  # type: ignore[index]
 
             return node
 
@@ -468,13 +468,13 @@ class Parser:
             node.node_type = node_type
             node.node_id = len(tree.nodes)
             node.negate = negate
-            tree.nodes.append(node)
+            tree.nodes.append(node)  # type: ignore[union-attr]
 
             subexprs = Parser.get_sub_expr(wexpr)
             if subexprs:
                 child = Parser._from_string_recursive(tree, subexprs[0], not negate, node_type)
                 if child:
-                    tree.nodes[node.node_id].children.append(child.node_id)
+                    tree.nodes[node.node_id].children.append(child.node_id)  # type: ignore[index]
 
             return node
 
@@ -482,14 +482,14 @@ class Parser:
             node = Parser.node_from_string_predicate(wexpr)
             node.node_id = len(tree.nodes)
             node.negate = negate
-            tree.nodes.append(node)
+            tree.nodes.append(node)  # type: ignore[union-attr]
             return node
 
         elif node_type == Node.FUNCTION:
             node = Parser.node_from_string_function(wexpr)
             node.node_id = len(tree.nodes)
             node.negate = negate
-            tree.nodes.append(node)
+            tree.nodes.append(node)  # type: ignore[union-attr]
             return node
 
         elif node_type == Node.EXPRESSION:
@@ -499,13 +499,13 @@ class Parser:
             node.expression_type = expr_type
             node.node_id = len(tree.nodes)
             node.negate = negate
-            tree.nodes.append(node)
+            tree.nodes.append(node)  # type: ignore[union-attr]
 
             subexprs = Parser.get_sub_expr(wexpr)
             for subexpr in subexprs:
                 child = Parser._from_string_recursive(tree, subexpr, negate, node_type)
                 if child:
-                    tree.nodes[node.node_id].children.append(child.node_id)
+                    tree.nodes[node.node_id].children.append(child.node_id)  # type: ignore[index]
 
             return node
 
@@ -516,13 +516,13 @@ class Parser:
             node.modifier_type = mod_type
             node.node_id = len(tree.nodes)
             node.negate = negate
-            tree.nodes.append(node)
+            tree.nodes.append(node)  # type: ignore[union-attr]
 
             subexprs = Parser.get_sub_expr(wexpr)
             for subexpr in subexprs:
                 child = Parser._from_string_recursive(tree, subexpr, negate, node_type)
                 if child:
-                    tree.nodes[node.node_id].children.append(child.node_id)
+                    tree.nodes[node.node_id].children.append(child.node_id)  # type: ignore[index]
 
             return node
 
@@ -532,20 +532,20 @@ class Parser:
             node.node_id = len(tree.nodes)
             node.value = float(wexpr)
             node.negate = negate
-            tree.nodes.append(node)
+            tree.nodes.append(node)  # type: ignore[union-attr]
             return node
 
         elif node_type == Node.EXISTS:
             node = Parser.node_from_string_exists(wexpr)
             node.node_id = len(tree.nodes)
             node.negate = negate
-            tree.nodes.append(node)
+            tree.nodes.append(node)  # type: ignore[union-attr]
 
             subexprs = Parser.get_sub_expr(wexpr)
             for subexpr in subexprs:
                 child = Parser._from_string_recursive(tree, subexpr, negate, node_type)
                 if child:
-                    tree.nodes[node.node_id].children.append(child.node_id)
+                    tree.nodes[node.node_id].children.append(child.node_id)  # type: ignore[index]
 
             return node
 
@@ -555,8 +555,8 @@ class Parser:
             node.node_id = len(tree.nodes)
             node.name = wexpr
             node.negate = negate
-            node.parameters.append(Parser.param_from_string(wexpr))
-            tree.nodes.append(node)
+            node.parameters.append(Parser.param_from_string(wexpr))  # type: ignore[union-attr]
+            tree.nodes.append(node)  # type: ignore[union-attr]
             return node
 
         return None
@@ -576,7 +576,7 @@ class Parser:
             )
 
         tree = Tree()
-        tree.nodes.append(node)
+        tree.nodes.append(node)  # type: ignore[union-attr]
         return Parser.tree_to_string(tree)
 
     @staticmethod
@@ -592,7 +592,7 @@ class Parser:
         if node_id >= len(tree.nodes):
             return ''
 
-        node = tree.nodes[node_id]
+        node = tree.nodes[node_id]  # type: ignore[index]
 
         if node.node_type == Node.PREDICATE:
             return Parser._to_string_predicate(tree, node_id, negate)
@@ -625,7 +625,7 @@ class Parser:
         if node_id >= len(tree.nodes):
             return ''
 
-        node = tree.nodes[node_id]
+        node = tree.nodes[node_id]  # type: ignore[index]
         result = '(not (' if negate else '('
         result += node.name
 
@@ -641,7 +641,7 @@ class Parser:
         if node_id >= len(tree.nodes):
             return ''
 
-        node = tree.nodes[node_id]
+        node = tree.nodes[node_id]  # type: ignore[index]
         result = '(' + node.name
 
         for param in node.parameters:
@@ -656,7 +656,7 @@ class Parser:
         if node_id >= len(tree.nodes):
             return ''
 
-        return str(tree.nodes[node_id].value)
+        return str(tree.nodes[node_id].value)  # type: ignore[index]
 
     @staticmethod
     def _to_string_and(tree: Tree, node_id: int, negate: bool) -> str:
@@ -664,7 +664,7 @@ class Parser:
         if node_id >= len(tree.nodes):
             return ''
 
-        node = tree.nodes[node_id]
+        node = tree.nodes[node_id]  # type: ignore[index]
         if not node.children:
             return '(and)'
 
@@ -682,7 +682,7 @@ class Parser:
         if node_id >= len(tree.nodes):
             return ''
 
-        node = tree.nodes[node_id]
+        node = tree.nodes[node_id]  # type: ignore[index]
         if not node.children:
             return '(or)'
 
@@ -700,7 +700,7 @@ class Parser:
         if node_id >= len(tree.nodes):
             return ''
 
-        node = tree.nodes[node_id]
+        node = tree.nodes[node_id]  # type: ignore[index]
         if not node.children:
             return '(not)'
 
@@ -712,7 +712,7 @@ class Parser:
         if node_id >= len(tree.nodes):
             return ''
 
-        node = tree.nodes[node_id]
+        node = tree.nodes[node_id]  # type: ignore[index]
         if len(node.children) < 2:
             return ''
 
@@ -748,7 +748,7 @@ class Parser:
         if node_id >= len(tree.nodes):
             return ''
 
-        node = tree.nodes[node_id]
+        node = tree.nodes[node_id]  # type: ignore[index]
         if len(node.children) < 2:
             return ''
 
@@ -775,7 +775,7 @@ class Parser:
         if node_id >= len(tree.nodes):
             return ''
 
-        return tree.nodes[node_id].name
+        return tree.nodes[node_id].name  # type: ignore[index]
 
     @staticmethod
     def _to_string_parameter(tree: Tree, node_id: int, negate: bool) -> str:
@@ -783,9 +783,9 @@ class Parser:
         if node_id >= len(tree.nodes):
             return ''
 
-        node = tree.nodes[node_id]
+        node = tree.nodes[node_id]  # type: ignore[index]
         if node.parameters:
-            return node.parameters[0].name
+            return node.parameters[0].name  # type: ignore[index]
         return ''
 
     @staticmethod
@@ -794,7 +794,7 @@ class Parser:
         if node_id >= len(tree.nodes):
             return ''
 
-        node = tree.nodes[node_id]
+        node = tree.nodes[node_id]  # type: ignore[index]
         if not node.children:
             return '(exists ())'
 
@@ -820,3 +820,119 @@ class Parser:
             result += ')'
 
         return result
+
+    @staticmethod
+    def param_to_dict(param: Param) -> Dict[str, Any]:
+        """Convert a plansys2_msgs.msg.Param to a dictionary.
+
+        Parameters
+        ----------
+        param : plansys2_msgs.msg.Param
+            The Param message to convert.
+
+        Returns
+        -------
+        Dict[str, Any]
+            Dictionary representation of the Param with keys:
+            - name: str - Parameter name
+            - type: str - Parameter type
+            - sub_types: List[str] - List of sub-types (for complex types)
+        """
+        return {
+            'name': param.name,
+            'type': param.type,
+            'sub_types': list(param.sub_types) if param.sub_types else []
+        }
+
+    @staticmethod
+    def node_to_dict(node: Node) -> Dict[str, Any]:
+        """Convert a plansys2_msgs.msg.Node to a dictionary.
+
+        The Node message represents elements in PDDL expression trees,
+        including logical operators, predicates, functions, and values.
+
+        Parameters
+        ----------
+        node : plansys2_msgs.msg.Node
+            The Node message to convert.
+
+        Returns
+        -------
+        Dict[str, Any]
+            Dictionary representation of the Node with keys:
+            - node_type: int - Type of node (AND, OR, NOT, PREDICATE, etc.)
+            - node_type_name: str - Human-readable name of the node type
+            - expression_type: int - Type of expression if applicable
+            - expression_type_name: str - Human-readable expression type name
+            - modifier_type: int - Type of function modifier if applicable
+            - modifier_type_name: str - Human-readable modifier type name
+            - node_id: int - Unique identifier for this node
+            - children: List[int] - List of child node IDs
+            - name: str - Node name (for predicates, functions, etc.)
+            - parameters: List[Dict] - List of parameters (converted to dicts)
+            - value: float - Numeric value (for NUMBER nodes)
+            - negate: bool - Whether the node is negated
+        """
+        # Node type constants and names mapping
+        node_type_names = {
+            0: 'UNKNOWN', 1: 'AND', 2: 'OR', 3: 'NOT', 4: 'ACTION',
+            5: 'PREDICATE', 6: 'FUNCTION', 7: 'EXPRESSION',
+            8: 'FUNCTION_MODIFIER', 9: 'NUMBER', 10: 'CONSTANT',
+            11: 'PARAMETER', 12: 'EXISTS'
+        }
+
+        # Expression type constants and names mapping
+        expression_type_names = {
+            13: 'COMP_EQ', 14: 'COMP_GE', 15: 'COMP_GT',
+            16: 'COMP_LE', 17: 'COMP_LT', 18: 'ARITH_MULT',
+            19: 'ARITH_DIV', 20: 'ARITH_ADD', 21: 'ARITH_SUB'
+        }
+
+        # Function modifier type constants and names mapping
+        modifier_type_names = {
+            22: 'ASSIGN', 23: 'INCREASE', 24: 'DECREASE',
+            25: 'SCALE_UP', 26: 'SCALE_DOWN'
+        }
+
+        return {
+            'node_type': node.node_type,
+            'node_type_name': node_type_names.get(node.node_type, 'UNKNOWN'),
+            'expression_type': node.expression_type,
+            'expression_type_name': expression_type_names.get(
+                node.expression_type, 'NONE'
+            ),
+            'modifier_type': node.modifier_type,
+            'modifier_type_name': modifier_type_names.get(
+                node.modifier_type, 'NONE'
+            ),
+            'node_id': node.node_id,
+            'children': list(node.children) if node.children else [],
+            'name': node.name,
+            'parameters': [Parser.param_to_dict(p) for p in node.parameters]
+            if node.parameters else [],
+            'value': node.value,
+            'negate': node.negate
+        }
+
+    @staticmethod
+    def tree_to_dict(tree: Tree) -> Dict[str, Any]:
+        """Convert a plansys2_msgs.msg.Tree to a dictionary.
+
+        The Tree message represents a PDDL construct as a tree structure
+        composed of Node elements.
+
+        Parameters
+        ----------
+        tree : plansys2_msgs.msg.Tree
+            The Tree message to convert.
+
+        Returns
+        -------
+        Dict[str, Any]
+            Dictionary representation of the Tree with keys:
+            - nodes: List[Dict] - List of nodes (converted to dicts)
+        """
+        nodes = [Parser.node_to_dict(n) for n in tree.nodes] if tree.nodes else []
+        return {
+            'nodes': nodes
+        }
