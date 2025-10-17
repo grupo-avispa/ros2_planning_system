@@ -20,91 +20,113 @@ This module provides specific classes for interacting with PlanSys2 services.
 """
 
 from typing import List, Optional
+
+from plansys2_msgs.msg import Action as PlanSys2Action
+from plansys2_msgs.msg import Derived
+from plansys2_msgs.msg import DurativeAction as PlanSys2DurativeAction
+from plansys2_msgs.msg import Node as PlanSys2Node
+from plansys2_msgs.srv import (GetDomain, GetDomainActionDetails,
+                               GetDomainActions, GetDomainConstants,
+                               GetDomainDerivedPredicateDetails,
+                               GetDomainDurativeActionDetails, GetDomainName,
+                               GetDomainTypes, GetNodeDetails, GetStates)
+
 import rclpy
+
 from rclpy.client import Client
 from rclpy.node import Node
-
-from plansys2_msgs.msg import Derived
-from plansys2_msgs.msg import Node as PlanSys2Node  # Avoid name conflict
-from plansys2_msgs.msg import Action as PlanSys2Action
-from plansys2_msgs.msg import DurativeAction as PlanSys2DurativeAction
-
-# Domain Expert services
-from plansys2_msgs.srv import (
-    GetDomain,
-    GetDomainActionDetails,
-    GetDomainActions,
-    GetDomainConstants,
-    GetDomainDerivedPredicateDetails,
-    GetDomainDurativeActionDetails,
-    GetDomainName,
-    GetDomainTypes,
-    GetNodeDetails,
-    GetStates
-)
 
 
 class DomainExpertClient(Node):
     """
     Domain Expert client for PlanSys2.
 
-    This class provides convenient methods to interact with all Domain Expert services
-    in PlanSys2, wrapping the ROS2 service calls with proper error handling.
+    This class provides convenient methods to interact with all Domain
+    Expert services in PlanSys2, wrapping the ROS2 service calls with
+    proper error handling.
     """
 
-    def __init__(self, node_name: str = 'domain_expert_client', namespace: str = ''):
+    def __init__(
+        self, node_name: str = 'domain_expert_client',
+        namespace: str = ''
+    ):
         """
         Initialize the Domain Expert client.
 
-        Parameters:
-        node_name (str): Name of the ROS2 node.
-        namespace (str): Namespace prefix for services.
+        Parameters
+        ----------
+        node_name : str, optional
+            Name of the ROS2 node.
+        namespace : str, optional
+            Namespace prefix for services.
         """
         super().__init__(node_name)
 
         # Setup namespace prefix
         self._namespace_prefix = f'/{namespace}' if namespace else ''
 
-        self.get_logger().debug(f'Domain Expert Client "{node_name}" initialized')
+        log_msg = f'Domain Expert Client "{node_name}" initialized'
+        self.get_logger().debug(log_msg)
 
-    def _create_and_call_service(self, service_type, service_name: str, request):
+    def _create_and_call_service(
+        self, service_type, service_name: str, request
+    ):
         """
-        Create a service client for the given service, call it and return the response.
+        Create service client, call it and return response.
 
-        Parameters:
-        service_type (Type): The ROS2 service type class.
-        service_name (str): The name/topic of the service.
-        request (Any): The service request object.
+        Parameters
+        ----------
+        service_type : Type
+            The ROS2 service type class.
+        service_name : str
+            The name/topic of the service.
+        request : Any
+            The service request object.
 
-        Returns:
-        Any: The service response or None if failed.
+        Returns
+        -------
+        Any
+            The service response or None if failed.
         """
         try:
-            client: Client = self.create_client(service_type, service_name)
+            client: Client = self.create_client(
+                service_type, service_name
+            )
 
             if not client.wait_for_service(timeout_sec=5.0):
-                self.get_logger().error(f'Service {service_name} not available')
+                error_msg = f'Service {service_name} not available'
+                self.get_logger().error(error_msg)
                 return None
 
             future = client.call_async(request)
-            rclpy.spin_until_future_complete(self, future, timeout_sec=10.0)
+            rclpy.spin_until_future_complete(
+                self, future, timeout_sec=10.0
+            )
 
             if future.done():
                 return future.result()
             else:
-                self.get_logger().error(f'Service call to {service_name} timed out')
+                error_msg = (
+                    f'Service call to {service_name} timed out'
+                )
+                self.get_logger().error(error_msg)
                 return None
 
-        except Exception as e:
-            self.get_logger().error(f'Error calling service {service_name}: {str(e)}')
+        except RuntimeError as e:
+            error_msg = (
+                f'Error calling service {service_name}: {str(e)}'
+            )
+            self.get_logger().error(error_msg)
             return None
 
     def get_domain(self) -> Optional[str]:
         """
         Get the PDDL domain as a string.
 
-        Returns:
-        Optional[str]: The PDDL domain string or None if failed.
+        Returns
+        -------
+        Optional[str]
+            The PDDL domain string or None if failed.
         """
         service_name = f'{self._namespace_prefix}/domain_expert/get_domain'
         request = GetDomain.Request()
@@ -122,8 +144,10 @@ class DomainExpertClient(Node):
         """
         Get the name of the domain.
 
-        Returns:
-        Optional[str]: The domain name or None if failed.
+        Returns
+        -------
+        Optional[str]
+            The domain name or None if failed.
         """
         service_name = f'{self._namespace_prefix}/domain_expert/get_domain_name'
         request = GetDomainName.Request()
@@ -141,8 +165,10 @@ class DomainExpertClient(Node):
         """
         Get the valid types in the domain.
 
-        Returns:
-        Optional[List[str]]: List of domain types or None if failed.
+        Returns
+        -------
+        Optional[List[str]]
+            List of domain types or None if failed.
         """
         service_name = f'{self._namespace_prefix}/domain_expert/get_domain_types'
         request = GetDomainTypes.Request()
@@ -160,11 +186,15 @@ class DomainExpertClient(Node):
         """
         Get the constants of a specific type.
 
-        Parameters:
-        type_name (str): The type name to get constants for.
+        Parameters
+        ----------
+        type_name : str
+            The type name to get constants for.
 
-        Returns:
-        Optional[List[str]]: List of constants or None if failed.
+        Returns
+        -------
+        Optional[List[str]]
+            List of constants or None if failed.
         """
         service_name = f'{self._namespace_prefix}/domain_expert/get_domain_constants'
         request = GetDomainConstants.Request()
@@ -185,8 +215,10 @@ class DomainExpertClient(Node):
         """
         Get the predicates in the domain.
 
-        Returns:
-        Optional[List[PlanSys2Node]]: List of predicate nodes or None if failed.
+        Returns
+        -------
+        Optional[List[PlanSys2Node]]
+            List of predicate nodes or None if failed.
         """
         service_name = f'{self._namespace_prefix}/domain_expert/get_domain_predicates'
         request = GetStates.Request()
@@ -205,8 +237,10 @@ class DomainExpertClient(Node):
         """
         Get the functions in the domain.
 
-        Returns:
-        Optional[List[PlanSys2Node]]: List of function nodes or None if failed.
+        Returns
+        -------
+        Optional[List[PlanSys2Node]]
+            List of function nodes or None if failed.
         """
         service_name = f'{self._namespace_prefix}/domain_expert/get_domain_functions'
         request = GetStates.Request()
@@ -225,8 +259,10 @@ class DomainExpertClient(Node):
         """
         Get the derived predicates in the domain.
 
-        Returns:
-        Optional[List[PlanSys2Node]]: List of derived predicate nodes or None if failed.
+        Returns
+        -------
+        Optional[List[PlanSys2Node]]
+            List of derived predicate nodes or None if failed.
         """
         service_name = f'{self._namespace_prefix}/domain_expert/get_domain_derived_predicates'
         request = GetStates.Request()
@@ -246,11 +282,15 @@ class DomainExpertClient(Node):
         """
         Get the details of a specific derived predicate.
 
-        Parameters:
-        predicate_name (str): Name of the derived predicate.
+        Parameters
+        ----------
+        predicate_name : str
+            Name of the derived predicate.
 
-        Returns:
-        [Optional[List[Derived]]]: List of derived predicate details or None if failed.
+        Returns
+        -------
+        Optional[List[Derived]]
+            List of derived predicate details or None if failed.
         """
         service_name = (
             f'{self._namespace_prefix}/domain_expert/get_domain_derived_predicate_details'
@@ -274,8 +314,10 @@ class DomainExpertClient(Node):
         """
         Get the available actions in the domain.
 
-        Returns:
-        Optional[List[str]]: List of action names or None if failed.
+        Returns
+        -------
+        Optional[List[str]]
+            List of action names or None if failed.
         """
         service_name = f'{self._namespace_prefix}/domain_expert/get_domain_actions'
         request = GetDomainActions.Request()
@@ -295,8 +337,10 @@ class DomainExpertClient(Node):
         """
         Get the durative actions in the domain.
 
-        Returns:
-        Optional[List[str]]: List of durative action names or None if failed.
+        Returns
+        -------
+        Optional[List[str]]
+            List of durative action names or None if failed.
         """
         service_name = f'{self._namespace_prefix}/domain_expert/get_domain_durative_actions'
         request = GetDomainActions.Request()
@@ -315,11 +359,15 @@ class DomainExpertClient(Node):
         """
         Get the details of a specific predicate.
 
-        Parameters:
-        predicate_name (str): Name of the predicate.
+        Parameters
+        ----------
+        predicate_name : str
+            Name of the predicate.
 
-        Returns:
-        Optional[PlanSys2Node]: Predicate details or None if failed.
+        Returns
+        -------
+        Optional[PlanSys2Node]
+            Predicate details or None if failed.
         """
         service_name = f'{self._namespace_prefix}/domain_expert/get_domain_predicate_details'
         request = GetNodeDetails.Request()
@@ -340,11 +388,15 @@ class DomainExpertClient(Node):
         """
         Get the details of a specific function.
 
-        Parameters:
-        function_name (str): Name of the function.
+        Parameters
+        ----------
+        function_name : str
+            Name of the function.
 
-        Returns:
-        Optional[PlanSys2Node]: Function details or None if failed.
+        Returns
+        -------
+        Optional[PlanSys2Node]
+            Function details or None if failed.
         """
         service_name = f'{self._namespace_prefix}/domain_expert/get_domain_function_details'
         request = GetNodeDetails.Request()
@@ -367,12 +419,17 @@ class DomainExpertClient(Node):
         """
         Get the details of a specific action.
 
-        Parameters:
-        action_name (str): Name of the action.
-        parameters (Optional[List[str]]): Optional list of parameters.
+        Parameters
+        ----------
+        action_name : str
+            Name of the action.
+        parameters : Optional[List[str]], optional
+            Optional list of parameters.
 
-        Returns:
-        Optional[PlanSys2Action]: Action details or None if failed.
+        Returns
+        -------
+        Optional[PlanSys2Action]
+            Action details or None if failed.
         """
         service_name = f'{self._namespace_prefix}/domain_expert/get_domain_action_details'
         request = GetDomainActionDetails.Request()
@@ -395,12 +452,17 @@ class DomainExpertClient(Node):
         """
         Get the details of a specific durative action.
 
-        Parameters:
-        action_name (str): Name of the durative action.
-        parameters (Optional[List[str]]): Optional list of parameters.
+        Parameters
+        ----------
+        action_name : str
+            Name of the durative action.
+        parameters : Optional[List[str]], optional
+            Optional list of parameters.
 
-        Returns:
-        Optional[PlanSys2DurativeAction]: Durative action details or None if failed.
+        Returns
+        -------
+        Optional[PlanSys2DurativeAction]
+            Durative action details or None if failed.
         """
         service_name = f'{self._namespace_prefix}/domain_expert/get_domain_durative_action_details'
         request = GetDomainDurativeActionDetails.Request()
@@ -427,6 +489,8 @@ class DomainExpertClient(Node):
         """
         Print comprehensive information about the domain.
 
+        Notes
+        -----
         Call multiple services to provide an overview of the domain.
         """
         self.get_logger().info('=== Domain Expert Information ===')

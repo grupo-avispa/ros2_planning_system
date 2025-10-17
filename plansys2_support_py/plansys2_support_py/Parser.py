@@ -35,8 +35,15 @@ class Parser:
         """
         Remove newlines, duplicated spaces, tabs and spaces from parenthesis.
 
-        :param expr: The expression to be reduced
-        :return: The reduced expression
+        Parameters
+        ----------
+        expr : str
+            The expression to be reduced.
+
+        Returns
+        -------
+        str
+            The reduced expression.
         """
         # Remove newlines and tabs
         result = re.sub(r'[\n\t]+', '', expr)
@@ -53,9 +60,17 @@ class Parser:
         """
         Return node type corresponding to the string input.
 
-        :param expr: The input string
-        :param default_node_type: Default node type if none is found
-        :return: The node type
+        Parameters
+        ----------
+        expr : str
+            The input string.
+        default_node_type : int, optional
+            Default node type if none is found.
+
+        Returns
+        -------
+        int
+            The node type.
         """
         patterns = [
             (r'\(\s*and[ (]', Node.AND),
@@ -104,8 +119,15 @@ class Parser:
         """
         Return expression type and start position of an expression in a string.
 
-        :param expr: The input string
-        :return: Tuple of (expression_type, start_position)
+        Parameters
+        ----------
+        expr : str
+            The input string.
+
+        Returns
+        -------
+        Tuple[int, int]
+            Tuple of (expression_type, start_position).
         """
         patterns = [
             (r'\s*>=', Node.COMP_GE),
@@ -138,8 +160,15 @@ class Parser:
         """
         Return function modifier type and start position.
 
-        :param expr: The input string
-        :return: Tuple of (modifier_type, start_position)
+        Parameters
+        ----------
+        expr : str
+            The input string.
+
+        Returns
+        -------
+        Tuple[int, int]
+            Tuple of (modifier_type, start_position).
         """
         patterns = [
             (r'assign', Node.ASSIGN),
@@ -168,9 +197,17 @@ class Parser:
         """
         Find the matching closing parenthesis.
 
-        :param expr: The expression string
-        :param start: Starting position of opening parenthesis
-        :return: Position of matching closing parenthesis
+        Parameters
+        ----------
+        expr : str
+            The expression string.
+        start : int
+            Starting position of opening parenthesis.
+
+        Returns
+        -------
+        int
+            Position of matching closing parenthesis.
         """
         it = start + 1
         balance = 1
@@ -191,8 +228,15 @@ class Parser:
         """
         Extract sub-expressions from a compound expression.
 
-        :param expr: The expression string
-        :return: List of sub-expression strings
+        Parameters
+        ----------
+        expr : str
+            The expression string.
+
+        Returns
+        -------
+        List[str]
+            List of sub-expression strings.
         """
         result = []
         wexpr = expr.strip()
@@ -233,7 +277,19 @@ class Parser:
 
     @staticmethod
     def _remove_operator_before_parenthesis(expr: str) -> str:
-        """Remove operator keywords before the first parenthesis."""
+        """
+        Remove operator keywords before the first parenthesis.
+
+        Parameters
+        ----------
+        expr : str
+            The expression string.
+
+        Returns
+        -------
+        str
+            Expression with operator removed.
+        """
         # Check for 'exists'
         first_paren = expr.find('(')
         exists_pos = expr.find('exists')
@@ -260,9 +316,17 @@ class Parser:
         """
         Create a Param from string representation.
 
-        :param name: Parameter name
-        :param param_type: Parameter type (optional)
-        :return: Param message
+        Parameters
+        ----------
+        name : str
+            Parameter name.
+        param_type : str, optional
+            Parameter type.
+
+        Returns
+        -------
+        Param
+            Param message.
         """
         param = Param()
         param.name = name
@@ -274,8 +338,15 @@ class Parser:
         """
         Convert a Param to string representation.
 
-        :param param: The Param message
-        :return: String representation
+        Parameters
+        ----------
+        param : Param
+            The Param message.
+
+        Returns
+        -------
+        str
+            String representation.
         """
         if param.type:
             return f'{param.name} - {param.type}'
@@ -286,8 +357,15 @@ class Parser:
         """
         Create a Node from a predicate string.
 
-        :param predicate: The predicate string (e.g., "(at robot1 location1)")
-        :return: Node message with PREDICATE type
+        Parameters
+        ----------
+        predicate : str
+            The predicate string (e.g., "(at robot1 location1)").
+
+        Returns
+        -------
+        Node
+            Node message with PREDICATE type.
         """
         node = Node()
         node.node_type = Node.PREDICATE
@@ -316,8 +394,15 @@ class Parser:
         """
         Create a Node from a function string.
 
-        :param function: The function string (e.g., "(battery-level robot1)")
-        :return: Node message with FUNCTION type
+        Parameters
+        ----------
+        function : str
+            The function string (e.g., "(battery-level robot1)").
+
+        Returns
+        -------
+        Node
+            Node message with FUNCTION type.
         """
         node = Node()
         node.node_type = Node.FUNCTION
@@ -352,8 +437,15 @@ class Parser:
         """
         Create a Node from an exists expression.
 
-        :param exists: The exists expression string
-        :return: Node message with EXISTS type
+        Parameters
+        ----------
+        exists : str
+            The exists expression string.
+
+        Returns
+        -------
+        Node
+            Node message with EXISTS type.
         """
         node = Node()
         node.node_type = Node.EXISTS
@@ -398,10 +490,19 @@ class Parser:
         """
         Create a Tree from a string expression.
 
-        :param expr: The expression string
-        :param negate: Whether to negate the expression
-        :param parent: Parent node type for context
-        :return: Tree message
+        Parameters
+        ----------
+        expr : str
+            The expression string.
+        negate : bool, optional
+            Whether to negate the expression.
+        parent : int, optional
+            Parent node type for context.
+
+        Returns
+        -------
+        Tree
+            Tree message.
         """
         tree = Tree()
         Parser._from_string_recursive(tree, expr, negate, parent)
@@ -413,11 +514,21 @@ class Parser:
         """
         Recursively parse expression and build tree.
 
-        :param tree: The tree being constructed
-        :param expr: The expression string
-        :param negate: Whether to negate the expression
-        :param parent: Parent node type for context
-        :return: The created node
+        Parameters
+        ----------
+        tree : Tree
+            The tree being constructed.
+        expr : str
+            The expression string.
+        negate : bool, optional
+            Whether to negate the expression.
+        parent : int, optional
+            Parent node type for context.
+
+        Returns
+        -------
+        Optional[Node]
+            The created node.
         """
         wexpr = Parser.get_reduced_string(expr)
 
@@ -566,8 +677,15 @@ class Parser:
         """
         Convert a Node to string representation.
 
-        :param node: The Node message
-        :return: String representation
+        Parameters
+        ----------
+        node : Node
+            The Node message.
+
+        Returns
+        -------
+        str
+            String representation.
         """
         if node.node_type not in [Node.PREDICATE, Node.FUNCTION]:
             raise ValueError(
@@ -584,10 +702,19 @@ class Parser:
         """
         Convert a Tree to string representation.
 
-        :param tree: The Tree message
-        :param node_id: Starting node ID (default: 0)
-        :param negate: Whether to negate the expression
-        :return: String representation
+        Parameters
+        ----------
+        tree : Tree
+            The Tree message.
+        node_id : int, optional
+            Starting node ID (default: 0).
+        negate : bool, optional
+            Whether to negate the expression.
+
+        Returns
+        -------
+        str
+            String representation.
         """
         if node_id >= len(tree.nodes):
             return ''
@@ -621,7 +748,23 @@ class Parser:
 
     @staticmethod
     def _to_string_predicate(tree: Tree, node_id: int, negate: bool) -> str:
-        """Convert predicate node to string."""
+        """
+        Convert predicate node to string.
+
+        Parameters
+        ----------
+        tree : Tree
+            The tree structure.
+        node_id : int
+            Node identifier.
+        negate : bool
+            Whether to negate.
+
+        Returns
+        -------
+        str
+            String representation.
+        """
         if node_id >= len(tree.nodes):
             return ''
 
@@ -637,7 +780,23 @@ class Parser:
 
     @staticmethod
     def _to_string_function(tree: Tree, node_id: int, negate: bool) -> str:
-        """Convert function node to string."""
+        """
+        Convert function node to string.
+
+        Parameters
+        ----------
+        tree : Tree
+            The tree structure.
+        node_id : int
+            Node identifier.
+        negate : bool
+            Whether to negate.
+
+        Returns
+        -------
+        str
+            String representation.
+        """
         if node_id >= len(tree.nodes):
             return ''
 
@@ -652,7 +811,23 @@ class Parser:
 
     @staticmethod
     def _to_string_number(tree: Tree, node_id: int, negate: bool) -> str:
-        """Convert number node to string."""
+        """
+        Convert number node to string.
+
+        Parameters
+        ----------
+        tree : Tree
+            The tree structure.
+        node_id : int
+            Node identifier.
+        negate : bool
+            Whether to negate.
+
+        Returns
+        -------
+        str
+            String representation.
+        """
         if node_id >= len(tree.nodes):
             return ''
 
@@ -660,7 +835,23 @@ class Parser:
 
     @staticmethod
     def _to_string_and(tree: Tree, node_id: int, negate: bool) -> str:
-        """Convert AND node to string."""
+        """
+        Convert AND node to string.
+
+        Parameters
+        ----------
+        tree : Tree
+            The tree structure.
+        node_id : int
+            Node identifier.
+        negate : bool
+            Whether to negate.
+
+        Returns
+        -------
+        str
+            String representation.
+        """
         if node_id >= len(tree.nodes):
             return ''
 
@@ -678,7 +869,23 @@ class Parser:
 
     @staticmethod
     def _to_string_or(tree: Tree, node_id: int, negate: bool) -> str:
-        """Convert OR node to string."""
+        """
+        Convert OR node to string.
+
+        Parameters
+        ----------
+        tree : Tree
+            The tree structure.
+        node_id : int
+            Node identifier.
+        negate : bool
+            Whether to negate.
+
+        Returns
+        -------
+        str
+            String representation.
+        """
         if node_id >= len(tree.nodes):
             return ''
 
@@ -696,7 +903,23 @@ class Parser:
 
     @staticmethod
     def _to_string_not(tree: Tree, node_id: int, negate: bool) -> str:
-        """Convert NOT node to string."""
+        """
+        Convert NOT node to string.
+
+        Parameters
+        ----------
+        tree : Tree
+            The tree structure.
+        node_id : int
+            Node identifier.
+        negate : bool
+            Whether to negate.
+
+        Returns
+        -------
+        str
+            String representation.
+        """
         if node_id >= len(tree.nodes):
             return ''
 
@@ -708,7 +931,23 @@ class Parser:
 
     @staticmethod
     def _to_string_expression(tree: Tree, node_id: int, negate: bool) -> str:
-        """Convert expression node to string."""
+        """
+        Convert expression node to string.
+
+        Parameters
+        ----------
+        tree : Tree
+            The tree structure.
+        node_id : int
+            Node identifier.
+        negate : bool
+            Whether to negate.
+
+        Returns
+        -------
+        str
+            String representation.
+        """
         if node_id >= len(tree.nodes):
             return ''
 
@@ -744,7 +983,23 @@ class Parser:
 
     @staticmethod
     def _to_string_function_modifier(tree: Tree, node_id: int, negate: bool) -> str:
-        """Convert function modifier node to string."""
+        """
+        Convert function modifier node to string.
+
+        Parameters
+        ----------
+        tree : Tree
+            The tree structure.
+        node_id : int
+            Node identifier.
+        negate : bool
+            Whether to negate.
+
+        Returns
+        -------
+        str
+            String representation.
+        """
         if node_id >= len(tree.nodes):
             return ''
 
@@ -771,7 +1026,23 @@ class Parser:
 
     @staticmethod
     def _to_string_constant(tree: Tree, node_id: int, negate: bool) -> str:
-        """Convert constant node to string."""
+        """
+        Convert constant node to string.
+
+        Parameters
+        ----------
+        tree : Tree
+            The tree structure.
+        node_id : int
+            Node identifier.
+        negate : bool
+            Whether to negate.
+
+        Returns
+        -------
+        str
+            String representation.
+        """
         if node_id >= len(tree.nodes):
             return ''
 
@@ -779,7 +1050,23 @@ class Parser:
 
     @staticmethod
     def _to_string_parameter(tree: Tree, node_id: int, negate: bool) -> str:
-        """Convert parameter node to string."""
+        """
+        Convert parameter node to string.
+
+        Parameters
+        ----------
+        tree : Tree
+            The tree structure.
+        node_id : int
+            Node identifier.
+        negate : bool
+            Whether to negate.
+
+        Returns
+        -------
+        str
+            String representation.
+        """
         if node_id >= len(tree.nodes):
             return ''
 
@@ -790,7 +1077,23 @@ class Parser:
 
     @staticmethod
     def _to_string_exists(tree: Tree, node_id: int, negate: bool) -> str:
-        """Convert exists node to string."""
+        """
+        Convert exists node to string.
+
+        Parameters
+        ----------
+        tree : Tree
+            The tree structure.
+        node_id : int
+            Node identifier.
+        negate : bool
+            Whether to negate.
+
+        Returns
+        -------
+        str
+            String representation.
+        """
         if node_id >= len(tree.nodes):
             return ''
 

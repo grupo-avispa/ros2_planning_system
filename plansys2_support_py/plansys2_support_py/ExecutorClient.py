@@ -20,19 +20,21 @@ This module provides specific classes for interacting with PlanSys2 Executor ser
 """
 
 from typing import List, Optional
+
+
+from plansys2_msgs.action import ExecutePlan
+from plansys2_msgs.msg import ActionExecutionInfo, Plan, Tree
+from plansys2_msgs.srv import GetOrderedSubGoals, GetPlan
+# Import for getting domain and problem
+from plansys2_support_py.DomainExpertClient import DomainExpertClient
+from plansys2_support_py.PlannerClient import PlannerClient
+from plansys2_support_py.ProblemExpertClient import ProblemExpertClient
+
 import rclpy
+
 from rclpy.action import ActionClient
 from rclpy.client import Client
 from rclpy.node import Node
-
-from plansys2_msgs.srv import GetOrderedSubGoals, GetPlan
-from plansys2_msgs.msg import Plan, Tree, ActionExecutionInfo
-from plansys2_msgs.action import ExecutePlan
-
-# Import for getting domain and problem
-from plansys2_support_py.DomainExpertClient import DomainExpertClient
-from plansys2_support_py.ProblemExpertClient import ProblemExpertClient
-from plansys2_support_py.PlannerClient import PlannerClient
 
 
 class ExecutorClient(Node):
@@ -47,9 +49,12 @@ class ExecutorClient(Node):
         """
         Initialize the Executor client.
 
-        Parameters:
-        node_name (str): Name of the ROS2 node.
-        namespace (str): Namespace prefix for services.
+        Parameters
+        ----------
+        node_name : str, optional
+            Name of the ROS2 node.
+        namespace : str, optional
+            Namespace prefix for services.
         """
         super().__init__(node_name)
 
@@ -74,13 +79,19 @@ class ExecutorClient(Node):
         """
         Create a service client for the given service, call it and return the response.
 
-        Parameters:
-        service_type (Type): The ROS2 service type class.
-        service_name (str): The name/topic of the service.
-        request (Any): The service request object.
+        Parameters
+        ----------
+        service_type : Type
+            The ROS2 service type class.
+        service_name : str
+            The name/topic of the service.
+        request : Any
+            The service request object.
 
-        Returns:
-        Any: The service response or None if failed.
+        Returns
+        -------
+        Any
+            The service response or None if failed.
         """
         try:
             client: Client = self.create_client(service_type, service_name)
@@ -109,8 +120,10 @@ class ExecutorClient(Node):
         This method retrieves the list of sub-goals that the executor has identified
         for achieving the current problem goal, ordered by execution priority.
 
-        Returns:
-        Optional[List[Tree]]: List of sub-goals as Tree objects, or None if failed.
+        Returns
+        -------
+        Optional[List[Tree]]
+            List of sub-goals as Tree objects, or None if failed.
         """
         service_name = f'{self._namespace_prefix}/executor/get_ordered_sub_goals'
         request = GetOrderedSubGoals.Request()
@@ -130,8 +143,10 @@ class ExecutorClient(Node):
 
         This method retrieves the complete plan that the executor is currently working on.
 
-        Returns:
-        Optional[Plan]: The current plan or None if failed.
+        Returns
+        -------
+        Optional[Plan]
+            The current plan or None if failed.
         """
         service_name = f'{self._namespace_prefix}/executor/get_plan'
         request = GetPlan.Request()
@@ -154,8 +169,10 @@ class ExecutorClient(Node):
         This method retrieves the portion of the plan that has not yet been executed,
         which is useful for monitoring progress or handling plan modifications.
 
-        Returns:
-        Optional[Plan]: The remaining plan or None if failed.
+        Returns
+        -------
+        Optional[Plan]
+            The remaining plan or None if failed.
         """
         service_name = f'{self._namespace_prefix}/executor/get_remaining_plan'
         request = GetPlan.Request()
@@ -175,6 +192,8 @@ class ExecutorClient(Node):
         """
         Print comprehensive information about the executor state.
 
+        Notes
+        -----
         Call multiple services to provide an overview of the executor's current status,
         including ordered sub-goals, current plan, and remaining plan.
         """
@@ -234,14 +253,20 @@ class ExecutorClient(Node):
         This method executes the provided plan (or computes a new plan if not provided)
         and monitors its execution, displaying feedback if verbose is enabled.
 
-        Parameters:
-        plan (Optional[Plan]): The plan to execute. If None, computes a new plan from
-                               the current domain and problem.
-        verbose (bool): Whether to print execution feedback to the console.
-        rate_hz (float): Update rate in Hz for checking execution status.
+        Parameters
+        ----------
+        plan : Optional[Plan], optional
+            The plan to execute. If None, computes a new plan from
+            the current domain and problem.
+        verbose : bool, optional
+            Whether to print execution feedback to the console.
+        rate_hz : float, optional
+            Update rate in Hz for checking execution status.
 
-        Returns:
-        bool: True if plan execution succeeded, False otherwise.
+        Returns
+        -------
+        bool
+            True if plan execution succeeded, False otherwise.
         """
         # If no plan provided, compute a new plan
         if plan is None:
@@ -322,8 +347,10 @@ class ExecutorClient(Node):
         """
         Handle feedback from the plan execution action.
 
-        Parameters:
-        feedback_msg: The feedback message from the action server.
+        Parameters
+        ----------
+        feedback_msg
+            The feedback message from the action server.
         """
         feedback = feedback_msg.feedback
 
@@ -360,8 +387,10 @@ class ExecutorClient(Node):
         """
         Print the final execution result.
 
-        Parameters:
-        result: The execution result from the action.
+        Parameters
+        ----------
+        result
+            The execution result from the action.
         """
         if result.result == ExecutePlan.Result.SUCCESS:
             print('✓ Plan execution finished successfully')
