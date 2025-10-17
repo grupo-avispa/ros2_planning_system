@@ -37,6 +37,7 @@ class PluginDescriptor:
             Unique identifier for the plugin.
         attributes : Dict[str, str]
             Dictionary of plugin attributes.
+
         """
         self._plugin_id = plugin_id
         self._attributes = attributes
@@ -49,6 +50,7 @@ class PluginDescriptor:
         -------
         str
             The plugin identifier.
+
         """
         return self._plugin_id
 
@@ -60,6 +62,7 @@ class PluginDescriptor:
         -------
         Dict[str, str]
             Dictionary of plugin attributes.
+
         """
         return self._attributes
 
@@ -82,6 +85,7 @@ class PluginProvider:
             The export tag to search for in package.xml files.
         base_class_type : str
             The base class type that plugins must inherit from.
+
         """
         self._export_tag = export_tag
         self._base_class_type = base_class_type
@@ -100,6 +104,7 @@ class PluginProvider:
         -------
         List[PluginDescriptor]
             List of discovered plugin descriptors.
+
         """
         plugin_descriptors = []
         plugin_file_list = self._find_plugins(node)
@@ -128,6 +133,7 @@ class PluginProvider:
         -------
         object or None
             An instance of the loaded plugin, or None if loading failed.
+
         """
         if plugin_id not in self._plugin_descriptors:
             print(f'PluginProvider.load({plugin_id}): plugin not found')
@@ -182,6 +188,7 @@ class PluginProvider:
         ----------
         plugin_instance : object
             The plugin instance to unload.
+
         """
         # Cleanup can be added here if needed
         pass
@@ -199,6 +206,7 @@ class PluginProvider:
         -------
         List[tuple]
             List of (package_name, plugin_xml_path) tuples.
+
         """
         plugin_files = []
 
@@ -243,6 +251,7 @@ class PluginProvider:
         -------
         List[PluginDescriptor]
             List of plugin descriptors found in the file.
+
         """
         plugin_descriptors: List[PluginDescriptor] = []
 
@@ -316,5 +325,6 @@ class PluginProvider:
         -------
         Dict[str, PluginDescriptor]
             Dictionary of plugin descriptors indexed by ID.
+
         """
         return self._plugin_descriptors

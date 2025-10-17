@@ -76,7 +76,9 @@ class PlannerNode(LifecycleNode):
         ----------
         param_name : str
             Name of the parameter to declare.
-        default_value: Default value for the parameter.
+        default_value: Any
+            Default value for the parameter.
+
         """
         if not self.has_parameter(param_name):
             self.declare_parameter(param_name, default_value)
@@ -93,6 +95,7 @@ class PlannerNode(LifecycleNode):
         Returns
         -------
         str: The plugin type.
+
         """
         param_name = f'{plugin_name}.plugin'
         self._declare_parameter_if_not_declared(param_name, '')
@@ -124,6 +127,7 @@ class PlannerNode(LifecycleNode):
         -------
         TransitionCallbackReturn: SUCCESS if configuration successful,
             FAILURE otherwise.
+
         """
         self.get_logger().info(f'[{self.get_name()}] Configuring...')
 
@@ -254,6 +258,7 @@ class PlannerNode(LifecycleNode):
         Returns
         -------
         TransitionCallbackReturn: SUCCESS if activation is successful.
+
         """
         self.get_logger().info(f'[{self.get_name()}] Activating...')
         self.get_logger().info(f'[{self.get_name()}] Activated')
@@ -271,6 +276,7 @@ class PlannerNode(LifecycleNode):
         Returns
         -------
         TransitionCallbackReturn: SUCCESS if deactivation is successful.
+
         """
         self.get_logger().info(f'[{self.get_name()}] Deactivating...')
         self.get_logger().info(f'[{self.get_name()}] Deactivated')
@@ -288,6 +294,7 @@ class PlannerNode(LifecycleNode):
         Returns
         -------
         TransitionCallbackReturn: SUCCESS if cleanup is successful.
+
         """
         self.get_logger().info(f'[{self.get_name()}] Cleaning up...')
 
@@ -322,6 +329,7 @@ class PlannerNode(LifecycleNode):
         Returns
         -------
         TransitionCallbackReturn: SUCCESS if shutdown is successful.
+
         """
         self.get_logger().info(f'[{self.get_name()}] Shutting down...')
         self.get_logger().info(f'[{self.get_name()}] Shut down')
@@ -339,6 +347,7 @@ class PlannerNode(LifecycleNode):
         Returns
         -------
         TransitionCallbackReturn: SUCCESS if error handling is successful.
+
         """
         self.get_logger().error(f'[{self.get_name()}] Error transition')
         return TransitionCallbackReturn.SUCCESS
@@ -357,6 +366,7 @@ class PlannerNode(LifecycleNode):
         Returns
         -------
         PlanArray: An array of plans found by the planners.
+
         """
         futures: Dict[str, Future] = {}
         results: Dict[str, Optional[Plan]] = {}
@@ -435,12 +445,15 @@ class PlannerNode(LifecycleNode):
 
         Parameters
         ----------
-        request: Service request with domain and problem PDDL strings.
-        response: Service response containing the generated plan.
+        request: GetPlan.Request
+            Service request with domain and problem PDDL strings.
+        response: GetPlan.Response
+            Service response containing the generated plan.
 
         Returns
         -------
         GetPlan.Response: Response with plan and success status.
+
         """
         plans = self.get_plan_array(request.domain, request.problem)
 
@@ -459,12 +472,15 @@ class PlannerNode(LifecycleNode):
 
         Parameters
         ----------
-        request: Service request with domain and problem strings.
-        response: Service response containing array of plans.
+        request: GetPlanArray.Request
+            Service request with domain and problem strings.
+        response: GetPlanArray.Response
+            Service response containing array of plans.
 
         Returns
         -------
         GetPlanArray.Response: Response with plans array.
+
         """
         plans_result = self.get_plan_array(
             request.domain, request.problem
@@ -485,12 +501,15 @@ class PlannerNode(LifecycleNode):
 
         Parameters
         ----------
-        request: Service request containing the domain PDDL string.
-        response: Service response with validation result.
+        request: ValidateDomain.Request
+            Service request containing the domain and problem PDDL strings.
+        response: ValidateDomain.Response
+            Service response with the generated plans.
 
         Returns
         -------
         ValidateDomain.Response: The response with validation status.
+
         """
         if not self.solvers_:
             response.success = False
@@ -517,6 +536,7 @@ class PlannerNode(LifecycleNode):
         ----------
         solver_timeout : Duration
             The new timeout duration.
+
         """
         self.solver_timeout_ = solver_timeout
 
@@ -527,7 +547,9 @@ def main(args=None):
 
     Parameters
     ----------
-    args: Command line arguments (optional).
+    args: str
+        Command line arguments (optional).
+
     """
     rclpy.init(args=args)
 

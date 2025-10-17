@@ -59,6 +59,7 @@ class DomainExpertClient(Node):
             Name of the ROS2 node.
         namespace : str, optional
             Namespace prefix for services.
+
         """
         super().__init__(node_name)
 
@@ -87,6 +88,7 @@ class DomainExpertClient(Node):
         -------
         Any
             The service response or None if failed.
+
         """
         try:
             client: Client = self.create_client(
@@ -127,6 +129,7 @@ class DomainExpertClient(Node):
         -------
         Optional[str]
             The PDDL domain string or None if failed.
+
         """
         service_name = f'{self._namespace_prefix}/domain_expert/get_domain'
         request = GetDomain.Request()
@@ -148,6 +151,7 @@ class DomainExpertClient(Node):
         -------
         Optional[str]
             The domain name or None if failed.
+
         """
         service_name = f'{self._namespace_prefix}/domain_expert/get_domain_name'
         request = GetDomainName.Request()
@@ -169,6 +173,7 @@ class DomainExpertClient(Node):
         -------
         Optional[List[str]]
             List of domain types or None if failed.
+
         """
         service_name = f'{self._namespace_prefix}/domain_expert/get_domain_types'
         request = GetDomainTypes.Request()
@@ -195,6 +200,7 @@ class DomainExpertClient(Node):
         -------
         Optional[List[str]]
             List of constants or None if failed.
+
         """
         service_name = f'{self._namespace_prefix}/domain_expert/get_domain_constants'
         request = GetDomainConstants.Request()
@@ -219,6 +225,7 @@ class DomainExpertClient(Node):
         -------
         Optional[List[PlanSys2Node]]
             List of predicate nodes or None if failed.
+
         """
         service_name = f'{self._namespace_prefix}/domain_expert/get_domain_predicates'
         request = GetStates.Request()
@@ -241,6 +248,7 @@ class DomainExpertClient(Node):
         -------
         Optional[List[PlanSys2Node]]
             List of function nodes or None if failed.
+
         """
         service_name = f'{self._namespace_prefix}/domain_expert/get_domain_functions'
         request = GetStates.Request()
@@ -263,6 +271,7 @@ class DomainExpertClient(Node):
         -------
         Optional[List[PlanSys2Node]]
             List of derived predicate nodes or None if failed.
+
         """
         service_name = f'{self._namespace_prefix}/domain_expert/get_domain_derived_predicates'
         request = GetStates.Request()
@@ -291,6 +300,7 @@ class DomainExpertClient(Node):
         -------
         Optional[List[Derived]]
             List of derived predicate details or None if failed.
+
         """
         service_name = (
             f'{self._namespace_prefix}/domain_expert/get_domain_derived_predicate_details'
@@ -318,6 +328,7 @@ class DomainExpertClient(Node):
         -------
         Optional[List[str]]
             List of action names or None if failed.
+
         """
         service_name = f'{self._namespace_prefix}/domain_expert/get_domain_actions'
         request = GetDomainActions.Request()
@@ -341,6 +352,7 @@ class DomainExpertClient(Node):
         -------
         Optional[List[str]]
             List of durative action names or None if failed.
+
         """
         service_name = f'{self._namespace_prefix}/domain_expert/get_domain_durative_actions'
         request = GetDomainActions.Request()
@@ -368,6 +380,7 @@ class DomainExpertClient(Node):
         -------
         Optional[PlanSys2Node]
             Predicate details or None if failed.
+
         """
         service_name = f'{self._namespace_prefix}/domain_expert/get_domain_predicate_details'
         request = GetNodeDetails.Request()
@@ -397,6 +410,7 @@ class DomainExpertClient(Node):
         -------
         Optional[PlanSys2Node]
             Function details or None if failed.
+
         """
         service_name = f'{self._namespace_prefix}/domain_expert/get_domain_function_details'
         request = GetNodeDetails.Request()
@@ -430,6 +444,7 @@ class DomainExpertClient(Node):
         -------
         Optional[PlanSys2Action]
             Action details or None if failed.
+
         """
         service_name = f'{self._namespace_prefix}/domain_expert/get_domain_action_details'
         request = GetDomainActionDetails.Request()
@@ -463,6 +478,7 @@ class DomainExpertClient(Node):
         -------
         Optional[PlanSys2DurativeAction]
             Durative action details or None if failed.
+
         """
         service_name = f'{self._namespace_prefix}/domain_expert/get_domain_durative_action_details'
         request = GetDomainDurativeActionDetails.Request()
@@ -492,6 +508,7 @@ class DomainExpertClient(Node):
         Notes
         -----
         Call multiple services to provide an overview of the domain.
+
         """
         self.get_logger().info('=== Domain Expert Information ===')
 

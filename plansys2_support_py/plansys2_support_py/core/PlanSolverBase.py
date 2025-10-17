@@ -53,6 +53,7 @@ class PlanSolverBase(ABC):
             The ROS2 lifecycle node.
         plugin_name : str
             The name of the plugin.
+
         """
         pass
 
@@ -82,6 +83,7 @@ class PlanSolverBase(ABC):
         -------
         Optional[Plan]
             The resulting plan if found, otherwise None.
+
         """
         pass
 
@@ -101,6 +103,7 @@ class PlanSolverBase(ABC):
         -------
         bool
             True if the domain is valid, False otherwise.
+
         """
         pass
 
@@ -121,6 +124,7 @@ class PlanSolverBase(ABC):
         -------
         list
             List of tokens from the command.
+
         """
         return shlex.split(command)
 
@@ -146,6 +150,7 @@ class PlanSolverBase(ABC):
         -------
         bool
             True if the planner executed successfully, False otherwise.
+
         """
         if self._lc_node is None:
             raise RuntimeError('Node is not configured. Call configure() first.')

@@ -47,6 +47,7 @@ class PlannerClient(Node):
             Name of the ROS2 node.
         namespace : str, optional
             Namespace prefix for services.
+
         """
         super().__init__(node_name)
 
@@ -72,6 +73,7 @@ class PlannerClient(Node):
         -------
         Any
             The service response or None if failed.
+
         """
         try:
             client: Client = self.create_client(service_type, service_name)
@@ -108,6 +110,7 @@ class PlannerClient(Node):
         -------
         Optional[Plan]
             The plan response or None if failed.
+
         """
         service_name = f'{self._namespace_prefix}/planner/get_plan'
         request = GetPlan.Request()
@@ -138,6 +141,7 @@ class PlannerClient(Node):
         -------
         Optional[GetPlanArray]
             The plan array response or None if failed.
+
         """
         service_name = f'{self._namespace_prefix}/planner/get_plan_array'
         request = GetPlanArray.Request()
@@ -166,6 +170,7 @@ class PlannerClient(Node):
         -------
         bool
             True if the domain is valid, False otherwise.
+
         """
         service_name = f'{self._namespace_prefix}/planner/validate_domain'
         request = ValidateDomain.Request()

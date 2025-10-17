@@ -36,6 +36,7 @@ class ActionExecutorClient(LifecycleNode):
             Name of the node.
         rate : float
             Rate for the timer callback.
+
         """
         super().__init__(node_name)
 
@@ -64,6 +65,7 @@ class ActionExecutorClient(LifecycleNode):
         -------
         TransitionCallbackReturn
             SUCCESS or FAILURE.
+
         """
         self.statuspub = self.create_publisher(
             ActionPerformerStatus, 'performers_status',
@@ -126,6 +128,7 @@ class ActionExecutorClient(LifecycleNode):
         -------
         TransitionCallbackReturn
             SUCCESS.
+
         """
         self.status.state = ActionPerformerStatus.RUNNING
         self.status.status_stamp = self.get_clock().now().to_msg()
@@ -148,6 +151,7 @@ class ActionExecutorClient(LifecycleNode):
         -------
         TransitionCallbackReturn
             SUCCESS.
+
         """
         self.status.state = ActionPerformerStatus.READY
         self.status.status_stamp = self.get_clock().now().to_msg()
@@ -163,6 +167,7 @@ class ActionExecutorClient(LifecycleNode):
         ----------
         msg : ActionExecution
             Action execution message from the hub.
+
         """
         if msg.type == ActionExecution.REQUEST:
             curr_state = self._state_machine.current_state[0]
@@ -214,6 +219,7 @@ class ActionExecutorClient(LifecycleNode):
         -------
         bool
             True if action should be executed.
+
         """
         if action != self.action_managed:
             return False
@@ -241,6 +247,7 @@ class ActionExecutorClient(LifecycleNode):
         -----
         This method should be overridden by subclasses to implement
         the actual action execution logic.
+
         """
         print('do_work not overriden')
 
@@ -252,6 +259,7 @@ class ActionExecutorClient(LifecycleNode):
         ----------
         msg : ActionExecution
             Original action execution message.
+
         """
         msg_resp = ActionExecution()
         msg_resp = copy.copy(msg)
@@ -270,6 +278,7 @@ class ActionExecutorClient(LifecycleNode):
             Action completion percentage.
         status : str
             Action status.
+
         """
         msg_resp = ActionExecution()
         msg_resp.type = ActionExecution.FEEDBACK
@@ -293,6 +302,7 @@ class ActionExecutorClient(LifecycleNode):
             Action completion percentage.
         status : str
             Action status.
+
         """
         curr_state = self._state_machine.current_state[0]
         if curr_state == State.PRIMARY_STATE_ACTIVE:
