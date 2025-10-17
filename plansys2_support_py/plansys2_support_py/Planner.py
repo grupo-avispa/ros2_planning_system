@@ -16,13 +16,16 @@
 """Main planner node that loads and uses plan solver plugins."""
 
 from concurrent.futures import Future, ThreadPoolExecutor
+
 import time
+
 from typing import Dict, List, Optional
 
 from plansys2_msgs.msg import Plan, PlanArray
 from plansys2_msgs.srv import GetPlan, GetPlanArray, ValidateDomain
-from plansys2_support_py.core.PluginProvider import PluginProvider
 from plansys2_support_py.core.PlanSolverBase import PlanSolverBase
+from plansys2_support_py.core.PluginProvider import PluginProvider
+
 import rclpy
 from rclpy.duration import Duration
 from rclpy.lifecycle import LifecycleNode, LifecycleState, TransitionCallbackReturn
@@ -30,10 +33,11 @@ from rclpy.lifecycle import LifecycleNode, LifecycleState, TransitionCallbackRet
 
 class PlannerNode(LifecycleNode):
     """
-    ROS2 Lifecycle Node that manages the planning system and handles planning requests.
+    ROS2 Lifecycle Node that manages planning system.
 
-    This node loads planner plugins based on configuration parameters, provides services
-    to generate plans from PDDL domains and problems, and validates domains.
+    This node handles planning requests. Loads planner plugins based on
+    configuration parameters, provides services to generate plans from
+    PDDL domains and problems, and validates domains.
     """
 
     def __init__(self):
@@ -44,7 +48,7 @@ class PlannerNode(LifecycleNode):
         self.solver_ids_: List[str] = []
         self.solver_types_: List[str] = []
         self.default_ids_: List[str] = ['']
-        self.default_types_: List[str] = []
+        self.default_types_: List[str] = ['plansys2_popf_plan_solver/popf']
         self.solver_timeout_: Duration = Duration(seconds=15)
 
         # Declare parameters
@@ -68,8 +72,10 @@ class PlannerNode(LifecycleNode):
         """
         Declare a parameter if it has not been declared yet.
 
-        Parameters:
-        param_name (str): Name of the parameter to declare.
+        Parameters
+        ----------
+        param_name : str
+            Name of the parameter to declare.
         default_value: Default value for the parameter.
         """
         if not self.has_parameter(param_name):
@@ -79,10 +85,13 @@ class PlannerNode(LifecycleNode):
         """
         Get the plugin type parameter for a given plugin name.
 
-        Parameters:
-        plugin_name (str): Name of the plugin.
+        Parameters
+        ----------
+        plugin_name : str
+            Name of the plugin.
 
-        Returns:
+        Returns
+        -------
         str: The plugin type.
         """
         param_name = f'{plugin_name}.plugin'
@@ -91,20 +100,30 @@ class PlannerNode(LifecycleNode):
         plugin_type = self.get_parameter(param_name).value
 
         if not plugin_type:
-            self.get_logger().fatal(f"'plugin' param not defined for {plugin_name}")
-            raise RuntimeError(f"'plugin' param not defined for {plugin_name}")
+            self.get_logger().fatal(
+                f"'plugin' param not defined for {plugin_name}"
+            )
+            raise RuntimeError(
+                f"'plugin' param not defined for {plugin_name}"
+            )
 
         return plugin_type
 
-    def on_configure(self, state: LifecycleState) -> TransitionCallbackReturn:
+    def on_configure(
+        self, state: LifecycleState
+    ) -> TransitionCallbackReturn:
         """
         Configure the node.
 
-        Parameters:
-        state (LifecycleState): The current lifecycle state.
+        Parameters
+        ----------
+        state : LifecycleState
+            The current lifecycle state.
 
-        Returns:
-        TransitionCallbackReturn: SUCCESS if configuration is successful, FAILURE otherwise.
+        Returns
+        -------
+        TransitionCallbackReturn: SUCCESS if configuration successful,
+            FAILURE otherwise.
         """
         self.get_logger().info(f'[{self.get_name()}] Configuring...')
 
@@ -125,7 +144,8 @@ class PlannerNode(LifecycleNode):
             if self.solver_ids_ == self.default_ids_:
                 for i in range(len(self.default_ids_)):
                     self._declare_parameter_if_not_declared(
-                        f'{self.default_ids_[i]}.plugin', self.default_types_[i]
+                        f'{self.default_ids_[i]}.plugin',
+                        self.default_types_[i]
                     )
 
             # Load all configured solvers
@@ -134,15 +154,19 @@ class PlannerNode(LifecycleNode):
             for i in range(len(self.solver_ids_)):
                 try:
                     solver_id = self.solver_ids_[i]
-                    self.solver_types_[i] = self._get_plugin_type_param(solver_id)
+                    plugin_type = self._get_plugin_type_param(solver_id)
+                    self.solver_types_[i] = plugin_type
 
                     # Load plugin
-                    solver = self.plugin_provider_.load(self.solver_types_[i])
+                    solver = self.plugin_provider_.load(
+                        self.solver_types_[i]
+                    )
 
                     if solver is None:
                         self.get_logger().fatal(
-                            f'[{self.get_name()}] Failed to create solver: {solver_id} '
-                            f'of type {self.solver_types_[i]}'
+                            f'[{self.get_name()}] Failed to create '
+                            f'solver: {solver_id} of type '
+                            f'{self.solver_types_[i]}'
                         )
                         return TransitionCallbackReturn.FAILURE
 
@@ -150,25 +174,32 @@ class PlannerNode(LifecycleNode):
                     solver.configure(self, solver_id)
 
                     self.get_logger().info(
-                        f'[{self.get_name()}] Created solver: {solver_id} of '
-                        f'type {self.solver_types_[i]}'
+                        f'[{self.get_name()}] Created solver: '
+                        f'{solver_id} of type {self.solver_types_[i]}'
                     )
 
                     self.solvers_[solver_id] = solver
 
-                except Exception as ex:
+                except RuntimeError as ex:
                     self.get_logger().fatal(
-                        f'[{self.get_name()}] Failed to create solver. Exception: {ex}')
+                        f'[{self.get_name()}] Failed to create solver. '
+                        f'Exception: {ex}'
+                    )
                     return TransitionCallbackReturn.FAILURE
         else:
             # Load default POPF planner
             self.get_logger().info(
-                f'[{self.get_name()}] No plan_solver_plugins specified, '
-                f'loading default POPF solver')
+                f'[{self.get_name()}] No plan_solver_plugins '
+                f'specified, loading default POPF solver'
+            )
             try:
-                default_solver = self.plugin_provider_.load('plansys2::POPFPlanSolver')
+                default_solver = self.plugin_provider_.load(
+                    'plansys2::POPFPlanSolver'
+                )
                 if default_solver is None:
-                    self.get_logger().fatal('Failed to load default POPF solver')
+                    self.get_logger().fatal(
+                        'Failed to load default POPF solver'
+                    )
                     return TransitionCallbackReturn.FAILURE
 
                 default_solver.configure(self, 'POPF')
@@ -177,9 +208,11 @@ class PlannerNode(LifecycleNode):
                     f'[{self.get_name()}] Created default solver: '
                     'POPF of type plansys2::POPFPlanSolver'
                 )
-            except Exception as ex:
+            except RuntimeError as ex:
                 self.get_logger().fatal(
-                    f'[{self.get_name()}] Failed to create default solver. Exception: {ex}')
+                    f'[{self.get_name()}] Failed to create default '
+                    f'solver. Exception: {ex}'
+                )
                 return TransitionCallbackReturn.FAILURE
 
         timeout_seconds = self.solver_timeout_.nanoseconds / 1e9
@@ -213,10 +246,13 @@ class PlannerNode(LifecycleNode):
         """
         Activate the node.
 
-        Parameters:
-        state (LifecycleState): The current lifecycle state.
+        Parameters
+        ----------
+        state : LifecycleState
+            The current lifecycle state.
 
-        Returns:
+        Returns
+        -------
         TransitionCallbackReturn: SUCCESS if activation is successful.
         """
         self.get_logger().info(f'[{self.get_name()}] Activating...')
@@ -227,10 +263,13 @@ class PlannerNode(LifecycleNode):
         """
         Deactivate the node.
 
-        Parameters:
-        state (LifecycleState): The current lifecycle state.
+        Parameters
+        ----------
+        state : LifecycleState
+            The current lifecycle state.
 
-        Returns:
+        Returns
+        -------
         TransitionCallbackReturn: SUCCESS if deactivation is successful.
         """
         self.get_logger().info(f'[{self.get_name()}] Deactivating...')
@@ -241,10 +280,13 @@ class PlannerNode(LifecycleNode):
         """
         Clean up the node.
 
-        Parameters:
-        state (LifecycleState): The current lifecycle state.
+        Parameters
+        ----------
+        state : LifecycleState
+            The current lifecycle state.
 
-        Returns:
+        Returns
+        -------
         TransitionCallbackReturn: SUCCESS if cleanup is successful.
         """
         self.get_logger().info(f'[{self.get_name()}] Cleaning up...')
@@ -272,10 +314,13 @@ class PlannerNode(LifecycleNode):
         """
         Shut down the node.
 
-        Parameters:
-        state (LifecycleState): The current lifecycle state.
+        Parameters
+        ----------
+        state : LifecycleState
+            The current lifecycle state.
 
-        Returns:
+        Returns
+        -------
         TransitionCallbackReturn: SUCCESS if shutdown is successful.
         """
         self.get_logger().info(f'[{self.get_name()}] Shutting down...')
@@ -286,10 +331,13 @@ class PlannerNode(LifecycleNode):
         """
         Handle errors in the node.
 
-        Parameters:
-        state (LifecycleState): The current lifecycle state.
+        Parameters
+        ----------
+        state : LifecycleState
+            The current lifecycle state.
 
-        Returns:
+        Returns
+        -------
         TransitionCallbackReturn: SUCCESS if error handling is successful.
         """
         self.get_logger().error(f'[{self.get_name()}] Error transition')
@@ -297,13 +345,17 @@ class PlannerNode(LifecycleNode):
 
     def get_plan_array(self, domain: str, problem: str) -> PlanArray:
         """
-        Generate multiple plans for a PDDL problem using all configured planners.
+        Generate plans for PDDL problem using all configured planners.
 
-        Parameters:
-        domain (str): PDDL domain string.
-        problem (str): PDDL problem string.
+        Parameters
+        ----------
+        domain : str
+            PDDL domain string.
+        problem : str
+            PDDL problem string.
 
-        Returns:
+        Returns
+        -------
         PlanArray: An array of plans found by the planners.
         """
         futures: Dict[str, Future] = {}
@@ -331,11 +383,13 @@ class PlannerNode(LifecycleNode):
                     if solver_id not in results:
                         if future.done():
                             try:
-                                results[solver_id] = future.result(timeout=0.001)
+                                result = future.result(timeout=0.001)
+                                results[solver_id] = result
                                 pending_count -= 1
-                            except Exception as e:
+                            except RuntimeError as e:
                                 self.get_logger().warning(
-                                    f'[{self.get_name()}] Solver {solver_id} raised exception: {e}'
+                                    f'[{self.get_name()}] Solver '
+                                    f'{solver_id} raised exception: {e}'
                                 )
                                 results[solver_id] = None
                                 pending_count -= 1
@@ -356,20 +410,22 @@ class PlannerNode(LifecycleNode):
                 if solver_id not in results:
                     try:
                         future.result(timeout=0.1)
-                    except Exception as e:
+                    except RuntimeError as e:
                         self.get_logger().warning(
-                            f'[{self.get_name()}] Exception while destroying future '
-                            f'for {solver_id}: {e}'
+                            f'[{self.get_name()}] Exception while '
+                            f'destroying future for {solver_id}: {e}'
                         )
 
         # Build plan array from results
         plan_array = PlanArray()
         for solver_id, plan in results.items():
             if plan is not None:
-                plan_array.plan_array.append(plan)  # type: ignore[union-attr]
+                # type: ignore[union-attr]
+                plan_array.plan_array.append(plan)
 
         # Sort plans by number of items (shorter plans first)
-        plan_array.plan_array.sort(key=lambda p: len(p.items))  # type: ignore[union-attr]
+        # type: ignore[union-attr]
+        plan_array.plan_array.sort(key=lambda p: len(p.items))
 
         return plan_array
 
@@ -377,12 +433,14 @@ class PlannerNode(LifecycleNode):
         """
         Service callback to generate a plan for a PDDL problem.
 
-        Parameters:
-        request: Service request containing domain and problem PDDL strings.
+        Parameters
+        ----------
+        request: Service request with domain and problem PDDL strings.
         response: Service response containing the generated plan.
 
-        Returns:
-        GetPlan.Response: The response with plan and success status.
+        Returns
+        -------
+        GetPlan.Response: Response with plan and success status.
         """
         plans = self.get_plan_array(request.domain, request.problem)
 
@@ -397,16 +455,21 @@ class PlannerNode(LifecycleNode):
 
     def get_plan_array_service_callback(self, request, response):
         """
-        Service callback to generate multiple plans for a PDDL problem.
+        Service callback to generate multiple plans.
 
-        Parameters:
-        request: Service request containing domain and problem strings.
+        Parameters
+        ----------
+        request: Service request with domain and problem strings.
         response: Service response containing array of plans.
 
-        Returns:
-        GetPlanArray.Response: The response with plans array and success status.
+        Returns
+        -------
+        GetPlanArray.Response: Response with plans array.
         """
-        response.plan_array = self.get_plan_array(request.domain, request.problem)
+        plans_result = self.get_plan_array(
+            request.domain, request.problem
+        )
+        response.plan_array = plans_result
 
         if response.plan_array.plan_array:
             response.success = True
@@ -420,11 +483,13 @@ class PlannerNode(LifecycleNode):
         """
         Service callback to validate a PDDL domain.
 
-        Parameters:
+        Parameters
+        ----------
         request: Service request containing the domain PDDL string.
         response: Service response with validation result.
 
-        Returns:
+        Returns
+        -------
         ValidateDomain.Response: The response with validation status.
         """
         if not self.solvers_:
@@ -434,7 +499,10 @@ class PlannerNode(LifecycleNode):
 
         # Use the first solver to validate the domain
         first_solver = next(iter(self.solvers_.values()))
-        response.success = first_solver.is_domain_valid(request.domain, self.get_namespace())
+        is_valid = first_solver.is_domain_valid(
+            request.domain, self.get_namespace()
+        )
+        response.success = is_valid
 
         if not response.success:
             response.error_info = 'Domain is not valid'
@@ -445,8 +513,10 @@ class PlannerNode(LifecycleNode):
         """
         Set the timeout for plan solvers.
 
-        Parameters:
-        solver_timeout (Duration): The new timeout duration.
+        Parameters
+        ----------
+        solver_timeout : Duration
+            The new timeout duration.
         """
         self.solver_timeout_ = solver_timeout
 
@@ -455,7 +525,8 @@ def main(args=None):
     """
     Run the main entry point for the planner node.
 
-    Parameters:
+    Parameters
+    ----------
     args: Command line arguments (optional).
     """
     rclpy.init(args=args)

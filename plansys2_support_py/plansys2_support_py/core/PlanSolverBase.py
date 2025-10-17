@@ -16,10 +16,12 @@
 """Abstract base class for plan solvers in PlanSys2."""
 
 from abc import ABC, abstractmethod
+
 import shlex
 import signal
 import subprocess
 import threading
+
 from typing import Optional
 
 from plansys2_msgs.msg import Plan
@@ -45,9 +47,12 @@ class PlanSolverBase(ABC):
         """
         Configure the plan solver with a lifecycle node and plugin name.
 
-        Parameters:
-        lc_node (Node): The ROS2 lifecycle node.
-        plugin_name (str): The name of the plugin.
+        Parameters
+        ----------
+        lc_node : Node
+            The ROS2 lifecycle node.
+        plugin_name : str
+            The name of the plugin.
         """
         pass
 
@@ -62,14 +67,21 @@ class PlanSolverBase(ABC):
         """
         Generate a plan given a PDDL domain and problem definition.
 
-        Parameters:
-        domain (str): The PDDL domain as a string.
-        problem (str): The PDDL problem definition as a string.
-        node_namespace (str): The node namespace (optional).
-        solver_timeout (Duration): Timeout for the solver (default: 15s).
+        Parameters
+        ----------
+        domain : str
+            The PDDL domain as a string.
+        problem : str
+            The PDDL problem definition as a string.
+        node_namespace : str, optional
+            The node namespace (default is '').
+        solver_timeout : Duration, optional
+            Timeout for the solver (default is 15s).
 
-        Returns:
-        Optional[Plan]: The resulting plan if found, otherwise None.
+        Returns
+        -------
+        Optional[Plan]
+            The resulting plan if found, otherwise None.
         """
         pass
 
@@ -78,12 +90,17 @@ class PlanSolverBase(ABC):
         """
         Validate a PDDL domain.
 
-        Parameters:
-        domain (str): The PDDL domain as a string.
-        node_namespace (str): The node namespace (optional).
+        Parameters
+        ----------
+        domain : str
+            The PDDL domain as a string.
+        node_namespace : str, optional
+            The node namespace (default is '').
 
-        Returns:
-        bool: True if the domain is valid, False otherwise.
+        Returns
+        -------
+        bool
+            True if the domain is valid, False otherwise.
         """
         pass
 
@@ -95,11 +112,15 @@ class PlanSolverBase(ABC):
         """
         Tokenize a command string using shell-like syntax.
 
-        Parameters:
-        command (str): The command string to tokenize.
+        Parameters
+        ----------
+        command : str
+            The command string to tokenize.
 
-        Returns:
-        list: List of tokens from the command.
+        Returns
+        -------
+        list
+            List of tokens from the command.
         """
         return shlex.split(command)
 
@@ -112,13 +133,19 @@ class PlanSolverBase(ABC):
         """
         Execute the planner with a command.
 
-        Parameters:
-        command (str): The command to execute the planner.
-        solver_timeout (Duration): Timeout for the solver.
-        plan_path (str): Path to store the resulting plan.
+        Parameters
+        ----------
+        command : str
+            The command to execute the planner.
+        solver_timeout : Duration
+            Timeout for the solver.
+        plan_path : str
+            Path to store the resulting plan.
 
-        Returns:
-        bool: True if the planner executed successfully, False otherwise.
+        Returns
+        -------
+        bool
+            True if the planner executed successfully, False otherwise.
         """
         if self._lc_node is None:
             raise RuntimeError('Node is not configured. Call configure() first.')

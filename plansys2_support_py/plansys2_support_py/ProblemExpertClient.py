@@ -20,30 +20,20 @@ This module provides specific classes for interacting with PlanSys2 Problem Expe
 """
 
 from typing import List, Optional
-import rclpy
-from rclpy.client import Client
-from rclpy.node import Node
 
 from plansys2_msgs.msg import Node as PlanSys2Node  # Avoid name conflict
 from plansys2_msgs.msg import Param, Tree
-
 # Problem Expert services
-from plansys2_msgs.srv import (
-    AddProblem,
-    AddProblemGoal,
-    AffectNode,
-    AffectParam,
-    ClearProblemKnowledge,
-    ExistNode,
-    GetNodeDetails,
-    GetProblem,
-    GetProblemGoal,
-    GetProblemInstanceDetails,
-    GetProblemInstances,
-    GetStates,
-    IsProblemGoalSatisfied,
-    RemoveProblemGoal
-)
+from plansys2_msgs.srv import (AddProblem, AddProblemGoal, AffectNode,
+                               AffectParam, ClearProblemKnowledge, ExistNode,
+                               GetNodeDetails, GetProblem, GetProblemGoal,
+                               GetProblemInstanceDetails, GetProblemInstances,
+                               GetStates, IsProblemGoalSatisfied,
+                               RemoveProblemGoal)
+
+import rclpy
+from rclpy.client import Client
+from rclpy.node import Node
 
 
 class ProblemExpertClient(Node):
@@ -58,9 +48,12 @@ class ProblemExpertClient(Node):
         """
         Initialize the Problem Expert client.
 
-        Parameters:
-        node_name (str): Name of the ROS2 node.
-        namespace (str): Namespace prefix for services.
+        Parameters
+        ----------
+        node_name : str, optional
+            Name of the ROS2 node.
+        namespace : str, optional
+            Namespace prefix for services.
         """
         super().__init__(node_name)
         self._namespace_prefix = f'/{namespace}' if namespace else ''
@@ -70,13 +63,19 @@ class ProblemExpertClient(Node):
         """
         Create a service client for the given service, call it and return the response.
 
-        Parameters:
-        service_type (Type): The ROS2 service type class.
-        service_name (str): The name/topic of the service.
-        request (Any): The service request object.
+        Parameters
+        ----------
+        service_type : Type
+            The ROS2 service type class.
+        service_name : str
+            The name/topic of the service.
+        request : Any
+            The service request object.
 
-        Returns:
-        Any: The service response or None if failed.
+        Returns
+        -------
+        Any
+            The service response or None if failed.
         """
         try:
             client: Client = self.create_client(service_type, service_name)
@@ -98,10 +97,13 @@ class ProblemExpertClient(Node):
         """
         Add a PDDL problem.
 
-        Parameters:
-        problem (str): The PDDL problem string.
+        Parameters
+        ----------
+        problem : str
+            The PDDL problem string.
 
-        Returns:
+        Returns
+        -------
         bool: True if successful, False otherwise.
         """
         service_name = f'{self._namespace_prefix}/problem_expert/add_problem'
@@ -121,10 +123,13 @@ class ProblemExpertClient(Node):
         """
         Add a goal to the problem.
 
-        Parameters:
-        goal (Tree): The goal to add.
+        Parameters
+        ----------
+        goal : Tree
+            The goal to add.
 
-        Returns:
+        Returns
+        -------
         bool: True if successful, False otherwise.
         """
         service_name = f'{self._namespace_prefix}/problem_expert/add_problem_goal'
@@ -144,10 +149,13 @@ class ProblemExpertClient(Node):
         """
         Add an instance to the problem.
 
-        Parameters:
-        instance (Param): The instance to add.
+        Parameters
+        ----------
+        instance : Param
+            The instance to add.
 
-        Returns:
+        Returns
+        -------
         bool: True if successful, False otherwise.
         """
         service_name = f'{self._namespace_prefix}/problem_expert/add_problem_instance'
@@ -167,10 +175,13 @@ class ProblemExpertClient(Node):
         """
         Add a predicate to the problem.
 
-        Parameters:
-        predicate (PlanSys2Node): The predicate to add.
+        Parameters
+        ----------
+        predicate : PlanSys2Node
+            The predicate to add.
 
-        Returns:
+        Returns
+        -------
         bool: True if successful, False otherwise.
         """
         service_name = f'{self._namespace_prefix}/problem_expert/add_problem_predicate'
@@ -190,10 +201,13 @@ class ProblemExpertClient(Node):
         """
         Add a function to the problem.
 
-        Parameters:
-        function (PlanSys2Node): The function to add.
+        Parameters
+        ----------
+        function : PlanSys2Node
+            The function to add.
 
-        Returns:
+        Returns
+        -------
         bool: True if successful, False otherwise.
         """
         service_name = f'{self._namespace_prefix}/problem_expert/add_problem_function'
@@ -213,7 +227,8 @@ class ProblemExpertClient(Node):
         """
         Get the goals in the problem as a PDDL string.
 
-        Returns:
+        Returns
+        -------
         Optional[str]: The goals string or None if failed.
         """
         service_name = f'{self._namespace_prefix}/problem_expert/get_problem_goal'
@@ -232,10 +247,13 @@ class ProblemExpertClient(Node):
         """
         Get the details of an instance.
 
-        Parameters:
-        instance (str): The name of the instance to retrieve.
+        Parameters
+        ----------
+        instance : str
+            The name of the instance to retrieve.
 
-        Returns:
+        Returns
+        -------
         Optional[Param]: Details of the instance or None if failed.
         """
         service_name = f'{self._namespace_prefix}/problem_expert/get_problem_instance'
@@ -256,7 +274,8 @@ class ProblemExpertClient(Node):
         """
         Get the instances in the problem.
 
-        Returns:
+        Returns
+        -------
         Optional[List[Param]]: List of instance or None if failed.
         """
         service_name = f'{self._namespace_prefix}/problem_expert/get_problem_instances'
@@ -276,10 +295,13 @@ class ProblemExpertClient(Node):
         """
         Get the details of a predicate.
 
-        Parameters:
-        predicate (str): The name of the predicate to retrieve.
+        Parameters
+        ----------
+        predicate : str
+            The name of the predicate to retrieve.
 
-        Returns:
+        Returns
+        -------
         Optional[PlanSys2Node]: List of predicate names or None if failed.
         """
         service_name = f'{self._namespace_prefix}/problem_expert/get_problem_predicate'
@@ -300,7 +322,8 @@ class ProblemExpertClient(Node):
         """
         Get the predicates in the problem.
 
-        Returns:
+        Returns
+        -------
         Optional[List[PlanSys2Node]]: List of predicate names or None if failed.
         """
         service_name = f'{self._namespace_prefix}/problem_expert/get_problem_predicates'
@@ -320,10 +343,13 @@ class ProblemExpertClient(Node):
         """
         Get the details of a function.
 
-        Parameters:
-        function (str): The name of the function to retrieve.
+        Parameters
+        ----------
+        function : str
+            The name of the function to retrieve.
 
-        Returns:
+        Returns
+        -------
         Optional[PlanSys2Node]: List of function names or None if failed.
         """
         service_name = f'{self._namespace_prefix}/problem_expert/get_problem_function'
@@ -344,7 +370,8 @@ class ProblemExpertClient(Node):
         """
         Get the functions in the problem.
 
-        Returns:
+        Returns
+        -------
         Optional[List[PlanSys2Node]]: List of function names or None if failed.
         """
         service_name = f'{self._namespace_prefix}/problem_expert/get_problem_functions'
@@ -364,7 +391,8 @@ class ProblemExpertClient(Node):
         """
         Get the PDDL problem as a string.
 
-        Returns:
+        Returns
+        -------
         Optional[str]: The PDDL problem string or None if failed.
         """
         service_name = f'{self._namespace_prefix}/problem_expert/get_problem'
@@ -383,7 +411,8 @@ class ProblemExpertClient(Node):
         """
         Remove the current goal from the problem.
 
-        Returns:
+        Returns
+        -------
         bool: True if successful, False otherwise.
         """
         service_name = f'{self._namespace_prefix}/problem_expert/remove_problem_goal'
@@ -402,7 +431,8 @@ class ProblemExpertClient(Node):
         """
         Clear the instances, predicates, and functions.
 
-        Returns:
+        Returns
+        -------
         bool: True if successful, False otherwise.
         """
         service_name = f'{self._namespace_prefix}/problem_expert/clear_problem_knowledge'
@@ -422,10 +452,13 @@ class ProblemExpertClient(Node):
         """
         Remove an instance from the problem.
 
-        Parameters:
-        instance (Param): The instance to remove.
+        Parameters
+        ----------
+        instance : Param
+            The instance to remove.
 
-        Returns:
+        Returns
+        -------
         bool: True if successful, False otherwise.
         """
         service_name = f'{self._namespace_prefix}/problem_expert/remove_problem_instance'
@@ -445,10 +478,13 @@ class ProblemExpertClient(Node):
         """
         Remove a predicate from the problem.
 
-        Parameters:
-        predicate (PlanSys2Node): The predicate to remove.
+        Parameters
+        ----------
+        predicate : PlanSys2Node
+            The predicate to remove.
 
-        Returns:
+        Returns
+        -------
         bool: True if successful, False otherwise.
         """
         service_name = f'{self._namespace_prefix}/problem_expert/remove_problem_predicate'
@@ -468,10 +504,13 @@ class ProblemExpertClient(Node):
         """
         Remove a function from the problem.
 
-        Parameters:
-        function (PlanSys2Node): The function to remove.
+        Parameters
+        ----------
+        function : PlanSys2Node
+            The function to remove.
 
-        Returns:
+        Returns
+        -------
         bool: True if successful, False otherwise.
         """
         service_name = f'{self._namespace_prefix}/problem_expert/remove_problem_function'
@@ -491,10 +530,13 @@ class ProblemExpertClient(Node):
         """
         Check if a predicate exists.
 
-        Parameters:
-        predicate (PlanSys2Node): The predicate to check.
+        Parameters
+        ----------
+        predicate : PlanSys2Node
+            The predicate to check.
 
-        Returns:
+        Returns
+        -------
         Optional[bool]: True if satisfied, False if not, None if failed.
         """
         service_name = f'{self._namespace_prefix}/problem_expert/exist_problem_predicate'
@@ -513,10 +555,13 @@ class ProblemExpertClient(Node):
         """
         Check if a function exists.
 
-        Parameters:
-        function (PlanSys2Node): The function to check.
+        Parameters
+        ----------
+        function : PlanSys2Node
+            The function to check.
 
-        Returns:
+        Returns
+        -------
         Optional[bool]: True if satisfied, False if not, None if failed.
         """
         service_name = f'{self._namespace_prefix}/problem_expert/exist_problem_function'
@@ -535,10 +580,13 @@ class ProblemExpertClient(Node):
         """
         Update a function value.
 
-        Parameters:
-        function (PlanSys2Node): The function to update.
+        Parameters
+        ----------
+        function : PlanSys2Node
+            The function to update.
 
-        Returns:
+        Returns
+        -------
         Optional[bool]: True if satisfied, False if not, None if failed.
         """
         service_name = f'{self._namespace_prefix}/problem_expert/update_problem_function'
@@ -557,7 +605,8 @@ class ProblemExpertClient(Node):
         """
         Check if the current problem goal is satisfied.
 
-        Returns:
+        Returns
+        -------
         Optional[bool]: True if satisfied, False if not, None if failed.
         """
         service_name = f'{self._namespace_prefix}/problem_expert/is_problem_goal_satisfied'
