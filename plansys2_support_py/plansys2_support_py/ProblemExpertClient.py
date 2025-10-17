@@ -54,6 +54,7 @@ class ProblemExpertClient(Node):
             Name of the ROS2 node.
         namespace : str, optional
             Namespace prefix for services.
+
         """
         super().__init__(node_name)
         self._namespace_prefix = f'/{namespace}' if namespace else ''
@@ -76,6 +77,7 @@ class ProblemExpertClient(Node):
         -------
         Any
             The service response or None if failed.
+
         """
         try:
             client: Client = self.create_client(service_type, service_name)
@@ -105,6 +107,7 @@ class ProblemExpertClient(Node):
         Returns
         -------
         bool: True if successful, False otherwise.
+
         """
         service_name = f'{self._namespace_prefix}/problem_expert/add_problem'
         request = AddProblem.Request()
@@ -131,6 +134,7 @@ class ProblemExpertClient(Node):
         Returns
         -------
         bool: True if successful, False otherwise.
+
         """
         service_name = f'{self._namespace_prefix}/problem_expert/add_problem_goal'
         request = AddProblemGoal.Request()
@@ -157,6 +161,7 @@ class ProblemExpertClient(Node):
         Returns
         -------
         bool: True if successful, False otherwise.
+
         """
         service_name = f'{self._namespace_prefix}/problem_expert/add_problem_instance'
         request = AffectParam.Request()
@@ -183,6 +188,7 @@ class ProblemExpertClient(Node):
         Returns
         -------
         bool: True if successful, False otherwise.
+
         """
         service_name = f'{self._namespace_prefix}/problem_expert/add_problem_predicate'
         request = AffectNode.Request()
@@ -209,6 +215,7 @@ class ProblemExpertClient(Node):
         Returns
         -------
         bool: True if successful, False otherwise.
+
         """
         service_name = f'{self._namespace_prefix}/problem_expert/add_problem_function'
         request = AffectNode.Request()
@@ -230,6 +237,7 @@ class ProblemExpertClient(Node):
         Returns
         -------
         Optional[str]: The goals string or None if failed.
+
         """
         service_name = f'{self._namespace_prefix}/problem_expert/get_problem_goal'
         request = GetProblemGoal.Request()
@@ -255,6 +263,7 @@ class ProblemExpertClient(Node):
         Returns
         -------
         Optional[Param]: Details of the instance or None if failed.
+
         """
         service_name = f'{self._namespace_prefix}/problem_expert/get_problem_instance'
         request = GetProblemInstanceDetails.Request()
@@ -277,6 +286,7 @@ class ProblemExpertClient(Node):
         Returns
         -------
         Optional[List[Param]]: List of instance or None if failed.
+
         """
         service_name = f'{self._namespace_prefix}/problem_expert/get_problem_instances'
         request = GetProblemInstances.Request()
@@ -303,6 +313,7 @@ class ProblemExpertClient(Node):
         Returns
         -------
         Optional[PlanSys2Node]: List of predicate names or None if failed.
+
         """
         service_name = f'{self._namespace_prefix}/problem_expert/get_problem_predicate'
         request = GetNodeDetails.Request()
@@ -325,6 +336,7 @@ class ProblemExpertClient(Node):
         Returns
         -------
         Optional[List[PlanSys2Node]]: List of predicate names or None if failed.
+
         """
         service_name = f'{self._namespace_prefix}/problem_expert/get_problem_predicates'
         request = GetStates.Request()
@@ -351,6 +363,7 @@ class ProblemExpertClient(Node):
         Returns
         -------
         Optional[PlanSys2Node]: List of function names or None if failed.
+
         """
         service_name = f'{self._namespace_prefix}/problem_expert/get_problem_function'
         request = GetNodeDetails.Request()
@@ -373,6 +386,7 @@ class ProblemExpertClient(Node):
         Returns
         -------
         Optional[List[PlanSys2Node]]: List of function names or None if failed.
+
         """
         service_name = f'{self._namespace_prefix}/problem_expert/get_problem_functions'
         request = GetStates.Request()
@@ -394,6 +408,7 @@ class ProblemExpertClient(Node):
         Returns
         -------
         Optional[str]: The PDDL problem string or None if failed.
+
         """
         service_name = f'{self._namespace_prefix}/problem_expert/get_problem'
         request = GetProblem.Request()
@@ -414,6 +429,7 @@ class ProblemExpertClient(Node):
         Returns
         -------
         bool: True if successful, False otherwise.
+
         """
         service_name = f'{self._namespace_prefix}/problem_expert/remove_problem_goal'
         request = RemoveProblemGoal.Request()
@@ -434,6 +450,7 @@ class ProblemExpertClient(Node):
         Returns
         -------
         bool: True if successful, False otherwise.
+
         """
         service_name = f'{self._namespace_prefix}/problem_expert/clear_problem_knowledge'
         request = ClearProblemKnowledge.Request()
@@ -460,6 +477,7 @@ class ProblemExpertClient(Node):
         Returns
         -------
         bool: True if successful, False otherwise.
+
         """
         service_name = f'{self._namespace_prefix}/problem_expert/remove_problem_instance'
         request = AffectParam.Request()
@@ -486,6 +504,7 @@ class ProblemExpertClient(Node):
         Returns
         -------
         bool: True if successful, False otherwise.
+
         """
         service_name = f'{self._namespace_prefix}/problem_expert/remove_problem_predicate'
         request = AffectNode.Request()
@@ -512,6 +531,7 @@ class ProblemExpertClient(Node):
         Returns
         -------
         bool: True if successful, False otherwise.
+
         """
         service_name = f'{self._namespace_prefix}/problem_expert/remove_problem_function'
         request = AffectNode.Request()
@@ -538,6 +558,7 @@ class ProblemExpertClient(Node):
         Returns
         -------
         Optional[bool]: True if satisfied, False if not, None if failed.
+
         """
         service_name = f'{self._namespace_prefix}/problem_expert/exist_problem_predicate'
         request = ExistNode.Request()
@@ -563,6 +584,7 @@ class ProblemExpertClient(Node):
         Returns
         -------
         Optional[bool]: True if satisfied, False if not, None if failed.
+
         """
         service_name = f'{self._namespace_prefix}/problem_expert/exist_problem_function'
         request = ExistNode.Request()
@@ -588,6 +610,7 @@ class ProblemExpertClient(Node):
         Returns
         -------
         Optional[bool]: True if satisfied, False if not, None if failed.
+
         """
         service_name = f'{self._namespace_prefix}/problem_expert/update_problem_function'
         request = AffectNode.Request()
@@ -608,6 +631,7 @@ class ProblemExpertClient(Node):
         Returns
         -------
         Optional[bool]: True if satisfied, False if not, None if failed.
+
         """
         service_name = f'{self._namespace_prefix}/problem_expert/is_problem_goal_satisfied'
         request = IsProblemGoalSatisfied.Request()
@@ -626,6 +650,7 @@ class ProblemExpertClient(Node):
         Print comprehensive information about the current problem.
 
         Calls all available public methods to provide an overview of the problem state.
+
         """
         self.get_logger().info('=== Problem Expert Information ===')
 

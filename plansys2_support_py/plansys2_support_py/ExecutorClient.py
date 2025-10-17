@@ -55,6 +55,7 @@ class ExecutorClient(Node):
             Name of the ROS2 node.
         namespace : str, optional
             Namespace prefix for services.
+
         """
         super().__init__(node_name)
 
@@ -92,6 +93,7 @@ class ExecutorClient(Node):
         -------
         Any
             The service response or None if failed.
+
         """
         try:
             client: Client = self.create_client(service_type, service_name)
@@ -124,6 +126,7 @@ class ExecutorClient(Node):
         -------
         Optional[List[Tree]]
             List of sub-goals as Tree objects, or None if failed.
+
         """
         service_name = f'{self._namespace_prefix}/executor/get_ordered_sub_goals'
         request = GetOrderedSubGoals.Request()
@@ -147,6 +150,7 @@ class ExecutorClient(Node):
         -------
         Optional[Plan]
             The current plan or None if failed.
+
         """
         service_name = f'{self._namespace_prefix}/executor/get_plan'
         request = GetPlan.Request()
@@ -173,6 +177,7 @@ class ExecutorClient(Node):
         -------
         Optional[Plan]
             The remaining plan or None if failed.
+
         """
         service_name = f'{self._namespace_prefix}/executor/get_remaining_plan'
         request = GetPlan.Request()
@@ -196,6 +201,7 @@ class ExecutorClient(Node):
         -----
         Call multiple services to provide an overview of the executor's current status,
         including ordered sub-goals, current plan, and remaining plan.
+
         """
         self.get_logger().info('=== Executor Information ===')
 
@@ -267,6 +273,7 @@ class ExecutorClient(Node):
         -------
         bool
             True if plan execution succeeded, False otherwise.
+
         """
         # If no plan provided, compute a new plan
         if plan is None:
@@ -351,6 +358,7 @@ class ExecutorClient(Node):
         ----------
         feedback_msg
             The feedback message from the action server.
+
         """
         feedback = feedback_msg.feedback
 
@@ -391,6 +399,7 @@ class ExecutorClient(Node):
         ----------
         result
             The execution result from the action.
+
         """
         if result.result == ExecutePlan.Result.SUCCESS:
             print('✓ Plan execution finished successfully')

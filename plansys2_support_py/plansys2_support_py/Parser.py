@@ -44,6 +44,7 @@ class Parser:
         -------
         str
             The reduced expression.
+
         """
         # Remove newlines and tabs
         result = re.sub(r'[\n\t]+', '', expr)
@@ -71,6 +72,7 @@ class Parser:
         -------
         int
             The node type.
+
         """
         patterns = [
             (r'\(\s*and[ (]', Node.AND),
@@ -128,6 +130,7 @@ class Parser:
         -------
         Tuple[int, int]
             Tuple of (expression_type, start_position).
+
         """
         patterns = [
             (r'\s*>=', Node.COMP_GE),
@@ -169,6 +172,7 @@ class Parser:
         -------
         Tuple[int, int]
             Tuple of (modifier_type, start_position).
+
         """
         patterns = [
             (r'assign', Node.ASSIGN),
@@ -208,6 +212,7 @@ class Parser:
         -------
         int
             Position of matching closing parenthesis.
+
         """
         it = start + 1
         balance = 1
@@ -237,6 +242,7 @@ class Parser:
         -------
         List[str]
             List of sub-expression strings.
+
         """
         result = []
         wexpr = expr.strip()
@@ -289,6 +295,7 @@ class Parser:
         -------
         str
             Expression with operator removed.
+
         """
         # Check for 'exists'
         first_paren = expr.find('(')
@@ -327,6 +334,7 @@ class Parser:
         -------
         Param
             Param message.
+
         """
         param = Param()
         param.name = name
@@ -347,6 +355,7 @@ class Parser:
         -------
         str
             String representation.
+
         """
         if param.type:
             return f'{param.name} - {param.type}'
@@ -366,6 +375,7 @@ class Parser:
         -------
         Node
             Node message with PREDICATE type.
+
         """
         node = Node()
         node.node_type = Node.PREDICATE
@@ -403,6 +413,7 @@ class Parser:
         -------
         Node
             Node message with FUNCTION type.
+
         """
         node = Node()
         node.node_type = Node.FUNCTION
@@ -446,6 +457,7 @@ class Parser:
         -------
         Node
             Node message with EXISTS type.
+
         """
         node = Node()
         node.node_type = Node.EXISTS
@@ -503,6 +515,7 @@ class Parser:
         -------
         Tree
             Tree message.
+
         """
         tree = Tree()
         Parser._from_string_recursive(tree, expr, negate, parent)
@@ -529,6 +542,7 @@ class Parser:
         -------
         Optional[Node]
             The created node.
+
         """
         wexpr = Parser.get_reduced_string(expr)
 
@@ -686,6 +700,7 @@ class Parser:
         -------
         str
             String representation.
+
         """
         if node.node_type not in [Node.PREDICATE, Node.FUNCTION]:
             raise ValueError(
@@ -715,6 +730,7 @@ class Parser:
         -------
         str
             String representation.
+
         """
         if node_id >= len(tree.nodes):
             return ''
@@ -764,6 +780,7 @@ class Parser:
         -------
         str
             String representation.
+
         """
         if node_id >= len(tree.nodes):
             return ''
@@ -796,6 +813,7 @@ class Parser:
         -------
         str
             String representation.
+
         """
         if node_id >= len(tree.nodes):
             return ''
@@ -827,6 +845,7 @@ class Parser:
         -------
         str
             String representation.
+
         """
         if node_id >= len(tree.nodes):
             return ''
@@ -851,6 +870,7 @@ class Parser:
         -------
         str
             String representation.
+
         """
         if node_id >= len(tree.nodes):
             return ''
@@ -885,6 +905,7 @@ class Parser:
         -------
         str
             String representation.
+
         """
         if node_id >= len(tree.nodes):
             return ''
@@ -919,6 +940,7 @@ class Parser:
         -------
         str
             String representation.
+
         """
         if node_id >= len(tree.nodes):
             return ''
@@ -947,6 +969,7 @@ class Parser:
         -------
         str
             String representation.
+
         """
         if node_id >= len(tree.nodes):
             return ''
@@ -999,6 +1022,7 @@ class Parser:
         -------
         str
             String representation.
+
         """
         if node_id >= len(tree.nodes):
             return ''
@@ -1042,6 +1066,7 @@ class Parser:
         -------
         str
             String representation.
+
         """
         if node_id >= len(tree.nodes):
             return ''
@@ -1066,6 +1091,7 @@ class Parser:
         -------
         str
             String representation.
+
         """
         if node_id >= len(tree.nodes):
             return ''
@@ -1093,6 +1119,7 @@ class Parser:
         -------
         str
             String representation.
+
         """
         if node_id >= len(tree.nodes):
             return ''
@@ -1126,7 +1153,8 @@ class Parser:
 
     @staticmethod
     def param_to_dict(param: Param) -> Dict[str, Any]:
-        """Convert a plansys2_msgs.msg.Param to a dictionary.
+        """
+        Convert a plansys2_msgs.msg.Param to a dictionary.
 
         Parameters
         ----------
@@ -1140,6 +1168,7 @@ class Parser:
             - name: str - Parameter name
             - type: str - Parameter type
             - sub_types: List[str] - List of sub-types (for complex types)
+
         """
         return {
             'name': param.name,
@@ -1149,7 +1178,8 @@ class Parser:
 
     @staticmethod
     def node_to_dict(node: Node) -> Dict[str, Any]:
-        """Convert a plansys2_msgs.msg.Node to a dictionary.
+        """
+        Convert a plansys2_msgs.msg.Node to a dictionary.
 
         The Node message represents elements in PDDL expression trees,
         including logical operators, predicates, functions, and values.
@@ -1175,6 +1205,7 @@ class Parser:
             - parameters: List[Dict] - List of parameters (converted to dicts)
             - value: float - Numeric value (for NUMBER nodes)
             - negate: bool - Whether the node is negated
+
         """
         # Node type constants and names mapping
         node_type_names = {
@@ -1219,7 +1250,8 @@ class Parser:
 
     @staticmethod
     def tree_to_dict(tree: Tree) -> Dict[str, Any]:
-        """Convert a plansys2_msgs.msg.Tree to a dictionary.
+        """
+        Convert a plansys2_msgs.msg.Tree to a dictionary.
 
         The Tree message represents a PDDL construct as a tree structure
         composed of Node elements.
@@ -1234,6 +1266,7 @@ class Parser:
         Dict[str, Any]
             Dictionary representation of the Tree with keys:
             - nodes: List[Dict] - List of nodes (converted to dicts)
+
         """
         nodes = [Parser.node_to_dict(n) for n in tree.nodes] if tree.nodes else []
         return {
