@@ -167,7 +167,7 @@ DomainExpert::getFunction(const std::string & function)
 }
 
 plansys2_msgs::msg::Derived DomainExpert::getDerivedFromDomain(
-  const unsigned int& derived_index, const std::vector<std::string> & params)
+  const unsigned int & derived_index, const std::vector<std::string> & params)
 {
   plansys2_msgs::msg::Derived derived;
   derived.predicate.name = domain_->derived[derived_index]->name;

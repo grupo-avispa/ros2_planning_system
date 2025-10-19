@@ -123,7 +123,7 @@ public:
    *
    */
   plansys2_msgs::msg::Derived getDerivedFromDomain(
-    const unsigned int&  derived_index, const std::vector<std::string> & params = {});
+    const unsigned int & derived_index, const std::vector<std::string> & params = {});
 
   /// Get the derived predicates existing in the domain.
   /**
