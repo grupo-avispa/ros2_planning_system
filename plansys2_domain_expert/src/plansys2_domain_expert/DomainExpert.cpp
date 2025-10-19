@@ -166,27 +166,26 @@ DomainExpert::getFunction(const std::string & function)
   }
 }
 
-
 plansys2_msgs::msg::Derived DomainExpert::getDerivedFromDomain(
-  unsigned int i, const std::vector<std::string> & params)
+  const unsigned int& derived_index, const std::vector<std::string> & params)
 {
   plansys2_msgs::msg::Derived derived;
-  derived.predicate.name = domain_->derived[i]->name;
+  derived.predicate.name = domain_->derived[derived_index]->name;
   derived.predicate.node_type = plansys2_msgs::msg::Node::PREDICATE;
 
   // Parameters
-  for (unsigned j = 0; j < domain_->derived[i]->params.size(); j++) {
+  for (unsigned j = 0; j < domain_->derived[derived_index]->params.size(); j++) {
     plansys2_msgs::msg::Param param;
-    param.name = "?" + domain_->types[domain_->derived[i]->params[j]]->getName() +
+    param.name = "?" + domain_->types[domain_->derived[derived_index]->params[j]]->getName() +
       std::to_string(j);
-    param.type = domain_->types[domain_->derived[i]->params[j]]->name;
-    domain_->types[domain_->derived[i]->params[j]]->getSubTypesNames(param.sub_types);
+    param.type = domain_->types[domain_->derived[derived_index]->params[j]]->name;
+    domain_->types[domain_->derived[derived_index]->params[j]]->getSubTypesNames(param.sub_types);
     derived.predicate.parameters.push_back(param);
   }
 
   // Preconditions
-  if (domain_->derived[i]->cond) {
-    domain_->derived[i]->cond->getTree(derived.preconditions, *domain_, params);
+  if (domain_->derived[derived_index]->cond) {
+    domain_->derived[derived_index]->cond->getTree(derived.preconditions, *domain_, params);
   }
 
   return derived;

@@ -114,8 +114,16 @@ public:
    */
   std::optional<plansys2::Function> getFunction(const std::string & function);
 
+  /**
+   * @brief Get a derived predicate from the domain given an index and parameters.
+   *
+   * @param derived_index The index of the derived predicate in the domain.
+   * @param params The parameters for the derived predicate (empty by default).
+   * @return plansys2_msgs::msg::Derived The derived predicate message.
+   *
+   */
   plansys2_msgs::msg::Derived getDerivedFromDomain(
-    unsigned int i, const std::vector<std::string> & params = {});
+    const unsigned int&  derived_index, const std::vector<std::string> & params = {});
 
   /// Get the derived predicates existing in the domain.
   /**
