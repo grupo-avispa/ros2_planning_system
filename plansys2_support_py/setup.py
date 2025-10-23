@@ -23,5 +23,8 @@ setup(
         ],
     },
     entry_points={
+        'console_scripts': [
+            'planner = ' + package_name + '.Planner:main',
+        ],
     },
 )
