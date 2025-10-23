@@ -162,9 +162,7 @@ class PlannerNode(LifecycleNode):
                     self.solver_types_[i] = plugin_type
 
                     # Load plugin
-                    solver = self.plugin_provider_.load(
-                        self.solver_types_[i]
-                    )
+                    solver = self.plugin_provider_.load(self.solver_types_[i], self)
 
                     if solver is None:
                         self.get_logger().fatal(
@@ -197,9 +195,7 @@ class PlannerNode(LifecycleNode):
                 f'specified, loading default POPF solver'
             )
             try:
-                default_solver = self.plugin_provider_.load(
-                    'plansys2::POPFPlanSolver'
-                )
+                default_solver = self.plugin_provider_.load('plansys2::POPFPlanSolver', self)
                 if default_solver is None:
                     self.get_logger().fatal(
                         'Failed to load default POPF solver'
