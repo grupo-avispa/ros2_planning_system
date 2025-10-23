@@ -22,6 +22,7 @@ from typing import Dict, List
 from xml.etree import ElementTree
 
 from ament_index_python.packages import get_package_share_directory, get_packages_with_prefixes
+from rclpy.node import Node
 
 
 class PluginDescriptor:
@@ -91,7 +92,7 @@ class PluginProvider:
         self._base_class_type = base_class_type
         self._plugin_descriptors: Dict[str, PluginDescriptor] = {}
 
-    def discover(self, node) -> List[PluginDescriptor]:
+    def discover(self, node: Node) -> List[PluginDescriptor]:
         """
         Discover all available plugins.
 
@@ -118,7 +119,7 @@ class PluginProvider:
 
         return plugin_descriptors
 
-    def load(self, plugin_id: str, plugin_context=None):
+    def load(self, plugin_id: str, node: Node, plugin_context=None):
         """
         Load a plugin by its ID.
 
@@ -126,6 +127,8 @@ class PluginProvider:
         ----------
         plugin_id : str
             The unique identifier of the plugin to load.
+        node : Node
+            ROS2 node for logging.
         plugin_context : object, optional
             Optional context to pass to the plugin constructor.
 
@@ -136,7 +139,7 @@ class PluginProvider:
 
         """
         if plugin_id not in self._plugin_descriptors:
-            print(f'PluginProvider.load({plugin_id}): plugin not found')
+            node.get_logger().error(f'PluginProvider.load({plugin_id}): plugin not found')
             return None
 
         attributes = self._plugin_descriptors[plugin_id].attributes()
@@ -157,16 +160,18 @@ class PluginProvider:
                 level=0
             )
         except Exception:
-            print(f'PluginProvider.load({plugin_id}): exception raised in '
-                  f"__import__({attributes['module_name']}, "
-                  f"[{attributes['class_from_class_type']}]):\n{traceback.format_exc()}")
+            node.get_logger().error(
+                f'PluginProvider.load({plugin_id}): exception raised in '
+                f"__import__({attributes['module_name']}, "
+                f"[{attributes['class_from_class_type']}]):\n{traceback.format_exc()}")
             return None
 
         # Get class reference from module
         class_ref = getattr(module, attributes['class_from_class_type'], None)
         if class_ref is None:
-            print(f'PluginProvider.load({plugin_id}): could not find class '
-                  f'"{attributes["class_from_class_type"]}" in module "{module}"')
+            node.get_logger().error(
+                f'PluginProvider.load({plugin_id}): could not find class '
+                f'"{attributes["class_from_class_type"]}" in module "{module}"')
             return None
 
         # Create plugin instance
@@ -176,8 +181,9 @@ class PluginProvider:
             else:
                 return class_ref(plugin_context)
         except Exception:
-            print(f'PluginProvider.load({plugin_id}): exception creating instance:\n'
-                  f'{traceback.format_exc()}')
+            node.get_logger().error(
+                f'PluginProvider.load({plugin_id}): exception creating instance:\n'
+                f'{traceback.format_exc()}')
             return None
 
     def unload(self, plugin_instance):
@@ -233,7 +239,7 @@ class PluginProvider:
         self,
         package_name: str,
         plugin_xml: str,
-        node
+        node: Node
     ) -> List[PluginDescriptor]:
         """
         Parse a plugin.xml file and extract plugin descriptors.
