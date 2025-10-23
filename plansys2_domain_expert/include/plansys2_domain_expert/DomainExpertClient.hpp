@@ -21,6 +21,7 @@
 #include <memory>
 
 #include "plansys2_core/Types.hpp"
+#include "plansys2_core/DerivedResolutionGraph.hpp"
 #include "plansys2_domain_expert/DomainExpertInterface.hpp"
 
 #include "std_msgs/msg/string.hpp"
@@ -122,7 +123,9 @@ public:
    * @return std::vector<plansys2::Predicate> Vector containing the derived predicates
    *         defined in the domain.
    */
-  std::vector<plansys2::Predicate> getDerivedPredicates();
+  std::vector<plansys2_msgs::msg::Derived> getDerivedPredicates();
+
+  plansys2::DerivedResolutionGraph getDerivedResolutionGraph();
 
   /**
    * @brief Get the details of a derived predicate defined in the domain.
@@ -206,7 +209,8 @@ private:
   rclcpp::Client<plansys2_msgs::srv::GetDomainConstants>::SharedPtr get_constants_client_;
   rclcpp::Client<plansys2_msgs::srv::GetStates>::SharedPtr get_predicates_client_;
   rclcpp::Client<plansys2_msgs::srv::GetStates>::SharedPtr get_functions_client_;
-  rclcpp::Client<plansys2_msgs::srv::GetStates>::SharedPtr get_derived_predicates_client_;
+  rclcpp::Client<plansys2_msgs::srv::GetDomainDerivedPredicateDetails>::SharedPtr
+    get_derived_predicates_client_;
   rclcpp::Client<plansys2_msgs::srv::GetDomainDerivedPredicateDetails>::SharedPtr
     get_derived_predicate_details_client_;
   rclcpp::Client<plansys2_msgs::srv::GetDomainActions>::SharedPtr get_actions_client_;
