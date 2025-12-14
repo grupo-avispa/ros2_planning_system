@@ -156,8 +156,6 @@ ament_export_include_directories("include/${PROJECT_NAME}")
 ament_export_libraries(${PROJECT_NAME} bt_builder_plugins)
 ament_export_targets(export_${PROJECT_NAME} bt_builder_plugins)
 ament_export_dependencies(
-  eigen3_cmake_module
-  Eigen3
   rclcpp
   rclcpp_lifecycle
   lifecycle_msgs
