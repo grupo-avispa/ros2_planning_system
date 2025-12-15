@@ -104,6 +104,21 @@ protected:
   }
 };
 
+static void drain_ros(const rclcpp::Node::SharedPtr & n, std::chrono::milliseconds total = 200ms)
+{
+  rclcpp::executors::SingleThreadedExecutor ex;
+  ex.add_node(n);
+
+  auto start = n->now();
+  rclcpp::Rate r(200);  // 5 ms
+  while ((n->now() - start).seconds() < std::chrono::duration<double>(total).count()) {
+    ex.spin_some();
+    r.sleep();
+  }
+
+  ex.remove_node(n);
+}
+
 TEST_F(TerminalTestCase, token_utils)
 {
   auto test1 = plansys2_terminal::tokenize("");
@@ -136,6 +151,10 @@ TEST_F(TerminalTestCase, token_utils)
 class TerminalTest : public plansys2_terminal::Terminal
 {
 public:
+  TerminalTest(const rclcpp::NodeOptions & options = rclcpp::NodeOptions())
+  : Terminal(options)
+  {}
+
   void init()
   {
     method_executed_["init"] = true;
@@ -280,12 +299,16 @@ public:
 
 TEST_F(TerminalTestCase, load_popf_plugin)
 {
-  auto test_node = rclcpp::Node::make_shared("terminal_node_test_load_popf_plugin");
+  rclcpp::NodeOptions options;
+  options.enable_rosout(false);
+  options.arguments({"--ros-args", "--disable-rosout-logs", "--disable-stdout-logs"});
 
-  auto domain_node = std::make_shared<plansys2::DomainExpertNode>();
-  auto problem_node = std::make_shared<plansys2::ProblemExpertNode>();
-  auto planner_node = std::make_shared<plansys2::PlannerNode>();
-  auto executor_node = std::make_shared<plansys2::ExecutorNode>();
+  auto test_node = rclcpp::Node::make_shared("terminal_node_test_load_popf_plugin", options);
+
+  auto domain_node = std::make_shared<plansys2::DomainExpertNode>(options);
+  auto problem_node = std::make_shared<plansys2::ProblemExpertNode>(options);
+  auto planner_node = std::make_shared<plansys2::PlannerNode>(options);
+  auto executor_node = std::make_shared<plansys2::ExecutorNode>(options);
 
   auto problem_client = std::make_shared<plansys2::ProblemExpertClient>();
 
@@ -336,7 +359,7 @@ TEST_F(TerminalTestCase, load_popf_plugin)
     }
   }
 
-  auto terminal_node = std::make_shared<TerminalTest>();
+  auto terminal_node = std::make_shared<TerminalTest>(options);
   terminal_node->init();
 
   std::string command_1("    hey how        do   you    test  ");
@@ -612,16 +635,23 @@ TEST_F(TerminalTestCase, load_popf_plugin)
   planner_node.reset();
   executor_node.reset();
   terminal_node.reset();
+
+  auto drain_node = std::make_shared<rclcpp::Node>("__drain__");
+  drain_ros(drain_node, 200ms);
 }
 
 TEST_F(TerminalTestCase, add_problem)
 {
-  auto test_node = rclcpp::Node::make_shared("terminal_node_test_add_problem");
+  rclcpp::NodeOptions options;
+  options.enable_rosout(false);
+  options.arguments({"--ros-args", "--disable-rosout-logs", "--disable-stdout-logs"});
 
-  auto domain_node = std::make_shared<plansys2::DomainExpertNode>();
-  auto problem_node = std::make_shared<plansys2::ProblemExpertNode>();
-  auto planner_node = std::make_shared<plansys2::PlannerNode>();
-  auto executor_node = std::make_shared<plansys2::ExecutorNode>();
+  auto test_node = rclcpp::Node::make_shared("terminal_node_test_add_problem", options);
+
+  auto domain_node = std::make_shared<plansys2::DomainExpertNode>(options);
+  auto problem_node = std::make_shared<plansys2::ProblemExpertNode>(options);
+  auto planner_node = std::make_shared<plansys2::PlannerNode>(options);
+  auto executor_node = std::make_shared<plansys2::ExecutorNode>(options);
 
   auto problem_client = std::make_shared<plansys2::ProblemExpertClient>();
 
@@ -671,7 +701,7 @@ TEST_F(TerminalTestCase, add_problem)
     }
   }
 
-  auto terminal_node = std::make_shared<TerminalTest>();
+  auto terminal_node = std::make_shared<TerminalTest>(options);
   terminal_node->set_parameter({"problem_file", pkgpath + "/pddl/problem_charging.pddl"});
   terminal_node->init();
 
@@ -733,16 +763,24 @@ TEST_F(TerminalTestCase, add_problem)
   planner_node.reset();
   executor_node.reset();
   terminal_node.reset();
+
+  auto drain_node = std::make_shared<rclcpp::Node>("__drain__");
+  drain_ros(drain_node, 200ms);
 }
 
 TEST_F(TerminalTestCase, add_problem_empty_domain)
 {
-  auto test_node = rclcpp::Node::make_shared("terminal_node_test_add_problem_empty_domain");
+  rclcpp::NodeOptions options;
+  options.enable_rosout(false);
+  options.arguments({"--ros-args", "--disable-rosout-logs", "--disable-stdout-logs"});
 
-  auto domain_node = std::make_shared<plansys2::DomainExpertNode>();
-  auto problem_node = std::make_shared<plansys2::ProblemExpertNode>();
-  auto planner_node = std::make_shared<plansys2::PlannerNode>();
-  auto executor_node = std::make_shared<plansys2::ExecutorNode>();
+
+  auto test_node = rclcpp::Node::make_shared("terminal_node_test_add_problem_empty_domain", options);
+
+  auto domain_node = std::make_shared<plansys2::DomainExpertNode>(options);
+  auto problem_node = std::make_shared<plansys2::ProblemExpertNode>(options);
+  auto planner_node = std::make_shared<plansys2::PlannerNode>(options);
+  auto executor_node = std::make_shared<plansys2::ExecutorNode>(options);
 
   auto problem_client = std::make_shared<plansys2::ProblemExpertClient>();
 
@@ -792,7 +830,7 @@ TEST_F(TerminalTestCase, add_problem_empty_domain)
     }
   }
 
-  auto terminal_node = std::make_shared<TerminalTest>();
+  auto terminal_node = std::make_shared<TerminalTest>(options);
   terminal_node->set_parameter({"problem_file", pkgpath + "/pddl/problem_empty_domain.pddl"});
   terminal_node->init();
 
@@ -835,16 +873,23 @@ TEST_F(TerminalTestCase, add_problem_empty_domain)
   planner_node.reset();
   executor_node.reset();
   terminal_node.reset();
+
+  auto drain_node = std::make_shared<rclcpp::Node>("__drain__");
+  drain_ros(drain_node, 200ms);
 }
 
 TEST_F(TerminalTestCase, check_actors)
 {
-  auto test_node = rclcpp::Node::make_shared("terminal_node_test_check_actors");
+  rclcpp::NodeOptions options;
+  options.enable_rosout(false);
+  options.arguments({"--ros-args", "--disable-rosout-logs", "--disable-stdout-logs"});
 
-  auto domain_node = std::make_shared<plansys2::DomainExpertNode>();
-  auto problem_node = std::make_shared<plansys2::ProblemExpertNode>();
-  auto planner_node = std::make_shared<plansys2::PlannerNode>();
-  auto executor_node = std::make_shared<plansys2::ExecutorNode>();
+  auto test_node = rclcpp::Node::make_shared("terminal_node_test_check_actors", options);
+
+  auto domain_node = std::make_shared<plansys2::DomainExpertNode>(options);
+  auto problem_node = std::make_shared<plansys2::ProblemExpertNode>(options);
+  auto planner_node = std::make_shared<plansys2::PlannerNode>(options);
+  auto executor_node = std::make_shared<plansys2::ExecutorNode>(options);
 
   auto problem_client = std::make_shared<plansys2::ProblemExpertClient>();
 
@@ -970,7 +1015,7 @@ TEST_F(TerminalTestCase, check_actors)
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
 
 
-  auto terminal_node = std::make_shared<TerminalTest>();
+  auto terminal_node = std::make_shared<TerminalTest>(options);
   terminal_node->init();
 
   std::ostringstream os;
@@ -998,16 +1043,23 @@ TEST_F(TerminalTestCase, check_actors)
   move_actor_2_node.reset();
   ask_charge_actor_1_node.reset();
   charge_actor_1_node.reset();
+
+  auto drain_node = std::make_shared<rclcpp::Node>("__drain__");
+  drain_ros(drain_node, 200ms);
 }
 
 TEST_F(TerminalTestCase, source_run_plan)
 {
-  auto test_node = rclcpp::Node::make_shared("terminal_node_test_source_run_plan");
+  rclcpp::NodeOptions options;
+  options.enable_rosout(false);
+  options.arguments({"--ros-args", "--disable-rosout-logs", "--disable-stdout-logs"});
 
-  auto domain_node = std::make_shared<plansys2::DomainExpertNode>();
-  auto problem_node = std::make_shared<plansys2::ProblemExpertNode>();
-  auto planner_node = std::make_shared<plansys2::PlannerNode>();
-  auto executor_node = std::make_shared<plansys2::ExecutorNode>();
+  auto test_node = rclcpp::Node::make_shared("terminal_node_test_source_run_plan", options);
+
+  auto domain_node = std::make_shared<plansys2::DomainExpertNode>(options);
+  auto problem_node = std::make_shared<plansys2::ProblemExpertNode>(options);
+  auto planner_node = std::make_shared<plansys2::PlannerNode>(options);
+  auto executor_node = std::make_shared<plansys2::ExecutorNode>(options);
 
   auto problem_client = std::make_shared<plansys2::ProblemExpertClient>();
 
@@ -1126,7 +1178,7 @@ TEST_F(TerminalTestCase, source_run_plan)
     charge_actor_1_node->get_current_state().id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
 
-  auto terminal_node = std::make_shared<TerminalTest>();
+  auto terminal_node = std::make_shared<TerminalTest>(options);
   terminal_node->init();
 
   {
@@ -1207,6 +1259,9 @@ TEST_F(TerminalTestCase, source_run_plan)
   planner_node.reset();
   executor_node.reset();
   terminal_node.reset();
+
+  auto drain_node = std::make_shared<rclcpp::Node>("__drain__");
+  drain_ros(drain_node, 200ms);
 }
 
 int main(int argc, char ** argv)
