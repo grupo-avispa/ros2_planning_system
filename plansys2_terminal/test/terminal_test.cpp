@@ -81,15 +81,24 @@ private:
 class TerminalTestCase : public ::testing::Test
 {
 protected:
+  ~TerminalTestCase()
+  {
+    rclcpp::shutdown();
+  }
+
   void SetUp()
   {
-    rclcpp::init(0, nullptr);
+    if (!initialized) {
+      rclcpp::init(0, nullptr);
+      initialized = true;
+    }
   }
 
   void TearDown()
   {
-    rclcpp::shutdown();
   }
+
+  bool initialized {false};
 };
 
 TEST_F(TerminalTestCase, token_utils)
@@ -292,6 +301,7 @@ TEST_F(TerminalTestCase, load_popf_plugin)
   std::thread t([&]() {
       exe.spin();
     });
+
 
   domain_node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_CONFIGURE);
   problem_node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_CONFIGURE);
