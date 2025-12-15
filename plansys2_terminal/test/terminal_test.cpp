@@ -18,6 +18,7 @@
 #include <sstream>
 #include <map>
 #include <algorithm>
+#include <cstdlib>
 
 #include "rclcpp/rclcpp.hpp"
 #include "ament_index_cpp/get_package_share_directory.hpp"
@@ -77,28 +78,30 @@ private:
   std::string name_;
 };
 
+class ROS2Environment : public ::testing::Environment
+{
+public:
+  void SetUp() override
+  {
+    rclcpp::init(0, nullptr);
+  }
+
+  void TearDown() override
+  {
+    rclcpp::shutdown();
+  }
+};
 
 class TerminalTestCase : public ::testing::Test
 {
 protected:
-  ~TerminalTestCase()
-  {
-    rclcpp::shutdown();
-  }
-
   void SetUp()
   {
-    if (!initialized) {
-      rclcpp::init(0, nullptr);
-      initialized = true;
-    }
   }
 
   void TearDown()
   {
   }
-
-  bool initialized {false};
 };
 
 TEST_F(TerminalTestCase, token_utils)
@@ -277,7 +280,7 @@ public:
 
 TEST_F(TerminalTestCase, load_popf_plugin)
 {
-  auto test_node = rclcpp::Node::make_shared("terminal_node_test");
+  auto test_node = rclcpp::Node::make_shared("terminal_node_test_load_popf_plugin");
 
   auto domain_node = std::make_shared<plansys2::DomainExpertNode>();
   auto problem_node = std::make_shared<plansys2::ProblemExpertNode>();
@@ -602,11 +605,18 @@ TEST_F(TerminalTestCase, load_popf_plugin)
 
   exe.cancel();
   t.join();
+
+  test_node.reset();
+  domain_node.reset();
+  problem_node.reset();
+  planner_node.reset();
+  executor_node.reset();
+  terminal_node.reset();
 }
 
 TEST_F(TerminalTestCase, add_problem)
 {
-  auto test_node = rclcpp::Node::make_shared("terminal_node_test");
+  auto test_node = rclcpp::Node::make_shared("terminal_node_test_add_problem");
 
   auto domain_node = std::make_shared<plansys2::DomainExpertNode>();
   auto problem_node = std::make_shared<plansys2::ProblemExpertNode>();
@@ -716,11 +726,18 @@ TEST_F(TerminalTestCase, add_problem)
 
   exe.cancel();
   t.join();
+
+  test_node.reset();
+  domain_node.reset();
+  problem_node.reset();
+  planner_node.reset();
+  executor_node.reset();
+  terminal_node.reset();
 }
 
 TEST_F(TerminalTestCase, add_problem_empty_domain)
 {
-  auto test_node = rclcpp::Node::make_shared("terminal_node_test");
+  auto test_node = rclcpp::Node::make_shared("terminal_node_test_add_problem_empty_domain");
 
   auto domain_node = std::make_shared<plansys2::DomainExpertNode>();
   auto problem_node = std::make_shared<plansys2::ProblemExpertNode>();
@@ -811,11 +828,18 @@ TEST_F(TerminalTestCase, add_problem_empty_domain)
 
   exe.cancel();
   t.join();
+
+  test_node.reset();
+  domain_node.reset();
+  problem_node.reset();
+  planner_node.reset();
+  executor_node.reset();
+  terminal_node.reset();
 }
 
 TEST_F(TerminalTestCase, check_actors)
 {
-  auto test_node = rclcpp::Node::make_shared("terminal_node_test");
+  auto test_node = rclcpp::Node::make_shared("terminal_node_test_check_actors");
 
   auto domain_node = std::make_shared<plansys2::DomainExpertNode>();
   auto problem_node = std::make_shared<plansys2::ProblemExpertNode>();
@@ -962,11 +986,23 @@ TEST_F(TerminalTestCase, check_actors)
 
   exe.cancel();
   t.join();
+
+  test_node.reset();
+  domain_node.reset();
+  problem_node.reset();
+  planner_node.reset();
+  executor_node.reset();
+  terminal_node.reset();
+
+  move_actor_1_node.reset();
+  move_actor_2_node.reset();
+  ask_charge_actor_1_node.reset();
+  charge_actor_1_node.reset();
 }
 
 TEST_F(TerminalTestCase, source_run_plan)
 {
-  auto test_node = rclcpp::Node::make_shared("terminal_node_test");
+  auto test_node = rclcpp::Node::make_shared("terminal_node_test_source_run_plan");
 
   auto domain_node = std::make_shared<plansys2::DomainExpertNode>();
   auto problem_node = std::make_shared<plansys2::ProblemExpertNode>();
@@ -1164,4 +1200,22 @@ TEST_F(TerminalTestCase, source_run_plan)
 
   exe.cancel();
   t.join();
+
+  test_node.reset();
+  domain_node.reset();
+  problem_node.reset();
+  planner_node.reset();
+  executor_node.reset();
+  terminal_node.reset();
+}
+
+int main(int argc, char ** argv)
+{
+  // Disable rosout at both layers (rcl and rclcpp).
+  setenv("RCL_DISABLE_ROSOUT", "1", 1);
+  setenv("RCLCPP_DISABLE_ROSOUT", "1", 1);
+
+  ::testing::InitGoogleTest(&argc, argv);
+  ::testing::AddGlobalTestEnvironment(new ROS2Environment);
+  return RUN_ALL_TESTS();
 }
