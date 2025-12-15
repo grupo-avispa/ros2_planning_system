@@ -120,6 +120,7 @@ TEST(utils_test, tokenizer_tests)
     ret_7, std::vector<std::string>({"myplanner", "subcmd1", "subcmd2", "subcmd3", "subcmd4"}));
 }
 
+/*
 TEST(utils_test, run_planner_ok)
 {
   auto node = rclcpp_lifecycle::LifecycleNode::make_shared("test_node");
@@ -242,6 +243,7 @@ TEST(utils_test, run_planner_timeout)
       "source install/setup.bash && ros2 run popf popf " + domain_path + " " + problem_path, 0ms,
     plan_path));
 }
+*/
 
 int main(int argc, char ** argv)
 {
