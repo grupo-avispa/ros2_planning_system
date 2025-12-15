@@ -100,7 +100,7 @@ public:
   /**
    * @brief Constructor for the ExecutorNode.
    */
-  ExecutorNode();
+  ExecutorNode(const rclcpp::NodeOptions & options = rclcpp::NodeOptions());
 
   /**
    * @brief Configures the node.

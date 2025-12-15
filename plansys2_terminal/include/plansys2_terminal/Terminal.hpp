@@ -42,7 +42,7 @@ parse_plan(const std::string planfile);
 class Terminal : public rclcpp::Node
 {
 public:
-  Terminal();
+  Terminal(const rclcpp::NodeOptions & options = rclcpp::NodeOptions());
 
   virtual void run_console();
 

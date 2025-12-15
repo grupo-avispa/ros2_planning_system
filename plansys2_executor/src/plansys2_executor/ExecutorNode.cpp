@@ -59,8 +59,8 @@ namespace plansys2
 using ExecutePlan = plansys2_msgs::action::ExecutePlan;
 using namespace std::chrono_literals;
 
-ExecutorNode::ExecutorNode()
-: rclcpp_lifecycle::LifecycleNode("executor"),
+ExecutorNode::ExecutorNode(const rclcpp::NodeOptions & options)
+: rclcpp_lifecycle::LifecycleNode("executor", options),
   bt_builder_loader_("plansys2_executor", "plansys2::BTBuilder"),
   executor_state_(STATE_IDLE)
 {
