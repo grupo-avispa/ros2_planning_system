@@ -775,7 +775,8 @@ TEST_F(TerminalTestCase, add_problem_empty_domain)
   options.arguments({"--ros-args", "--disable-rosout-logs", "--disable-stdout-logs"});
 
 
-  auto test_node = rclcpp::Node::make_shared("terminal_node_test_add_problem_empty_domain", options);
+  auto test_node = rclcpp::Node::make_shared("terminal_node_test_add_problem_empty_domain",
+    options);
 
   auto domain_node = std::make_shared<plansys2::DomainExpertNode>(options);
   auto problem_node = std::make_shared<plansys2::ProblemExpertNode>(options);
