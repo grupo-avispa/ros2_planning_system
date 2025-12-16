@@ -748,7 +748,7 @@ TEST_F(TerminalTestCase, add_problem)
     planner_node.reset();
     executor_node.reset();
     terminal_node.reset();
-}
+  }
   plansys2::drain_ros(500ms);
 }
 
@@ -860,7 +860,7 @@ TEST_F(TerminalTestCase, add_problem_empty_domain)
     planner_node.reset();
     executor_node.reset();
     terminal_node.reset();
-}
+  }
   plansys2::drain_ros(500ms);
 }
 
@@ -1248,7 +1248,7 @@ TEST_F(TerminalTestCase, source_run_plan)
     planner_node.reset();
     executor_node.reset();
     terminal_node.reset();
-}
+  }
 
   plansys2::drain_ros(500ms);
 }
