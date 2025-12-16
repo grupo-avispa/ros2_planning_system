@@ -620,7 +620,7 @@ TEST_F(TerminalTestCase, load_popf_plugin)
     t.join();
 }
 
-  plansys2::drain_ros(500ms);
+  plansys2::drain_ros(2s);
 }
 
 TEST_F(TerminalTestCase, add_problem)
@@ -749,7 +749,7 @@ TEST_F(TerminalTestCase, add_problem)
     executor_node.reset();
     terminal_node.reset();
   }
-  plansys2::drain_ros(500ms);
+  plansys2::drain_ros(2s);
 }
 
 TEST_F(TerminalTestCase, add_problem_empty_domain)
@@ -861,7 +861,7 @@ TEST_F(TerminalTestCase, add_problem_empty_domain)
     executor_node.reset();
     terminal_node.reset();
   }
-  plansys2::drain_ros(500ms);
+  plansys2::drain_ros(2s);
 }
 
 TEST_F(TerminalTestCase, check_actors)
@@ -1032,7 +1032,7 @@ TEST_F(TerminalTestCase, check_actors)
     charge_actor_1_node.reset();
   }
 
-  plansys2::drain_ros(500ms);
+  plansys2::drain_ros(2s);
 }
 
 TEST_F(TerminalTestCase, source_run_plan)
@@ -1250,7 +1250,7 @@ TEST_F(TerminalTestCase, source_run_plan)
     terminal_node.reset();
   }
 
-  plansys2::drain_ros(500ms);
+  plansys2::drain_ros(2s);
 }
 
 int main(int argc, char ** argv)

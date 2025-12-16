@@ -117,6 +117,11 @@ ExecutorNode::ExecutorNode(const rclcpp::NodeOptions & options)
       std::placeholders::_3));
 }
 
+ExecutorNode::~ExecutorNode()
+{
+  node_running_ = false;
+}
+
 
 using CallbackReturnT =
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
@@ -209,6 +214,8 @@ ExecutorNode::on_activate(const rclcpp_lifecycle::State & state)
   //    20ms, std::bind(&ExecutorNode::execution_cycle, this));
 
   std::thread{std::bind(&ExecutorNode::execution_cycle, this)}.detach();
+
+  node_running_ = true;
 
   return CallbackReturnT::SUCCESS;
 }
@@ -744,7 +751,7 @@ void
 ExecutorNode::execution_cycle()
 {
   rclcpp::Rate rate(50);
-  while (rclcpp::ok()) {
+  while (rclcpp::ok() && node_running_) {
     auto feedback = std::make_shared<ExecutePlan::Feedback>();
     auto result = std::make_shared<ExecutePlan::Result>();
 
