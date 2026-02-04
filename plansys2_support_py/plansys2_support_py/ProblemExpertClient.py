@@ -44,7 +44,7 @@ class ProblemExpertClient(Node):
     in PlanSys2, wrapping the ROS2 service calls with proper error handling.
     """
 
-    def __init__(self, node_name: str = 'problem_expert_client', namespace: str = ''):
+    def __init__(self, node_name: str = 'problem_expert_client', namespace: str = '') -> None:
         """
         Initialize the Problem Expert client.
 
@@ -56,8 +56,11 @@ class ProblemExpertClient(Node):
             Namespace prefix for services.
 
         """
-        super().__init__(node_name)
+        super().__init__(node_name=node_name, namespace=namespace)
+
+        # Setup namespace prefix
         self._namespace_prefix = f'/{namespace}' if namespace else ''
+
         self.get_logger().debug(f'Problem Expert Client "{node_name}" initialized')
 
     def _create_and_call_service(self, service_type, service_name: str, request):

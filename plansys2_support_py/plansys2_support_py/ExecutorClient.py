@@ -19,22 +19,20 @@ PlanSys2 Executor Client.
 This module provides specific classes for interacting with PlanSys2 Executor services.
 """
 
-from typing import List, Optional
+from typing import Any, List, Optional
 
-
+from action_msgs.msg import GoalStatus
 from plansys2_msgs.action import ExecutePlan
 from plansys2_msgs.msg import ActionExecutionInfo, Plan, Tree
 from plansys2_msgs.srv import GetOrderedSubGoals, GetPlan
-# Import for getting domain and problem
-from plansys2_support_py.DomainExpertClient import DomainExpertClient
-from plansys2_support_py.PlannerClient import PlannerClient
-from plansys2_support_py.ProblemExpertClient import ProblemExpertClient
 
 import rclpy
-
 from rclpy.action import ActionClient
+from rclpy.action.client import ClientGoalHandle
 from rclpy.client import Client
 from rclpy.node import Node
+from rclpy.task import Future
+from rclpy.type_support import GetResultServiceResponse
 
 
 class ExecutorClient(Node):
@@ -45,7 +43,7 @@ class ExecutorClient(Node):
     in PlanSys2, wrapping the ROS2 service calls with proper error handling.
     """
 
-    def __init__(self, node_name: str = 'executor_client', namespace: str = ''):
+    def __init__(self, node_name: str = 'executor_client', namespace: str = '') -> None:
         """
         Initialize the Executor client.
 
@@ -57,7 +55,7 @@ class ExecutorClient(Node):
             Namespace prefix for services.
 
         """
-        super().__init__(node_name)
+        super().__init__(node_name=node_name, namespace=namespace)
 
         # Setup namespace prefix
         self._namespace_prefix = f'/{namespace}' if namespace else ''
@@ -69,10 +67,12 @@ class ExecutorClient(Node):
             f'{self._namespace_prefix}/execute_plan'
         )
 
-        # Create clients for domain, problem, and planner
-        self._domain_client = DomainExpertClient(namespace=namespace)
-        self._problem_client = ProblemExpertClient(namespace=namespace)
-        self._planner_client = PlannerClient(namespace=namespace)
+        # State variables for plan execution
+        self._executing_plan = False
+        self.goal_handle: Optional[ClientGoalHandle[Any, Any, Any]] = None
+        self.result_future: \
+            Optional[Future[GetResultServiceResponse[Any]]] = None
+        self.feedback: Any = None
 
         self.get_logger().debug(f'Executor Client "{node_name}" initialized')
 
@@ -249,51 +249,30 @@ class ExecutorClient(Node):
 
         print('=' * 40)
 
-    def execute_plan(
-        self, plan: Optional[Plan] = None,
-        verbose: bool = True, rate_hz: float = 5.0
-    ) -> bool:
+    def start_plan_execution(self, plan: Plan, verbose: bool = False) -> bool:
         """
-        Execute a plan using the executor action client.
+        Start the execution of a plan without blocking.
 
-        This method executes the provided plan (or computes a new plan if not provided)
-        and monitors its execution, displaying feedback if verbose is enabled.
+        This method initiates the execution of the provided plan and returns immediately.
+        Use `execute_and_check_plan()` to monitor the execution.
 
         Parameters
         ----------
-        plan : Optional[Plan], optional
-            The plan to execute. If None, computes a new plan from
-            the current domain and problem.
+        plan : Plan
+            The plan to execute.
         verbose : bool, optional
             Whether to print execution feedback to the console.
-        rate_hz : float, optional
-            Update rate in Hz for checking execution status.
 
         Returns
         -------
         bool
-            True if plan execution succeeded, False otherwise.
+            True if plan execution started successfully, False otherwise.
 
         """
-        # If no plan provided, compute a new plan
+        # Check if plan is empty
         if plan is None:
-            # Get domain and problem
-            domain = self._domain_client.get_domain()
-            problem = self._problem_client.get_problem()
-
-            if not domain:
-                self.get_logger().error('Could not retrieve domain')
-                return False
-
-            if not problem:
-                self.get_logger().error('Could not retrieve problem')
-                return False
-
-            # Get plan from planner
-            plan = self._planner_client.get_plan(domain, problem)
-            if plan is None:
-                self.get_logger().error('Plan could not be computed')
-                return False
+            self.get_logger().error('Plan cannot be None')
+            return False
 
         # Check if plan is empty
         if len(plan.items) == 0:
@@ -317,38 +296,56 @@ class ExecutorClient(Node):
         )
 
         # Wait for goal acceptance
-        rclpy.spin_until_future_complete(self, send_goal_future)
+        rclpy.spin_until_future_complete(self, send_goal_future, timeout_sec=3.0)
         goal_handle = send_goal_future.result()
 
         if goal_handle is None or not goal_handle.accepted:
             self.get_logger().error('Plan execution goal was rejected')
             return False
 
-        if verbose:
-            self.get_logger().info('Plan execution started...')
+        self._goal_handle = goal_handle  # type: ignore[assignment]
+        self._result_future = goal_handle.get_result_async()
+        self._executing_plan = True
+        return True
 
-        # Wait for the result
-        result_future = goal_handle.get_result_async()
+    def execute_and_check_plan(self, verbose: bool = True) -> bool:
+        """
+        Check the status of plan execution.
 
-        # Monitor execution with feedback
-        rate = self.create_rate(rate_hz)
-        while not result_future.done():
-            rclpy.spin_once(self, timeout_sec=0.1)
-            rate.sleep()
+        This method should be called periodically to monitor plan execution.
+        Returns True if the plan is still executing, False if it has finished.
+
+        Parameters
+        ----------
+        verbose : bool, optional
+            Whether to print status information to the console.
+
+        Returns
+        -------
+        bool
+            True if plan is still executing, False if plan has finished.
+
+        """
+        # Get the result of the future, if complete
+        rclpy.spin_until_future_complete(self, self._result_future, timeout_sec=0.10)
 
         # Get the result
-        result = result_future.result()
+        result_response = self._result_future.result()
 
-        if result is None:
-            self.get_logger().error('Plan execution result is None')
-            return False
+        if result_response:
+            if verbose:
+                # Print execution results
+                self._print_execution_result(result_response)
 
-        # Process result
-        if verbose:
-            print()  # New line after feedback
-            self._print_execution_result(result.result)
+            # Update state if not preempted
+            if result_response.result:
+                if result_response.result.result != ExecutePlan.Result.PREEMPT:
+                    self._executing_plan = False
 
-        return result.result.result == ExecutePlan.Result.SUCCESS
+            return False  # Plan finished
+        else:
+            # Timed out, still processing, not complete yet
+            return True
 
     def _feedback_callback(self, feedback_msg) -> None:
         """
@@ -362,8 +359,11 @@ class ExecutorClient(Node):
         """
         feedback = feedback_msg.feedback
 
+        # Store feedback for later use if needed
+        self._feedback = feedback
+
         # Clear the line and print status
-        print('\r\033[K', end='', flush=True)
+        self.get_logger().info('\r\033[K')
 
         status_parts = []
         for action_status in feedback.action_execution_status:
@@ -389,34 +389,96 @@ class ExecutorClient(Node):
                 status_parts.append(f'[{action_str} CANCELLED]')
 
         if status_parts:
-            print(' '.join(status_parts), end='', flush=True)
+            self.get_logger().info(' '.join(status_parts))
 
-    def _print_execution_result(self, result) -> None:
+    def _print_execution_result(self, result_response: Any) -> None:
         """
-        Print the final execution result.
+        Print the execution result and detailed action status information.
 
         Parameters
         ----------
-        result
-            The execution result from the action.
+        result_response : Any
+            The execution result response containing status and action information.
 
         """
-        if result.result == ExecutePlan.Result.SUCCESS:
-            print('✓ Plan execution finished successfully')
-        elif result.result == ExecutePlan.Result.PREEMPT:
-            print('⚠ Plan execution was preempted')
-        elif result.result == ExecutePlan.Result.FAILURE:
-            print('✗ Plan execution finished with error(s)')
-
-            # Print failed actions
-            for action_status in result.action_execution_status:
-                if action_status.status == ActionExecutionInfo.FAILED:
-                    action_str = f'({action_status.action}'
-                    for param in action_status.arguments:
-                        action_str += f' {param}'
-                    action_str += ')'
-                    print(f'  Failed action: {action_str}')
-                    if action_status.message_status:
-                        print(f'    Error: {action_status.message_status}')
+        if result_response.status == GoalStatus.STATUS_SUCCEEDED:
+            if result_response.result is None:
+                self.get_logger().warning('Plan empty')
+            elif result_response.result.result == ExecutePlan.Result.SUCCESS:
+                self.get_logger().info('Plan Succeeded')
+            elif result_response.result.result == ExecutePlan.Result.PREEMPT:
+                self.get_logger().info('Plan Preempted')
+            else:
+                self.get_logger().error('Plan Failed')
+                # Log each action status
+                for action_status in result_response.result.action_execution_status:
+                    if action_status.status == ActionExecutionInfo.SUCCEEDED:
+                        self.get_logger().warning(
+                            f'Action: {action_status.action_full_name} succeeded '
+                            f'with message_status: {action_status.message_status}'
+                        )
+                    elif action_status.status == ActionExecutionInfo.FAILED:
+                        self.get_logger().error(
+                            f'Action: {action_status.action_full_name} failed '
+                            f'with message_status: {action_status.message_status}'
+                        )
+                    elif action_status.status == ActionExecutionInfo.NOT_EXECUTED:
+                        self.get_logger().warning(
+                            f'Action: {action_status.action_full_name} was not executed'
+                        )
+                    elif action_status.status == ActionExecutionInfo.CANCELLED:
+                        self.get_logger().warning(
+                            f'Action: {action_status.action_full_name} was cancelled'
+                        )
+                    elif action_status.status == ActionExecutionInfo.EXECUTING:
+                        self.get_logger().warning(
+                            f'Action: {action_status.action_full_name} was executing'
+                        )
+        elif result_response.status == GoalStatus.STATUS_ABORTED:
+            self.get_logger().warning('Plan Aborted')
+        elif result_response.status == GoalStatus.STATUS_CANCELED:
+            self.get_logger().info('Plan Cancelled')
         else:
-            print(f'Plan execution finished with unknown result: {result.result}')
+            self.get_logger().error(f'Invalid status value {result_response.status}')
+
+    def is_executing_plan(self) -> bool:
+        """
+        Check if a plan is currently being executed.
+
+        Returns
+        -------
+        bool
+            True if a plan is executing, False otherwise.
+
+        """
+        return self._executing_plan
+
+    def get_feedback(self):
+        """
+        Get the last feedback from plan execution.
+
+        Returns
+        -------
+        feedback
+            The last feedback message or None if no feedback available.
+
+        """
+        return self._feedback
+
+    def get_result(self) -> Optional[ExecutePlan.Result]:
+        """
+        Get the result from the last plan execution.
+
+        Returns
+        -------
+        Optional[ExecutePlan.Result]
+            The execution result or None if no result is available.
+
+        """
+        if self._result_future is None:
+            return None
+
+        result_response = self._result_future.result()
+        if result_response is not None and result_response.result is not None:
+            return result_response.result
+        return None

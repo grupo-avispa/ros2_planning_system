@@ -37,7 +37,7 @@ class PlannerClient(Node):
     in PlanSys2, wrapping the ROS2 service calls with proper error handling.
     """
 
-    def __init__(self, node_name: str = 'planner_client', namespace: str = ''):
+    def __init__(self, node_name: str = 'planner_client', namespace: str = '') -> None:
         """
         Initialize the Planner client.
 
@@ -49,7 +49,7 @@ class PlannerClient(Node):
             Namespace prefix for services.
 
         """
-        super().__init__(node_name)
+        super().__init__(node_name=node_name, namespace=namespace)
 
         # Setup namespace prefix
         self._namespace_prefix = f'/{namespace}' if namespace else ''
