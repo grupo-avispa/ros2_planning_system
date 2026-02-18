@@ -18,6 +18,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <map>
 
 #include "behaviortree_cpp/behavior_tree.h"
 #include "behaviortree_cpp/bt_factory.h"
@@ -27,6 +28,7 @@
 #include "behaviortree_cpp/loggers/groot2_publisher.h"
 
 #include "plansys2_executor/ActionExecutorClient.hpp"
+#include "plansys2_msgs/srv/add_expanded_arguments.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 namespace plansys2
@@ -135,15 +137,36 @@ protected:
   BT::BehaviorTreeFactory factory_;
 
 private:
+  /**
+   * @brief Service callback for adding expanded arguments to the blackboard.
+   *
+   * This callback is triggered when a request is received on the "add_expanded_arguments" service.
+   * It updates the blackboard with the expanded arguments provided in the request.
+   * This allows the BT to access these arguments during execution.
+   *
+   * @param[in] request_header ROS service request header.
+   * @param[in] request Service request containing the expanded arguments to add.
+   * @param[out] response Service response indicating success or failure.
+   */
+  void addExpandedArgumentsCallback(
+    const std::shared_ptr<rmw_request_id_t> request_header,
+    const std::shared_ptr<plansys2_msgs::srv::AddExpandedArguments::Request> request,
+    const std::shared_ptr<plansys2_msgs::srv::AddExpandedArguments::Response> response);
+
   BT::Tree tree_;
   BT::Blackboard::Ptr blackboard_;
   std::string action_;
   std::string bt_xml_file_;
   std::vector<std::string> plugin_list_;
+  std::map<std::string, std::string> expanded_arguments_;
   bool finished_;
   int total_action_nodes_;
   std::unique_ptr<BT::FileLogger2> bt_file_logger_;
   std::unique_ptr<BT::MinitraceLogger> bt_minitrace_logger_;
+
+  // Service for adding expanded arguments to the blackboard
+  rclcpp::Service<plansys2_msgs::srv::AddExpandedArguments>::SharedPtr add_expanded_arguments_srv_;
+
   // Groot2 monitor
   std::unique_ptr<BT::Groot2Publisher> groot_monitor_;
 

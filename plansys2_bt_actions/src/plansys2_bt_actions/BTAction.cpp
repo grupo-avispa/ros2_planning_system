@@ -25,6 +25,7 @@
 #include "behaviortree_cpp/json_export.h"
 #include "behaviortree_cpp/utils/shared_library.h"
 #include "std_msgs/msg/header.hpp"
+#include "plansys2_msgs/msg/argument.hpp"
 #include "plansys2_bt_actions/BTAction.hpp"
 #include "plansys2_bt_actions/BTUtils.hpp"
 #include "plansys2_bt_actions/JSONUtils.hpp"
@@ -43,6 +44,11 @@ BTAction::BTAction(const std::string & action)
   declare_parameter<int>("server_port", -1);
   declare_parameter<int>("server_timeout", 5000);
   declare_parameter<int>("wait_for_service_timeout", 1000);
+
+  add_expanded_arguments_srv_ = create_service<plansys2_msgs::srv::AddExpandedArguments>(
+    get_name() + std::string("/add_expanded_arguments"), std::bind(
+      &BTAction::addExpandedArgumentsCallback,
+      this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 }
 
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
@@ -110,13 +116,34 @@ BTAction::on_activate(const rclcpp_lifecycle::State & previous_state)
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::FAILURE;
   }
 
-  for (size_t i = 0; i < get_arguments().size(); i++) {
-    auto arg = get_arguments()[i];
+  // Get original arguments
+  const auto & original_args = get_arguments();
+
+  // Merge arguments: use expanded arguments if available, otherwise use original
+  std::map<std::string, std::string> final_args;
+  std::set<std::string> processed_names;
+
+  // First, add all original arguments (preferring expanded if available with same name)
+  for (size_t i = 0; i < original_args.size(); i++) {
+    const auto & original_arg = original_args[i];
+
+    // Check if there's an expanded version with the same argument name
+    auto it = expanded_arguments_.find(original_arg);
+    // Use expanded argument if available
+    if (it != expanded_arguments_.end()) {
+      final_args["arg" + std::to_string(i)] = it->second;
+      processed_names.insert(original_arg);
+    // Use original argument
+    } else {
+      final_args["arg" + std::to_string(i)] = original_arg;
+    }
+  }
+
+  // Set all arguments in blackboard
+  for (const auto & [arg_name, arg_value] : final_args) {
+    blackboard_->set(arg_name, arg_value);
     RCLCPP_DEBUG_STREAM(
-      get_logger(),
-      "Setting arg" << i << " [" << arg << "]");
-    std::string argname = "arg" + std::to_string(i);
-    blackboard_->set(argname, arg);
+      get_logger(), "Setting arg: [" << arg_name << " = " << arg_value << "]");
   }
 
   if (get_parameter("bt_file_logging").as_bool() ||
@@ -268,6 +295,28 @@ void BTAction::reset_groot_monitor()
   if (groot_monitor_) {
     groot_monitor_.reset();
   }
+}
+
+void
+BTAction::addExpandedArgumentsCallback(
+  const std::shared_ptr<rmw_request_id_t> request_header,
+  const std::shared_ptr<plansys2_msgs::srv::AddExpandedArguments::Request> request,
+  const std::shared_ptr<plansys2_msgs::srv::AddExpandedArguments::Response> response)
+{
+  (void)request_header;
+
+  expanded_arguments_.clear();
+  for (const auto & arg : request->arguments) {
+    expanded_arguments_[arg.name] = arg.value;
+  }
+
+  RCLCPP_INFO(get_logger(), "Received %zu expanded arguments", expanded_arguments_.size());
+  for (const auto & [name, value] : expanded_arguments_) {
+    RCLCPP_INFO_STREAM(get_logger(), "Expanded arg: [" << name << " = " << value << "]");
+  }
+
+  response->success = true;
+  response->error_info = "";
 }
 
 }  // namespace plansys2
