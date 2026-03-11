@@ -18,9 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install popf deps
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libfl-dev
+        run: apt-get update && apt-get install -y libfl-dev
       - name: Setup ROS 2
         uses: ros-tooling/setup-ros@0.7.15
       - name: build and test

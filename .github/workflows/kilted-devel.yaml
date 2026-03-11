@@ -17,7 +17,7 @@ jobs:
       image: ubuntu:noble
     steps:
       - name: Install popf deps
-        run: sudo apt-get install libfl-dev
+        run: apt-get update && apt-get install libfl-dev
       - uses: actions/checkout@v4
         with:
           ref: kilted-devel
