@@ -31,6 +31,7 @@
 #include <sstream>
 #include <string>
 #include <thread>
+#include <cstring>
 
 using namespace std::chrono_literals;  // NOLINT
 
@@ -85,7 +86,7 @@ bool PlanSolverBase::execute_planner(
       exit(EXIT_FAILURE);
     }
     execvp(cmd_tokens[0], cmd_tokens);
-    std::fprintf(stderr, "[PlanSolverBase] execvp failed: %s\n", strerror(errno));
+    std::fprintf(stderr, "[PlanSolverBase] execvp failed: %s\n", std::strerror(errno));
     exit(EXIT_FAILURE);
   } else {
     std::thread monitor_thread([&]() {
