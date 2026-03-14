@@ -44,6 +44,9 @@ void Imply::PDDLPrint(
 plansys2_msgs::msg::Node::SharedPtr Imply::getTree(
   plansys2_msgs::msg::Tree & tree, const Domain & d, const std::vector<std::string> & replace) const
 {
+  (void)tree;
+  (void)d;
+  (void)replace;
   throw UnsupportedConstruct("Imply");
 }
 

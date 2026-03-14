@@ -221,6 +221,7 @@ using CallbackReturnT =
 CallbackReturnT
 ProblemExpertNode::on_configure(const rclcpp_lifecycle::State & state)
 {
+  (void)state;
   RCLCPP_INFO(get_logger(), "[%s] Configuring...", get_name());
 
   // (fmrico) Here we could have a discussion if we should read the domain from file or
@@ -262,6 +263,7 @@ ProblemExpertNode::on_configure(const rclcpp_lifecycle::State & state)
 CallbackReturnT
 ProblemExpertNode::on_activate(const rclcpp_lifecycle::State & state)
 {
+  (void)state;
   RCLCPP_INFO(get_logger(), "[%s] Activating...", get_name());
   update_pub_->on_activate();
   knowledge_pub_->on_activate();
@@ -273,6 +275,7 @@ ProblemExpertNode::on_activate(const rclcpp_lifecycle::State & state)
 CallbackReturnT
 ProblemExpertNode::on_deactivate(const rclcpp_lifecycle::State & state)
 {
+  (void)state;
   RCLCPP_INFO(get_logger(), "[%s] Deactivating...", get_name());
   update_pub_->on_deactivate();
   knowledge_pub_->on_deactivate();
@@ -285,6 +288,7 @@ ProblemExpertNode::on_deactivate(const rclcpp_lifecycle::State & state)
 CallbackReturnT
 ProblemExpertNode::on_cleanup(const rclcpp_lifecycle::State & state)
 {
+  (void)state;
   RCLCPP_INFO(get_logger(), "[%s] Cleaning up...", get_name());
   RCLCPP_INFO(get_logger(), "[%s] Cleaned up", get_name());
 
@@ -294,6 +298,7 @@ ProblemExpertNode::on_cleanup(const rclcpp_lifecycle::State & state)
 CallbackReturnT
 ProblemExpertNode::on_shutdown(const rclcpp_lifecycle::State & state)
 {
+  (void)state;
   RCLCPP_INFO(get_logger(), "[%s] Shutting down...", get_name());
   RCLCPP_INFO(get_logger(), "[%s] Shutted down", get_name());
 
@@ -303,6 +308,7 @@ ProblemExpertNode::on_shutdown(const rclcpp_lifecycle::State & state)
 CallbackReturnT
 ProblemExpertNode::on_error(const rclcpp_lifecycle::State & state)
 {
+  (void)state;
   RCLCPP_ERROR(get_logger(), "[%s] Error transition", get_name());
 
   return CallbackReturnT::SUCCESS;
@@ -314,6 +320,7 @@ ProblemExpertNode::add_problem_service_callback(
   const std::shared_ptr<plansys2_msgs::srv::AddProblem::Request> request,
   const std::shared_ptr<plansys2_msgs::srv::AddProblem::Response> response)
 {
+  (void)request_header;
   if (problem_expert_ == nullptr) {
     response->success = false;
     response->error_info = "Requesting service in non-active state";
@@ -342,6 +349,7 @@ ProblemExpertNode::add_problem_goal_service_callback(
   const std::shared_ptr<plansys2_msgs::srv::AddProblemGoal::Request> request,
   const std::shared_ptr<plansys2_msgs::srv::AddProblemGoal::Response> response)
 {
+  (void)request_header;
   if (problem_expert_ == nullptr) {
     response->success = false;
     response->error_info = "Requesting service in non-active state";
@@ -373,6 +381,7 @@ ProblemExpertNode::add_problem_instance_service_callback(
   const std::shared_ptr<plansys2_msgs::srv::AffectParam::Request> request,
   const std::shared_ptr<plansys2_msgs::srv::AffectParam::Response> response)
 {
+  (void)request_header;
   if (problem_expert_ == nullptr) {
     response->success = false;
     response->error_info = "Requesting service in non-active state";
@@ -399,6 +408,7 @@ ProblemExpertNode::add_problem_predicate_service_callback(
   const std::shared_ptr<plansys2_msgs::srv::AffectNode::Request> request,
   const std::shared_ptr<plansys2_msgs::srv::AffectNode::Response> response)
 {
+  (void)request_header;
   if (problem_expert_ == nullptr) {
     response->success = false;
     response->error_info = "Requesting service in non-active state";
@@ -426,6 +436,7 @@ ProblemExpertNode::add_problem_function_service_callback(
   const std::shared_ptr<plansys2_msgs::srv::AffectNode::Request> request,
   const std::shared_ptr<plansys2_msgs::srv::AffectNode::Response> response)
 {
+  (void)request_header;
   if (problem_expert_ == nullptr) {
     response->success = false;
     response->error_info = "Requesting service in non-active state";
@@ -453,6 +464,8 @@ ProblemExpertNode::get_problem_goal_service_callback(
   const std::shared_ptr<plansys2_msgs::srv::GetProblemGoal::Request> request,
   const std::shared_ptr<plansys2_msgs::srv::GetProblemGoal::Response> response)
 {
+  (void)request_header;
+  (void)request;
   if (problem_expert_ == nullptr) {
     response->success = false;
     response->error_info = "Requesting service in non-active state";
@@ -469,6 +482,7 @@ ProblemExpertNode::get_problem_instance_details_service_callback(
   const std::shared_ptr<plansys2_msgs::srv::GetProblemInstanceDetails::Request> request,
   const std::shared_ptr<plansys2_msgs::srv::GetProblemInstanceDetails::Response> response)
 {
+  (void)request_header;
   if (problem_expert_ == nullptr) {
     response->success = false;
     response->error_info = "Requesting service in non-active state";
@@ -491,6 +505,8 @@ ProblemExpertNode::get_problem_instances_service_callback(
   const std::shared_ptr<plansys2_msgs::srv::GetProblemInstances::Request> request,
   const std::shared_ptr<plansys2_msgs::srv::GetProblemInstances::Response> response)
 {
+  (void)request;
+  (void)request_header;
   if (problem_expert_ == nullptr) {
     response->success = false;
     response->error_info = "Requesting service in non-active state";
@@ -508,6 +524,7 @@ ProblemExpertNode::get_problem_predicate_details_service_callback(
   const std::shared_ptr<plansys2_msgs::srv::GetNodeDetails::Request> request,
   const std::shared_ptr<plansys2_msgs::srv::GetNodeDetails::Response> response)
 {
+  (void)request_header;
   if (problem_expert_ == nullptr) {
     response->success = false;
     response->error_info = "Requesting service in non-active state";
@@ -530,6 +547,8 @@ ProblemExpertNode::get_problem_predicates_service_callback(
   const std::shared_ptr<plansys2_msgs::srv::GetStates::Request> request,
   const std::shared_ptr<plansys2_msgs::srv::GetStates::Response> response)
 {
+  (void)request;
+  (void)request_header;
   if (problem_expert_ == nullptr) {
     response->success = false;
     response->error_info = "Requesting service in non-active state";
@@ -547,6 +566,7 @@ ProblemExpertNode::get_problem_function_details_service_callback(
   const std::shared_ptr<plansys2_msgs::srv::GetNodeDetails::Request> request,
   const std::shared_ptr<plansys2_msgs::srv::GetNodeDetails::Response> response)
 {
+  (void)request_header;
   if (problem_expert_ == nullptr) {
     response->success = false;
     response->error_info = "Requesting service in non-active state";
@@ -569,6 +589,8 @@ ProblemExpertNode::get_problem_functions_service_callback(
   const std::shared_ptr<plansys2_msgs::srv::GetStates::Request> request,
   const std::shared_ptr<plansys2_msgs::srv::GetStates::Response> response)
 {
+  (void)request;
+  (void)request_header;
   if (problem_expert_ == nullptr) {
     response->success = false;
     response->error_info = "Requesting service in non-active state";
@@ -586,6 +608,8 @@ ProblemExpertNode::get_problem_service_callback(
   const std::shared_ptr<plansys2_msgs::srv::GetProblem::Request> request,
   const std::shared_ptr<plansys2_msgs::srv::GetProblem::Response> response)
 {
+  (void)request;
+  (void)request_header;
   if (problem_expert_ == nullptr) {
     response->success = false;
     response->error_info = "Requesting service in non-active state";
@@ -603,6 +627,7 @@ ProblemExpertNode::is_problem_goal_satisfied_service_callback(
   const std::shared_ptr<plansys2_msgs::srv::IsProblemGoalSatisfied::Request> request,
   const std::shared_ptr<plansys2_msgs::srv::IsProblemGoalSatisfied::Response> response)
 {
+  (void)request_header;
   if (problem_expert_ == nullptr) {
     response->success = false;
     response->error_info = "Requesting service in non-active state";
@@ -619,6 +644,8 @@ ProblemExpertNode::remove_problem_goal_service_callback(
   const std::shared_ptr<plansys2_msgs::srv::RemoveProblemGoal::Request> request,
   const std::shared_ptr<plansys2_msgs::srv::RemoveProblemGoal::Response> response)
 {
+  (void)request;
+  (void)request_header;
   if (problem_expert_ == nullptr) {
     response->success = false;
     response->error_info = "Requesting service in non-active state";
@@ -646,6 +673,8 @@ ProblemExpertNode::clear_problem_knowledge_service_callback(
   const std::shared_ptr<plansys2_msgs::srv::ClearProblemKnowledge::Request> request,
   const std::shared_ptr<plansys2_msgs::srv::ClearProblemKnowledge::Response> response)
 {
+  (void)request;
+  (void)request_header;
   if (problem_expert_ == nullptr) {
     response->success = false;
     response->error_info = "Requesting service in non-active state";
@@ -674,6 +703,7 @@ ProblemExpertNode::remove_problem_instance_service_callback(
   const std::shared_ptr<plansys2_msgs::srv::AffectParam::Request> request,
   const std::shared_ptr<plansys2_msgs::srv::AffectParam::Response> response)
 {
+  (void)request_header;
   if (problem_expert_ == nullptr) {
     response->success = false;
     response->error_info = "Requesting service in non-active state";
@@ -701,6 +731,7 @@ ProblemExpertNode::remove_problem_predicate_service_callback(
   const std::shared_ptr<plansys2_msgs::srv::AffectNode::Request> request,
   const std::shared_ptr<plansys2_msgs::srv::AffectNode::Response> response)
 {
+  (void)request_header;
   if (problem_expert_ == nullptr) {
     response->success = false;
     response->error_info = "Requesting service in non-active state";
@@ -727,6 +758,7 @@ ProblemExpertNode::remove_problem_function_service_callback(
   const std::shared_ptr<plansys2_msgs::srv::AffectNode::Request> request,
   const std::shared_ptr<plansys2_msgs::srv::AffectNode::Response> response)
 {
+  (void)request_header;
   if (problem_expert_ == nullptr) {
     response->success = false;
     response->error_info = "Requesting service in non-active state";
@@ -747,6 +779,7 @@ ProblemExpertNode::exist_problem_predicate_service_callback(
   const std::shared_ptr<plansys2_msgs::srv::ExistNode::Request> request,
   const std::shared_ptr<plansys2_msgs::srv::ExistNode::Response> response)
 {
+  (void)request_header;
   if (problem_expert_ == nullptr) {
     response->exist = false;
     RCLCPP_WARN(get_logger(), "Requesting service in non-active state");
@@ -761,6 +794,7 @@ ProblemExpertNode::exist_problem_function_service_callback(
   const std::shared_ptr<plansys2_msgs::srv::ExistNode::Request> request,
   const std::shared_ptr<plansys2_msgs::srv::ExistNode::Response> response)
 {
+  (void)request_header;
   if (problem_expert_ == nullptr) {
     response->exist = false;
     RCLCPP_WARN(get_logger(), "Requesting service in non-active state");
@@ -775,6 +809,7 @@ ProblemExpertNode::update_problem_function_service_callback(
   const std::shared_ptr<plansys2_msgs::srv::AffectNode::Request> request,
   const std::shared_ptr<plansys2_msgs::srv::AffectNode::Response> response)
 {
+  (void)request_header;
   if (problem_expert_ == nullptr) {
     response->success = false;
     response->error_info = "Requesting service in non-active state";

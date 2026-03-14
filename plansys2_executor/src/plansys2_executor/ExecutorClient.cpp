@@ -81,7 +81,9 @@ ExecutorClient::start_plan_execution(const plansys2_msgs::msg::Plan & plan)
 bool
 ExecutorClient::execute_and_check_plan()
 {
-  rclcpp::spin_some(node_);
+  rclcpp::executors::SingleThreadedExecutor exec;
+  exec.add_node(node_->get_node_base_interface());
+  exec.spin_some();
 
   if (!goal_result_available_) {
     return true;  // Plan not finished
@@ -203,7 +205,9 @@ ExecutorClient::should_cancel_goal()
     return false;
   }
 
-  rclcpp::spin_some(node_);
+  rclcpp::executors::SingleThreadedExecutor exec;
+  exec.add_node(node_->get_node_base_interface());
+  exec.spin_some();
   auto status = goal_handler_->get_status();
 
   return status == action_msgs::msg::GoalStatus::STATUS_ACCEPTED ||
@@ -342,6 +346,7 @@ ExecutorClient::feedback_callback(
   GoalHandleExecutePlan::SharedPtr goal_handle,
   const std::shared_ptr<const ExecutePlan::Feedback> feedback)
 {
+  (void)goal_handle;
   feedback_ = *feedback;
 }
 

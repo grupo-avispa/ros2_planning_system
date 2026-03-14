@@ -161,6 +161,8 @@ char * completion_generator(const char * text, int state)
 
 char ** completer(const char * text, int start, int end)
 {
+  (void)start;
+  (void)end;
   // Don't do filename completion even if our generator finds no matches.
   rl_attempted_completion_over = 1;
 
@@ -262,7 +264,7 @@ Terminal::run_console()
   init();
 
   std::string line;
-  bool success = true;
+  [[maybe_unused]] bool success = true;
 
   std::cout << "ROS2 Planning System console. Type \"quit\" to finish" << std::endl;
 
@@ -823,7 +825,7 @@ Terminal::execute_plan(int items)
     return;
   }
 
-  if (items > 0 && items <= plan.value().items.size()) {
+  if (items > 0 && items <= static_cast<int>(plan.value().items.size())) {
     plan.value().items.erase(plan.value().items.begin() + items, plan.value().items.end());
   } else if (items != -1) {
     std::cout << "Can't execute " << items << " actions" << std::endl;
@@ -837,6 +839,9 @@ void
 Terminal::execute_plan(const plansys2_msgs::msg::Plan & plan)
 {
   rclcpp::Rate loop_rate(5);
+
+  rclcpp::executors::SingleThreadedExecutor exec;
+  exec.add_node(this->get_node_base_interface());
 
   if (!executor_client_->start_plan_execution(plan)) {
     std::cout << "Execution could not start " << std::endl;
@@ -878,22 +883,27 @@ Terminal::execute_plan(const plansys2_msgs::msg::Plan & plan)
 
     std::cout << std::flush;
 
-    rclcpp::spin_some(this->get_node_base_interface());
+    exec.spin_some();
     loop_rate.sleep();
   }
 
   std::cout << std::endl;
 
-  switch (executor_client_->getResult().value().result) {
-    case plansys2_msgs::action::ExecutePlan::Result::SUCCESS:
-      std::cout << "Successful finished " << std::endl;
-      break;
-    case plansys2_msgs::action::ExecutePlan::Result::PREEMPT:
-      std::cout << "Preempted " << std::endl;
-      break;
-    case plansys2_msgs::action::ExecutePlan::Result::FAILURE:
-      std::cout << "Finished with error(s) " << std::endl;
-      break;
+  auto plan_result = executor_client_->getResult();
+  if (!plan_result.has_value()) {
+    std::cout << "Plan execution ended without result." << std::endl;
+  } else {
+    switch (plan_result.value().result) {
+      case plansys2_msgs::action::ExecutePlan::Result::SUCCESS:
+        std::cout << "Successfully finished" << std::endl;
+        break;
+      case plansys2_msgs::action::ExecutePlan::Result::PREEMPT:
+        std::cout << "Preempted " << std::endl;
+        break;
+      case plansys2_msgs::action::ExecutePlan::Result::FAILURE:
+        std::cout << "Finished with error(s)" << std::endl;
+        break;
+    }
   }
 }
 
@@ -935,7 +945,7 @@ Terminal::process_run(std::vector<std::string> & command, std::ostringstream & o
       try {
         int items = std::stoi(command[0]);
         execute_plan(items);
-      } catch (std::invalid_argument e) {
+      } catch (const std::invalid_argument & e) {
         os << e.what() << " with arg: [" << command[0] << "]" << std::endl;
       }
     } else if (command[0] == "plan-file") {
@@ -947,7 +957,7 @@ Terminal::process_run(std::vector<std::string> & command, std::ostringstream & o
         }
         try {
           execute_plan(plan.value());
-        } catch (std::invalid_argument e) {
+        } catch (const std::invalid_argument & e) {
           os << e.what() << " with arg: [" << command[0] <<
             command[1] << "]" << std::endl;
           return;
@@ -968,6 +978,7 @@ Terminal::process_run(std::vector<std::string> & command, std::ostringstream & o
 void
 Terminal::process_check_actors(std::vector<std::string> & command, std::ostringstream & os)
 {
+  (void)command;
   std::map<std::string, plansys2_msgs::msg::ActionPerformerStatus> actors;
 
   auto status_callback =
@@ -978,9 +989,12 @@ Terminal::process_check_actors(std::vector<std::string> & command, std::ostrings
   auto status_sub = create_subscription<plansys2_msgs::msg::ActionPerformerStatus>(
     "/performers_status", rclcpp::QoS(100).reliable(), status_callback);
 
+  rclcpp::executors::SingleThreadedExecutor exec;
+  exec.add_node(this->get_node_base_interface());
+
   auto start = now();
   while (rclcpp::ok() && (now() - start).seconds() < 2.0) {
-    rclcpp::spin_some(shared_from_this());
+    exec.spin_some();
   }
 
   std::list<std::string> keys;

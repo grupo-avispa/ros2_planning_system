@@ -108,7 +108,7 @@ STNBTBuilder::get_dotgraph(
   ss << t(1) << "rankdir=TB;\n";
 
   int node_count = 0;
-  for (const auto node : stn_->nodes) {
+  for (const auto & node : stn_->nodes) {
     ss << t(1) << "subgraph cluster_" << node_count << " {\n";
     auto start_time = node->action.time;
     auto duration = node->action.duration;
@@ -195,7 +195,7 @@ STNBTBuilder::propagate(const Graph::Ptr stn)
   Eigen::MatrixXd dist = get_distance_matrix(stn);
 
   // Check if STN is consistent.
-  for (size_t i = 0; i < dist.rows(); i++) {
+  for (Eigen::Index i = 0; i < dist.rows(); i++) {
     if (dist(i, i) < 0) {
       return false;
     }
@@ -1043,9 +1043,9 @@ STNBTBuilder::get_distance_matrix(const Graph::Ptr stn) const
   }
 
   // Extract the distances imposed by the STN.
-  for (const auto node : stn->nodes) {
+  for (const auto & node : stn->nodes) {
     int row = node->node_num;
-    for (const auto arc : node->output_arcs) {
+    for (const auto & arc : node->output_arcs) {
       auto child = std::get<0>(arc);
       int col = child->node_num;
       dist(row, col) = std::get<2>(arc);
@@ -1062,9 +1062,9 @@ STNBTBuilder::get_distance_matrix(const Graph::Ptr stn) const
 void
 STNBTBuilder::floyd_warshall(Eigen::MatrixXd & dist) const
 {
-  for (size_t k = 0; k < dist.rows(); k++) {
-    for (size_t i = 0; i < dist.rows(); i++) {
-      for (size_t j = 0; j < dist.rows(); j++) {
+  for (Eigen::Index k = 0; k < dist.rows(); k++) {
+    for (Eigen::Index i = 0; i < dist.rows(); i++) {
+      for (Eigen::Index j = 0; j < dist.rows(); j++) {
         if (dist(i, k) == std::numeric_limits<double>::infinity() ||
           dist(k, j) == std::numeric_limits<double>::infinity())
         {
@@ -1164,7 +1164,7 @@ STNBTBuilder::get_flow(
 
   auto num_output_arcs = node->output_arcs.size();
   if (num_output_arcs > 1) {
-    for (const auto arc : node->output_arcs) {
+    for (const auto & arc : node->output_arcs) {
       auto child = std::get<0>(arc);
       if (child->action.type == ActionType::GOAL) {
         num_output_arcs = num_output_arcs - 1;
@@ -1449,9 +1449,9 @@ STNBTBuilder::print_node(const plansys2::Node::Ptr node, int level) const
 void
 STNBTBuilder::print_arcs(const plansys2::Graph::Ptr graph) const
 {
-  for (const auto node : graph->nodes) {
+  for (const auto & node : graph->nodes) {
     int row = node->node_num;
-    for (const auto arc : node->output_arcs) {
+    for (const auto & arc : node->output_arcs) {
       auto child = std::get<0>(arc);
       int col = child->node_num;
 

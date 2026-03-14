@@ -21,6 +21,8 @@ namespace pddl
 void Action::PDDLPrint(
   std::ostream & s, unsigned indent, const TokenStruct<std::string> & ts, const Domain & d) const
 {
+  (void)indent;
+  (void)ts;
   s << "( :action " << name << "\n";
 
   s << "  :parameters ";
@@ -104,6 +106,7 @@ void Action::parseConditions(Stringreader & f, TokenStruct<std::string> & ts, Do
 
 void Action::parse(Stringreader & f, TokenStruct<std::string> & ts, Domain & d)
 {
+  (void)ts;
   f.next();
   f.assert_token(":parameters");
   f.assert_token("(");

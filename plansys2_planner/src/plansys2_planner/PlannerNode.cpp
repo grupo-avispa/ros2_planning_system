@@ -60,6 +60,7 @@ using CallbackReturnT =
 CallbackReturnT
 PlannerNode::on_configure(const rclcpp_lifecycle::State & state)
 {
+  (void)state;
   auto node = shared_from_this();
   double timeout;
 
@@ -136,6 +137,7 @@ PlannerNode::on_configure(const rclcpp_lifecycle::State & state)
 CallbackReturnT
 PlannerNode::on_activate(const rclcpp_lifecycle::State & state)
 {
+  (void)state;
   RCLCPP_INFO(get_logger(), "[%s] Activating...", get_name());
   RCLCPP_INFO(get_logger(), "[%s] Activated", get_name());
   return CallbackReturnT::SUCCESS;
@@ -144,6 +146,7 @@ PlannerNode::on_activate(const rclcpp_lifecycle::State & state)
 CallbackReturnT
 PlannerNode::on_deactivate(const rclcpp_lifecycle::State & state)
 {
+  (void)state;
   RCLCPP_INFO(get_logger(), "[%s] Deactivating...", get_name());
   RCLCPP_INFO(get_logger(), "[%s] Deactivated", get_name());
 
@@ -153,6 +156,7 @@ PlannerNode::on_deactivate(const rclcpp_lifecycle::State & state)
 CallbackReturnT
 PlannerNode::on_cleanup(const rclcpp_lifecycle::State & state)
 {
+  (void)state;
   RCLCPP_INFO(get_logger(), "[%s] Cleaning up...", get_name());
   RCLCPP_INFO(get_logger(), "[%s] Cleaned up", get_name());
 
@@ -162,6 +166,7 @@ PlannerNode::on_cleanup(const rclcpp_lifecycle::State & state)
 CallbackReturnT
 PlannerNode::on_shutdown(const rclcpp_lifecycle::State & state)
 {
+  (void)state;
   RCLCPP_INFO(get_logger(), "[%s] Shutting down...", get_name());
   RCLCPP_INFO(get_logger(), "[%s] Shutted down", get_name());
 
@@ -171,6 +176,7 @@ PlannerNode::on_shutdown(const rclcpp_lifecycle::State & state)
 CallbackReturnT
 PlannerNode::on_error(const rclcpp_lifecycle::State & state)
 {
+  (void)state;
   RCLCPP_ERROR(get_logger(), "[%s] Error transition", get_name());
 
   return CallbackReturnT::SUCCESS;
@@ -244,6 +250,7 @@ PlannerNode::get_plan_service_callback(
   const std::shared_ptr<plansys2_msgs::srv::GetPlan::Request> request,
   const std::shared_ptr<plansys2_msgs::srv::GetPlan::Response> response)
 {
+  (void)request_header;
   auto plans = get_plan_array(request->domain, request->problem);
 
   if (!plans.plan_array.empty()) {
@@ -261,6 +268,7 @@ PlannerNode::get_plan_array_service_callback(
   const std::shared_ptr<plansys2_msgs::srv::GetPlanArray::Request> request,
   const std::shared_ptr<plansys2_msgs::srv::GetPlanArray::Response> response)
 {
+  (void)request_header;
   response->plan_array = get_plan_array(request->domain, request->problem);
 
   if (!response->plan_array.plan_array.empty()) {
@@ -277,6 +285,7 @@ PlannerNode::validate_domain_service_callback(
   const std::shared_ptr<plansys2_msgs::srv::ValidateDomain::Request> request,
   const std::shared_ptr<plansys2_msgs::srv::ValidateDomain::Response> response)
 {
+  (void)request_header;
   response->success = solvers_.begin()->second->isDomainValid(
     request->domain, get_namespace());
 

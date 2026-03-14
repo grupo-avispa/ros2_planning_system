@@ -46,6 +46,8 @@ SimpleBTBuilder::initialize(
   const std::string & bt_action_2,
   int precision)
 {
+  (void)bt_action_2;
+  (void)precision;
   if (bt_action_1 != "") {
     bt_action_ = bt_action_1;
   } else {
@@ -331,7 +333,7 @@ SimpleBTBuilder::get_state(
 }
 
 ActionGraph::Ptr
-SimpleBTBuilder::get_graph(const plansys2_msgs::msg::Plan & current_plan)
+SimpleBTBuilder::build_action_graph(const plansys2_msgs::msg::Plan & current_plan)
 {
   int node_counter = 0;
   int level_counter = 0;
@@ -409,7 +411,7 @@ SimpleBTBuilder::get_graph(const plansys2_msgs::msg::Plan & current_plan)
     // Look for contradicting parallel actions
     // A1 and A2 cannot run in parallel if the effects of A1 contradict the requirements of A2
     auto contradictions = get_node_contradict(graph, new_node);
-    for (const auto parent : contradictions) {
+    for (const auto & parent : contradictions) {
       prune_backwards(new_node, parent);
 
       // Create the connections to the parent node
@@ -456,7 +458,7 @@ SimpleBTBuilder::get_graph(const plansys2_msgs::msg::Plan & current_plan)
 std::string
 SimpleBTBuilder::get_tree(const plansys2_msgs::msg::Plan & current_plan)
 {
-  graph_ = get_graph(current_plan);
+  graph_ = build_action_graph(current_plan);
 
   // If graph was not generated, return an empty string.
   // This can be used to fails the serveice call

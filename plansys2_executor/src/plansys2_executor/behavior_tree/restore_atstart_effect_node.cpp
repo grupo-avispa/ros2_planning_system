@@ -52,7 +52,7 @@ RestoreAtStartEffect::tick()
 
     std::vector<plansys2::Predicate> predicates;
     std::vector<plansys2::Function> functions;
-    std::tuple<bool, bool, double> ret = evaluate(
+    evaluate(
       effect, problem_client_, predicates, functions, true, false, 0, true);
   }
 

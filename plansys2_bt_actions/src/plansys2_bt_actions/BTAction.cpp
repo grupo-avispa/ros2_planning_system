@@ -45,19 +45,6 @@ BTAction::BTAction(const std::string & action)
   declare_parameter<int>("wait_for_service_timeout", 1000);
 }
 
-BTAction::BTAction(const std::string & action, const std::chrono::nanoseconds & rate)
-: ActionExecutorClient(action, rate)
-{
-  declare_parameter<std::string>("bt_xml_file", "");
-  declare_parameter<std::vector<std::string>>("plugins", std::vector<std::string>({}));
-  declare_parameter<bool>("bt_file_logging", false);
-  declare_parameter<bool>("bt_minitrace_logging", false);
-  declare_parameter<bool>("enable_groot_monitoring", false);
-  declare_parameter<int>("server_port", -1);
-  declare_parameter<int>("server_timeout", 5000);
-  declare_parameter<int>("wait_for_service_timeout", 1000);
-}
-
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
 BTAction::on_configure(const rclcpp_lifecycle::State & previous_state)
 {
@@ -123,7 +110,7 @@ BTAction::on_activate(const rclcpp_lifecycle::State & previous_state)
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::FAILURE;
   }
 
-  for (int i = 0; i < get_arguments().size(); i++) {
+  for (size_t i = 0; i < get_arguments().size(); i++) {
     auto arg = get_arguments()[i];
     RCLCPP_DEBUG_STREAM(
       get_logger(),
@@ -196,13 +183,13 @@ void BTAction::do_work()
     BT::NodeStatus result;
     try {
       result = tree_.rootNode()->executeTick();
-    } catch (BT::LogicError e) {
+    } catch (const BT::LogicError & e) {
       RCLCPP_ERROR_STREAM(get_logger(), e.what());
       finish(false, 0.0, "BTAction behavior tree threw a BT::LogicError");
-    } catch (BT::RuntimeError e) {
+    } catch (const BT::RuntimeError & e) {
       RCLCPP_ERROR_STREAM(get_logger(), e.what());
       finish(false, 0.0, "BTAction behavior tree threw a BT::RuntimeError");
-    } catch (std::exception e) {
+    } catch (const std::exception & e) {
       finish(false, 0.0, "BTAction behavior tree threw an unknown exception");
     }
 
@@ -217,6 +204,9 @@ void BTAction::do_work()
       case BT::NodeStatus::FAILURE:
         finish(false, 1.0, "BTAction behavior tree returned FAILURE");
         finished_ = true;
+        break;
+      case BT::NodeStatus::IDLE:
+      case BT::NodeStatus::SKIPPED:
         break;
     }
   }

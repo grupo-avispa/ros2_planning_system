@@ -45,7 +45,7 @@ ProblemExpert::addInstance(const plansys2::Instance & instance)
   std::transform(
     lowercase_instance.type.begin(), lowercase_instance.type.end(), lowercase_instance.type.begin(),
     [](unsigned char c) {return std::tolower(c);});
-  for (auto i = 0; i < lowercase_instance.sub_types.size(); ++i) {
+  for (size_t i = 0; i < lowercase_instance.sub_types.size(); ++i) {
     std::transform(
       lowercase_instance.sub_types[i].begin(), lowercase_instance.sub_types[i].end(),
       lowercase_instance.sub_types[i].begin(), [](unsigned char c) {return std::tolower(c);});
@@ -79,7 +79,7 @@ bool
 ProblemExpert::removeInstance(const plansys2::Instance & instance)
 {
   bool found = false;
-  int i = 0;
+  size_t i = 0;
 
   while (!found && i < instances_.size()) {
     if (instances_[i].name == instance.name) {
@@ -102,7 +102,7 @@ ProblemExpert::getInstance(const std::string & instance_name)
   plansys2::Instance ret;
 
   bool found = false;
-  int i = 0;
+  size_t i = 0;
   while (i < instances_.size() && !found) {
     if (instances_[i].name == instance_name) {
       found = true;
@@ -188,7 +188,7 @@ bool
 ProblemExpert::removePredicate(const plansys2::Predicate & predicate)
 {
   bool found = false;
-  int i = 0;
+  size_t i = 0;
 
   if (!isValidPredicate(predicate)) {  // if predicate is not valid, error
     return false;
@@ -252,7 +252,7 @@ bool
 ProblemExpert::removeFunction(const plansys2::Function & function)
 {
   bool found = false;
-  int i = 0;
+  size_t i = 0;
 
   if (!isValidFunction(function)) {  // if function is not valid, error
     return false;
@@ -468,7 +468,7 @@ bool
 ProblemExpert::existInstance(const std::string & name)
 {
   bool found = false;
-  int i = 0;
+  size_t i = 0;
 
   while (!found && i < instances_.size()) {
     if (instances_[i].name == name) {
@@ -484,7 +484,7 @@ bool
 ProblemExpert::existPredicate(const plansys2::Predicate & predicate)
 {
   bool found = false;
-  int i = 0;
+  size_t i = 0;
 
   while (!found && i < predicates_.size()) {
     if (parser::pddl::checkNodeEquality(predicates_[i], predicate)) {
@@ -514,7 +514,7 @@ bool
 ProblemExpert::existFunction(const plansys2::Function & function)
 {
   bool found = false;
-  int i = 0;
+  size_t i = 0;
 
   while (!found && i < functions_.size()) {
     if (parser::pddl::checkNodeEquality(functions_[i], function)) {
@@ -536,7 +536,7 @@ ProblemExpert::isValidPredicate(const plansys2::Predicate & predicate)
   if (model_predicate) {
     if (model_predicate.value().parameters.size() == predicate.parameters.size()) {
       bool same_types = true;
-      int i = 0;
+      size_t i = 0;
       while (same_types && i < predicate.parameters.size()) {
         auto arg_type = getInstance(predicate.parameters[i].name);
 
@@ -581,7 +581,7 @@ ProblemExpert::isValidFunction(const plansys2::Function & function)
   if (model_function) {
     if (model_function.value().parameters.size() == function.parameters.size()) {
       bool same_types = true;
-      int i = 0;
+      size_t i = 0;
       while (same_types && i < function.parameters.size()) {
         auto arg_type = getInstance(function.parameters[i].name);
 
@@ -780,7 +780,7 @@ ProblemExpert::addProblem(const std::string & problem_str)
   domain.name = domain_name;
   try {
     problem.parse(lc_problem);
-  } catch (std::runtime_error ex) {
+  } catch (const std::runtime_error & ex) {
     // all errors thrown by the Stringreader object extend std::runtime_error
     std::cerr << ex.what() << std::endl;
     return false;

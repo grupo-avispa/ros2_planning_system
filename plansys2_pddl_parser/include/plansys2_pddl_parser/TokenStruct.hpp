@@ -59,6 +59,16 @@ public:
   {
   }
 
+  TokenStruct & operator=(const TokenStruct & ts)
+  {
+    if (this != &ts) {
+      tokens = ts.tokens;
+      tokenMap = ts.tokenMap;
+      types = ts.types;
+    }
+    return *this;
+  }
+
   void append(const TokenStruct & ts)
   {
     for (unsigned i = 0; i < ts.size(); ++i) {insert(ts[i]);}

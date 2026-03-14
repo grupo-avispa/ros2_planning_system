@@ -118,6 +118,7 @@ using CallbackReturnT =
 CallbackReturnT
 DomainExpertNode::on_configure(const rclcpp_lifecycle::State & state)
 {
+  (void)state;
   RCLCPP_INFO(get_logger(), "[%s] Configuring...", get_name());
   const std::string model_file = get_parameter("model_file").get_value<std::string>();
   const bool validate_using_planner_node =
@@ -180,6 +181,7 @@ DomainExpertNode::on_configure(const rclcpp_lifecycle::State & state)
 CallbackReturnT
 DomainExpertNode::on_activate(const rclcpp_lifecycle::State & state)
 {
+  (void)state;
   RCLCPP_INFO(get_logger(), "[%s] Activating...", get_name());
   RCLCPP_INFO(get_logger(), "[%s] Activated", get_name());
 
@@ -195,6 +197,7 @@ DomainExpertNode::on_activate(const rclcpp_lifecycle::State & state)
 CallbackReturnT
 DomainExpertNode::on_deactivate(const rclcpp_lifecycle::State & state)
 {
+  (void)state;
   RCLCPP_INFO(get_logger(), "[%s] Deactivating...", get_name());
   RCLCPP_INFO(get_logger(), "[%s] Deactivated", get_name());
 
@@ -206,6 +209,7 @@ DomainExpertNode::on_deactivate(const rclcpp_lifecycle::State & state)
 CallbackReturnT
 DomainExpertNode::on_cleanup(const rclcpp_lifecycle::State & state)
 {
+  (void)state;
   RCLCPP_INFO(get_logger(), "[%s] Cleaning up...", get_name());
   RCLCPP_INFO(get_logger(), "[%s] Cleaned up", get_name());
 
@@ -217,6 +221,7 @@ DomainExpertNode::on_cleanup(const rclcpp_lifecycle::State & state)
 CallbackReturnT
 DomainExpertNode::on_shutdown(const rclcpp_lifecycle::State & state)
 {
+  (void)state;
   RCLCPP_INFO(get_logger(), "[%s] Shutting down...", get_name());
   RCLCPP_INFO(get_logger(), "[%s] Shutted down", get_name());
 
@@ -226,6 +231,7 @@ DomainExpertNode::on_shutdown(const rclcpp_lifecycle::State & state)
 CallbackReturnT
 DomainExpertNode::on_error(const rclcpp_lifecycle::State & state)
 {
+  (void)state;
   RCLCPP_ERROR(get_logger(), "[%s] Error transition", get_name());
 
   return CallbackReturnT::SUCCESS;
@@ -237,6 +243,8 @@ DomainExpertNode::get_domain_name_service_callback(
   const std::shared_ptr<plansys2_msgs::srv::GetDomainName::Request> request,
   const std::shared_ptr<plansys2_msgs::srv::GetDomainName::Response> response)
 {
+  (void)request;
+  (void)request_header;
   if (domain_expert_ == nullptr) {
     response->success = false;
     response->error_info = "Requesting service in non-active state";
@@ -253,6 +261,8 @@ DomainExpertNode::get_domain_types_service_callback(
   const std::shared_ptr<plansys2_msgs::srv::GetDomainTypes::Request> request,
   const std::shared_ptr<plansys2_msgs::srv::GetDomainTypes::Response> response)
 {
+  (void)request;
+  (void)request_header;
   if (domain_expert_ == nullptr) {
     response->success = false;
     response->error_info = "Requesting service in non-active state";
@@ -269,6 +279,8 @@ DomainExpertNode::get_domain_actions_service_callback(
   const std::shared_ptr<plansys2_msgs::srv::GetDomainActions::Request> request,
   const std::shared_ptr<plansys2_msgs::srv::GetDomainActions::Response> response)
 {
+  (void)request;
+  (void)request_header;
   if (domain_expert_ == nullptr) {
     response->success = false;
     response->error_info = "Requesting service in non-active state";
@@ -287,6 +299,7 @@ DomainExpertNode::get_domain_action_details_service_callback(
   const std::shared_ptr<plansys2_msgs::srv::GetDomainActionDetails::Request> request,
   const std::shared_ptr<plansys2_msgs::srv::GetDomainActionDetails::Response> response)
 {
+  (void)request_header;
   if (domain_expert_ == nullptr) {
     response->success = false;
     response->error_info = "Requesting service in non-active state";
@@ -312,6 +325,8 @@ DomainExpertNode::get_domain_durative_actions_service_callback(
   const std::shared_ptr<plansys2_msgs::srv::GetDomainActions::Request> request,
   const std::shared_ptr<plansys2_msgs::srv::GetDomainActions::Response> response)
 {
+  (void)request;
+  (void)request_header;
   if (domain_expert_ == nullptr) {
     response->success = false;
     response->error_info = "Requesting service in non-active state";
@@ -330,6 +345,7 @@ DomainExpertNode::get_domain_durative_action_details_service_callback(
   const std::shared_ptr<plansys2_msgs::srv::GetDomainDurativeActionDetails::Request> request,
   const std::shared_ptr<plansys2_msgs::srv::GetDomainDurativeActionDetails::Response> response)
 {
+  (void)request_header;
   if (domain_expert_ == nullptr) {
     response->success = false;
     response->error_info = "Requesting service in non-active state";
@@ -357,6 +373,8 @@ DomainExpertNode::get_domain_predicates_service_callback(
   const std::shared_ptr<plansys2_msgs::srv::GetStates::Request> request,
   const std::shared_ptr<plansys2_msgs::srv::GetStates::Response> response)
 {
+  (void)request;
+  (void)request_header;
   if (domain_expert_ == nullptr) {
     response->success = false;
     response->error_info = "Requesting service in non-active state";
@@ -374,6 +392,7 @@ DomainExpertNode::get_domain_predicate_details_service_callback(
   const std::shared_ptr<plansys2_msgs::srv::GetNodeDetails::Request> request,
   const std::shared_ptr<plansys2_msgs::srv::GetNodeDetails::Response> response)
 {
+  (void)request_header;
   if (domain_expert_ == nullptr) {
     response->success = false;
     response->error_info = "Requesting service in non-active state";
@@ -399,6 +418,8 @@ DomainExpertNode::get_domain_functions_service_callback(
   const std::shared_ptr<plansys2_msgs::srv::GetStates::Request> request,
   const std::shared_ptr<plansys2_msgs::srv::GetStates::Response> response)
 {
+  (void)request;
+  (void)request_header;
   if (domain_expert_ == nullptr) {
     response->success = false;
     response->error_info = "Requesting service in non-active state";
@@ -416,6 +437,7 @@ DomainExpertNode::get_domain_function_details_service_callback(
   const std::shared_ptr<plansys2_msgs::srv::GetNodeDetails::Request> request,
   const std::shared_ptr<plansys2_msgs::srv::GetNodeDetails::Response> response)
 {
+  (void)request_header;
   if (domain_expert_ == nullptr) {
     response->success = false;
     response->error_info = "Requesting service in non-active state";
@@ -441,6 +463,8 @@ DomainExpertNode::get_domain_derived_predicates_service_callback(
   const std::shared_ptr<plansys2_msgs::srv::GetDomainDerivedPredicateDetails::Request> request,
   const std::shared_ptr<plansys2_msgs::srv::GetDomainDerivedPredicateDetails::Response> response)
 {
+  (void)request;
+  (void)request_header;
   if (domain_expert_ == nullptr) {
     response->success = false;
     response->error_info = "Requesting service in non-active state";
@@ -457,6 +481,7 @@ DomainExpertNode::get_domain_derived_predicate_details_service_callback(
   const std::shared_ptr<plansys2_msgs::srv::GetDomainDerivedPredicateDetails::Request> request,
   const std::shared_ptr<plansys2_msgs::srv::GetDomainDerivedPredicateDetails::Response> response)
 {
+  (void)request_header;
   if (domain_expert_ == nullptr) {
     response->success = false;
     response->error_info = "Requesting service in non-active state";
@@ -485,6 +510,8 @@ DomainExpertNode::get_domain_service_callback(
   const std::shared_ptr<plansys2_msgs::srv::GetDomain::Request> request,
   const std::shared_ptr<plansys2_msgs::srv::GetDomain::Response> response)
 {
+  (void)request;
+  (void)request_header;
   if (domain_expert_ == nullptr) {
     response->success = false;
     response->error_info = "Requesting service in non-active state";

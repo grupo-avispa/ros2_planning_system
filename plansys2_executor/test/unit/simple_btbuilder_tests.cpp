@@ -95,9 +95,9 @@ public:
     return SimpleBTBuilder::is_action_executable(action, predicates, functions);
   }
 
-  plansys2::ActionGraph::Ptr get_graph(const plansys2_msgs::msg::Plan & current_plan)
+  plansys2::ActionGraph::Ptr build_action_graph(const plansys2_msgs::msg::Plan & current_plan)
   {
-    return SimpleBTBuilder::get_graph(current_plan);
+    return SimpleBTBuilder::build_action_graph(current_plan);
   }
 
   std::list<plansys2::ActionNode::Ptr> get_roots(
@@ -596,7 +596,7 @@ TEST(simple_btbuilder_tests, test_plan_2)
   it++;
   EXPECT_TRUE(btbuilder->get_node_satisfy(tree, *it, nullptr) == nullptr);
 
-  auto graph = btbuilder->get_graph(plan.value());
+  auto graph = btbuilder->build_action_graph(plan.value());
   EXPECT_TRUE(graph != nullptr);
 
   btbuilder->print_graph(graph);
@@ -805,7 +805,7 @@ TEST(simple_btbuilder_tests, test_plan_4)
 
   ASSERT_TRUE(plan);
 
-  btbuilder->print_graph(btbuilder->get_graph(plan.value()));
+  btbuilder->print_graph(btbuilder->build_action_graph(plan.value()));
   auto bt = btbuilder->get_tree(plan.value());
 
   std::cerr << bt << std::endl;
@@ -881,7 +881,7 @@ TEST(simple_btbuilder_tests, test_plan_5)
 
   ASSERT_TRUE(plan);
 
-  auto action_graph = btbuilder->get_graph(plan.value());
+  auto action_graph = btbuilder->build_action_graph(plan.value());
   btbuilder->print_graph_csv(action_graph);
 
   auto tabulated_graph = btbuilder->get_graph_tabular(action_graph);
@@ -995,7 +995,7 @@ TEST(simple_btbuilder_tests, test_plan_6)
 
   ASSERT_TRUE(plan);
 
-  auto action_graph = btbuilder->get_graph(plan.value());
+  auto action_graph = btbuilder->build_action_graph(plan.value());
   btbuilder->print_graph_csv(action_graph);
 
   auto tabulated_graph = btbuilder->get_graph_tabular(action_graph);

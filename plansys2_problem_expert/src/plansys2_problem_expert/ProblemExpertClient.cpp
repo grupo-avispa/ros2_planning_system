@@ -94,6 +94,7 @@ ProblemExpertClient::ProblemExpertClient()
   update_problem_sub_ = node_->create_subscription<std_msgs::msg::Empty>(
     "problem_expert/update_notify", 100,
     [this](std_msgs::msg::Empty::SharedPtr msg){
+      (void)msg;
       update_time_ = this->node_->now();
     });
 

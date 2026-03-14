@@ -45,6 +45,7 @@ PlannerClient::getPlan(
   const std::string & domain, const std::string & problem,
   const std::string & node_namespace)
 {
+  (void)node_namespace;
   while (!get_plan_client_->wait_for_service(std::chrono::seconds(30))) {
     if (!rclcpp::ok()) {
       return {};
@@ -101,6 +102,7 @@ PlannerClient::getPlanArray(
   const std::string & domain, const std::string & problem,
   const std::string & node_namespace)
 {
+  (void)node_namespace;
   while (!get_plan_array_client_->wait_for_service(std::chrono::seconds(30))) {
     if (!rclcpp::ok()) {
       return plansys2_msgs::msg::PlanArray();

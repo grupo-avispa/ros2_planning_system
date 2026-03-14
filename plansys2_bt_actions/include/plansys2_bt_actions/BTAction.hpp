@@ -50,15 +50,6 @@ public:
   explicit BTAction(const std::string & action);
 
   /**
-   * @brief Constructor for the BTAction.
-   *
-   * @param[in] action Name of the action this executor handles.
-   * @param[in] rate Execution rate for the action.
-   */
-  [[deprecated("Use BTAction(const std::string & action) instead")]]
-  BTAction(const std::string & action, const std::chrono::nanoseconds & rate);
-
-  /**
    * @brief Get the name of the action.
    *
    * @return std::string The action name.

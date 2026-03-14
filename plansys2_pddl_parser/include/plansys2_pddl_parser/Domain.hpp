@@ -587,8 +587,8 @@ public:
   bool isConstant(const std::string & name)
   {
     bool res = false;
-    for (int t = 0; t < types.size() && !res; t++) {
-      for (int c = 0; c < types[t]->constants.size() && !res; c++) {
+    for (unsigned t = 0; t < types.size() && !res; t++) {
+      for (unsigned c = 0; c < types[t]->constants.size() && !res; c++) {
         if (types[t]->constants[c] == name) {res = true;}
       }
     }
@@ -599,8 +599,8 @@ public:
   {
     int t, c;
     bool found = false;
-    for (t = 0; t < types.size() && !found; t++) {
-      for (c = 0; c < types[t]->constants.size() && !found; c++) {
+    for (t = 0; t < static_cast<int>(types.size()) && !found; t++) {
+      for (c = 0; c < static_cast<int>(types[t]->constants.size()) && !found; c++) {
         if (name == types[t]->constants[c]) {found = true;}
       }
     }

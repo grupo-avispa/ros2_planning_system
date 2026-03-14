@@ -49,7 +49,7 @@ plansys2_msgs::msg::Node::SharedPtr Exists::getTree(
   node->node_id = tree.nodes.size();
   for (unsigned i = 0; i < params.size(); ++i) {
     plansys2_msgs::msg::Param param;
-    if (i < replace.size() && params[i] < replace.size()) {
+    if (i < replace.size() && params[i] >= 0 && static_cast<size_t>(params[i]) < replace.size()) {
       if (params[i] >= 0) {
         // param has a variable value; replace by action-args
         param.name = replace[params[i]];
