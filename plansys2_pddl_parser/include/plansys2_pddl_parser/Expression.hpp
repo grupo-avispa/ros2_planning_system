@@ -41,8 +41,8 @@ public:
   // inherit
   virtual void print(std::ostream & stream) const {stream << info();}
 
-  virtual void parse(Stringreader & f, TokenStruct<std::string> & ts, Domain & d) {}
-  virtual void addParams(int m, unsigned n) {}
+  virtual void parse(Stringreader &, TokenStruct<std::string> &, Domain &) {}
+  virtual void addParams(int, unsigned) {}
 };
 
 Expression * createExpression(Stringreader & f, TokenStruct<std::string> & ts, Domain & d);
@@ -216,15 +216,15 @@ public:
   }
 
   void PDDLPrint(
-    std::ostream & s, unsigned indent, const TokenStruct<std::string> & ts,
-    const Domain & d) const override
+    std::ostream & s, unsigned, const TokenStruct<std::string> &,
+    const Domain &) const override
   {
     s << value;
   }
 
   plansys2_msgs::msg::Node::SharedPtr getTree(
-    plansys2_msgs::msg::Tree & tree, const Domain & d,
-    const std::vector<std::string> & replace = {}) const override
+    plansys2_msgs::msg::Tree & tree, const Domain &,
+    const std::vector<std::string> & = {}) const override
   {
     plansys2_msgs::msg::Node::SharedPtr node = std::make_shared<plansys2_msgs::msg::Node>();
     node->node_type = plansys2_msgs::msg::Node::NUMBER;
@@ -236,25 +236,25 @@ public:
 
   double evaluate() {return value;}
 
-  double evaluate(Instance & ins, const StringVec & par) {return value;}
+  double evaluate(Instance &, const StringVec &) {return value;}
 
   IntSet params() {return IntSet();}
 
-  Condition * copy(Domain & d) {return new ValueExpression(value);}
+  Condition * copy(Domain &) {return new ValueExpression(value);}
 };
 
 class DurationExpression : public Expression
 {
   void PDDLPrint(
-    std::ostream & s, unsigned indent, const TokenStruct<std::string> & ts,
-    const Domain & d) const override
+    std::ostream & s, unsigned, const TokenStruct<std::string> &,
+    const Domain &) const override
   {
     s << "?duration";
   }
 
   plansys2_msgs::msg::Node::SharedPtr getTree(
-    plansys2_msgs::msg::Tree & tree, const Domain & d,
-    const std::vector<std::string> & replace = {}) const override
+    plansys2_msgs::msg::Tree &, const Domain &,
+    const std::vector<std::string> & = {}) const override
   {
     throw UnsupportedConstruct("DurationExpression");
   }
@@ -263,11 +263,11 @@ class DurationExpression : public Expression
 
   double evaluate() {return -1;}
 
-  double evaluate(Instance & ins, const StringVec & par) {return evaluate();}
+  double evaluate(Instance &, const StringVec &) {return evaluate();}
 
   IntSet params() {return IntSet();}
 
-  Condition * copy(Domain & d) {return new DurationExpression();}
+  Condition * copy(Domain &) {return new DurationExpression();}
 };
 
 class ParamExpression : public Expression
@@ -286,14 +286,14 @@ public:
   }
 
   void PDDLPrint(
-    std::ostream & s, unsigned indent, const TokenStruct<std::string> & ts,
-    const Domain & d) const override
+    std::ostream & s, unsigned, const TokenStruct<std::string> &,
+    const Domain &) const override
   {
     s << "?" << param;
   }
 
   plansys2_msgs::msg::Node::SharedPtr getTree(
-    plansys2_msgs::msg::Tree & tree, const Domain & d,
+    plansys2_msgs::msg::Tree & tree, const Domain &,
     const std::vector<std::string> & replace = {}) const override
   {
     plansys2_msgs::msg::Node::SharedPtr node = std::make_shared<plansys2_msgs::msg::Node>();
@@ -301,7 +301,7 @@ public:
     node->node_id = tree.nodes.size();
     node->name = "?" + std::to_string(param);
     plansys2_msgs::msg::Param node_param;
-    if (replace.size() > param) {
+    if (static_cast<size_t>(replace.size()) > static_cast<size_t>(param)) {
       node_param.name = replace[param];
     } else {
       node_param.name = "?" + std::to_string(param);
@@ -313,11 +313,11 @@ public:
 
   double evaluate() {return -1;}
 
-  double evaluate(Instance & ins, const StringVec & par) {return evaluate();}
+  double evaluate(Instance &, const StringVec &) {return evaluate();}
 
   IntSet params() {return IntSet();}
 
-  Condition * copy(Domain & d) {return new ParamExpression(param);}
+  Condition * copy(Domain &) {return new ParamExpression(param);}
 };
 
 class ConstExpression : public Expression
@@ -345,11 +345,11 @@ public:
 
   double evaluate() {return -1;}
 
-  double evaluate(Instance & ins, const StringVec & par) {return evaluate();}
+  double evaluate(Instance &, const StringVec &) {return evaluate();}
 
   IntSet params() {return IntSet();}
 
-  Condition * copy(Domain & d) {return new ConstExpression(constant, tid);}
+  Condition * copy(Domain &) {return new ConstExpression(constant, tid);}
 };
 
 }  // namespace pddl

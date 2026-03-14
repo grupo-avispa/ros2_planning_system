@@ -21,6 +21,7 @@ namespace pddl
 void TypeGround::PDDLPrint(
   std::ostream & s, unsigned indent, const TokenStruct<std::string> & ts, const Domain & d) const
 {
+  (void)ts;
   tabindent(s, indent);
   s << "( " << name;
   for (unsigned i = 0; i < params.size(); ++i) {
@@ -56,6 +57,7 @@ void TypeGround::insert(Domain & d, const StringVec & v)
 
 void TypeGround::parse(Stringreader & f, TokenStruct<std::string> & ts, Domain & d)
 {
+  (void)ts;
   f.next();
   params.resize(lifted->params.size());
   for (unsigned i = 0; i < lifted->params.size(); ++i, f.next()) {

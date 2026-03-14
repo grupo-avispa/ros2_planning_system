@@ -37,11 +37,15 @@ void Lifted::PDDLPrint(
 plansys2_msgs::msg::Node::SharedPtr Lifted::getTree(
   plansys2_msgs::msg::Tree & tree, const Domain & d, const std::vector<std::string> & replace) const
 {
+  (void)tree;
+  (void)d;
+  (void)replace;
   throw UnsupportedConstruct("Lifted");
 }
 
 void Lifted::parse(Stringreader & f, TokenStruct<std::string> & ts, Domain & d)
 {
+  (void)ts;
   TokenStruct<std::string> lstruct = f.parseTypedList(true, d.types);
   params = d.convertTypes(lstruct.types);
 }

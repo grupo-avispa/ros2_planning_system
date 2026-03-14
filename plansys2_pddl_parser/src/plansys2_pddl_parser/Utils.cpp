@@ -346,7 +346,7 @@ int getParenthesis(const std::string & wexpr, int start)
   int it = start + 1;
   int balance = 1;
 
-  while (it < wexpr.size()) {
+  while (it < static_cast<int>(wexpr.size())) {
     if (wexpr[it] == '(') {
       balance++;
     }
@@ -367,7 +367,7 @@ int getParenthesis(const std::string & wexpr, int start)
 void removeOperatorBeforeParenthesis(std::string & wexpr)
 {
   // Find the position of the first parenthesis
-  int first_parenthesis = wexpr.find("(");
+  std::string::size_type first_parenthesis = wexpr.find("(");
 
   // Check if "exists" appears before the first parenthesis
   size_t exists_pos = wexpr.find("exists");
@@ -395,10 +395,12 @@ void removeOperatorBeforeParenthesis(std::string & wexpr)
   // Search for the first operator in the string
   std::smatch match;
   if (std::regex_search(wexpr, match, operator_regex)) {
-    int operator_pos = match.position();
+    auto operator_pos = match.position();
 
     // Check if the operator is before the first parenthesis
-    if (operator_pos < first_parenthesis || first_parenthesis == std::string::npos) {
+    if (first_parenthesis == std::string::npos ||
+      static_cast<std::string::size_type>(operator_pos) < first_parenthesis)
+    {
       // Remove the operator from the string
       wexpr.erase(operator_pos, match.length());
       wexpr.erase(0, wexpr.find_first_not_of(" \t\n\r"));
@@ -426,7 +428,7 @@ std::vector<std::string> getSubExpr(const std::string & expr)
 
   // Parse the inner content
   while (!wexpr.empty()) {
-    int first = wexpr.find("(");
+    std::string::size_type first = wexpr.find("(");
 
     // If there's a parenthesized subexpression
     if (first != std::string::npos) {
@@ -441,9 +443,9 @@ std::vector<std::string> getSubExpr(const std::string & expr)
       }
 
       // Extract the parenthesized subexpression
-      int last = getParenthesis(wexpr, first);
-      ret.push_back(wexpr.substr(first, last - first + 1));
-      wexpr.erase(0, last + 1);
+      int last = getParenthesis(wexpr, static_cast<int>(first));
+      ret.push_back(wexpr.substr(first, static_cast<std::string::size_type>(last) - first + 1));
+      wexpr.erase(0, static_cast<std::string::size_type>(last) + 1);
     } else {
       // No more parentheses, split the remaining string by whitespace
       std::istringstream iss(wexpr);
@@ -570,6 +572,7 @@ std::string toStringPredicate(const plansys2_msgs::msg::Tree & tree, uint32_t no
 
 std::string toStringFunction(const plansys2_msgs::msg::Tree & tree, uint32_t node_id, bool negate)
 {
+  (void)negate;
   if (node_id >= tree.nodes.size()) {
     return {};
   }
@@ -588,6 +591,7 @@ std::string toStringFunction(const plansys2_msgs::msg::Tree & tree, uint32_t nod
 
 std::string toStringNumber(const plansys2_msgs::msg::Tree & tree, uint32_t node_id, bool negate)
 {
+  (void)negate;
   if (node_id >= tree.nodes.size()) {
     return {};
   }
@@ -764,6 +768,7 @@ std::string toStringFunctionModifier(
 
 std::string toStringConstant(const plansys2_msgs::msg::Tree & tree, uint32_t node_id, bool negate)
 {
+  (void)negate;
   if (node_id >= tree.nodes.size()) {
     return {};
   }
@@ -773,6 +778,7 @@ std::string toStringConstant(const plansys2_msgs::msg::Tree & tree, uint32_t nod
 
 std::string toStringParameter(const plansys2_msgs::msg::Tree & tree, uint32_t node_id, bool negate)
 {
+  (void)negate;
   if (node_id >= tree.nodes.size()) {
     return {};
   }

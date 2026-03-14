@@ -203,6 +203,7 @@ ActionExecutor::is_finished()
 BT::NodeStatus
 ActionExecutor::tick(const rclcpp::Time & now)
 {
+  (void)now;
   switch (state_) {
     case IDLE:
       state_ = DEALING;

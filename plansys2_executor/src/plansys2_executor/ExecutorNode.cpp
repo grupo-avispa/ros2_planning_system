@@ -129,14 +129,16 @@ using CallbackReturnT =
 CallbackReturnT
 ExecutorNode::on_configure(const rclcpp_lifecycle::State & state)
 {
+  (void)state;
   RCLCPP_INFO(get_logger(), "[%s] Configuring...", get_name());
 
   auto default_action_bt_xml_filename =
     this->get_parameter("default_action_bt_xml_filename").as_string();
   if (default_action_bt_xml_filename.empty()) {
+    std::filesystem::path pkg_path;
+    ament_index_cpp::get_package_share_directory("plansys2_executor", pkg_path);
     default_action_bt_xml_filename =
-      ament_index_cpp::get_package_share_directory("plansys2_executor") +
-      "/behavior_trees/plansys2_action_bt.xml";
+      (pkg_path / "behavior_trees" / "plansys2_action_bt.xml").string();
   }
 
   std::ifstream action_bt_ifs(default_action_bt_xml_filename);
@@ -151,9 +153,10 @@ ExecutorNode::on_configure(const rclcpp_lifecycle::State & state)
   auto default_start_action_bt_xml_filename =
     this->get_parameter("default_start_action_bt_xml_filename").as_string();
   if (default_start_action_bt_xml_filename.empty()) {
+    std::filesystem::path pkg_path;
+    ament_index_cpp::get_package_share_directory("plansys2_executor", pkg_path);
     default_start_action_bt_xml_filename =
-      ament_index_cpp::get_package_share_directory("plansys2_executor") +
-      "/behavior_trees/plansys2_start_action_bt.xml";
+      (pkg_path / "behavior_trees" / "plansys2_start_action_bt.xml").string();
   }
 
   std::ifstream start_action_bt_ifs(default_start_action_bt_xml_filename);
@@ -169,9 +172,10 @@ ExecutorNode::on_configure(const rclcpp_lifecycle::State & state)
   auto default_end_action_bt_xml_filename =
     this->get_parameter("default_end_action_bt_xml_filename").as_string();
   if (default_end_action_bt_xml_filename.empty()) {
+    std::filesystem::path pkg_path;
+    ament_index_cpp::get_package_share_directory("plansys2_executor", pkg_path);
     default_end_action_bt_xml_filename =
-      ament_index_cpp::get_package_share_directory("plansys2_executor") +
-      "/behavior_trees/plansys2_end_action_bt.xml";
+      (pkg_path / "behavior_trees" / "plansys2_end_action_bt.xml").string();
   }
 
   std::ifstream end_action_bt_ifs(default_end_action_bt_xml_filename);
@@ -203,6 +207,7 @@ ExecutorNode::on_configure(const rclcpp_lifecycle::State & state)
 CallbackReturnT
 ExecutorNode::on_activate(const rclcpp_lifecycle::State & state)
 {
+  (void)state;
   RCLCPP_INFO(get_logger(), "[%s] Activating...", get_name());
   dotgraph_pub_->on_activate();
   execution_info_pub_->on_activate();
@@ -223,6 +228,7 @@ ExecutorNode::on_activate(const rclcpp_lifecycle::State & state)
 CallbackReturnT
 ExecutorNode::on_deactivate(const rclcpp_lifecycle::State & state)
 {
+  (void)state;
   RCLCPP_INFO(get_logger(), "[%s] Deactivating...", get_name());
   dotgraph_pub_->on_deactivate();
   executing_plan_pub_->on_deactivate();
@@ -236,6 +242,7 @@ ExecutorNode::on_deactivate(const rclcpp_lifecycle::State & state)
 CallbackReturnT
 ExecutorNode::on_cleanup(const rclcpp_lifecycle::State & state)
 {
+  (void)state;
   RCLCPP_INFO(get_logger(), "[%s] Cleaning up...", get_name());
   dotgraph_pub_.reset();
   executing_plan_pub_.reset();
@@ -248,6 +255,7 @@ ExecutorNode::on_cleanup(const rclcpp_lifecycle::State & state)
 CallbackReturnT
 ExecutorNode::on_shutdown(const rclcpp_lifecycle::State & state)
 {
+  (void)state;
   RCLCPP_INFO(get_logger(), "[%s] Shutting down...", get_name());
   dotgraph_pub_.reset();
   executing_plan_pub_.reset();
@@ -260,6 +268,7 @@ ExecutorNode::on_shutdown(const rclcpp_lifecycle::State & state)
 CallbackReturnT
 ExecutorNode::on_error(const rclcpp_lifecycle::State & state)
 {
+  (void)state;
   RCLCPP_ERROR(get_logger(), "[%s] Error transition", get_name());
 
   return CallbackReturnT::SUCCESS;
@@ -271,6 +280,8 @@ ExecutorNode::get_ordered_sub_goals_service_callback(
   const std::shared_ptr<plansys2_msgs::srv::GetOrderedSubGoals::Request> request,
   const std::shared_ptr<plansys2_msgs::srv::GetOrderedSubGoals::Response> response)
 {
+  (void)request;
+  (void)request_header;
   response->sub_goals = runtime_info_.ordered_sub_goals;
   response->success = true;
 }
@@ -332,6 +343,8 @@ ExecutorNode::get_plan_service_callback(
   const std::shared_ptr<plansys2_msgs::srv::GetPlan::Request> request,
   const std::shared_ptr<plansys2_msgs::srv::GetPlan::Response> response)
 {
+  (void)request_header;
+  (void)request;
   if (executor_state_ == STATE_EXECUTING) {
     response->success = true;
     response->plan = runtime_info_.complete_plan;
@@ -346,6 +359,8 @@ ExecutorNode::get_remaining_plan_service_callback(
   const std::shared_ptr<plansys2_msgs::srv::GetPlan::Request> request,
   const std::shared_ptr<plansys2_msgs::srv::GetPlan::Response> response)
 {
+  (void)request;
+  (void)request_header;
   if (executor_state_ == STATE_EXECUTING) {
     response->success = true;
     response->plan = runtime_info_.remaining_plan;
@@ -665,6 +680,9 @@ ExecutorNode::print_execution_info(
       case ActionExecutor::FAILURE:
         fprintf(stderr, "\tFAILURE\n");
         break;
+      case ActionExecutor::CANCELLED:
+        fprintf(stderr, "\tCANCELLED\n");
+        break;
     }
     if (action_info.second.action_info.is_empty()) {
       fprintf(stderr, "\tWith no action info\n");
@@ -717,6 +735,8 @@ ExecutorNode::handle_goal(
   const rclcpp_action::GoalUUID & uuid,
   std::shared_ptr<const ExecutePlan::Goal> goal)
 {
+  (void)uuid;
+  (void)goal;
   RCLCPP_INFO(this->get_logger(), "Received goal request with order");
 
   return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;

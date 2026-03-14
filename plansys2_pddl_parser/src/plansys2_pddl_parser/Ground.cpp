@@ -61,7 +61,7 @@ plansys2_msgs::msg::Node::SharedPtr Ground::getTree(
     bool is_variable = (param_index >= 0);
 
     if (is_variable) {
-      if (i < replace.size() && param_index < replace.size()) {
+      if (i < replace.size() && static_cast<size_t>(param_index) < replace.size()) {
         // param has a variable value; replace by action-args
         param.name = replace[params[i]];
       } else if (!d.types[lifted->params[i]]->object(params[i]).first.empty()) {

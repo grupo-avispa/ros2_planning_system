@@ -236,7 +236,6 @@ DomainExpert::getActions()
   std::vector<std::string> ret;
   for (unsigned i = 0; i < domain_->actions.size(); i++) {
     bool is_action = dynamic_cast<parser::pddl::TemporalAction *>(domain_->actions[i]) == nullptr;
-    parser::pddl::Action * action_obj = dynamic_cast<parser::pddl::Action *>(domain_->actions[i]);
     if (is_action) {
       ret.push_back(domain_->actions[i]->name);
     }
@@ -304,8 +303,6 @@ DomainExpert::getDurativeActions()
   for (unsigned i = 0; i < domain_->actions.size(); i++) {
     bool is_durative_action =
       dynamic_cast<parser::pddl::TemporalAction *>(domain_->actions[i]) != nullptr;
-    parser::pddl::TemporalAction * action_obj =
-      dynamic_cast<parser::pddl::TemporalAction *>(domain_->actions[i]);
     if (is_durative_action) {
       ret.push_back(domain_->actions[i]->name);
     }

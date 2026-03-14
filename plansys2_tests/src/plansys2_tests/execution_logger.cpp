@@ -44,10 +44,10 @@ ExecutionLogger::finished_before(const std::string & op1, const std::string & op
   bool op1_found = false;
   bool op2_found = false;
   for (const auto & action : action_execution_info_log_) {
-    op1_found = op1_found || action.action_full_name == op1 &&
-      action.completion > 0.9999999;
-    op2_found = op2_found || action.action_full_name == op2 &&
-      action.completion > 0.9999999;
+    op1_found = op1_found || (action.action_full_name == op1 &&
+      action.completion > 0.9999999);
+    op2_found = op2_found || (action.action_full_name == op2 &&
+      action.completion > 0.9999999);
 
     if (op2_found && !op1_found) {
       std::cerr << op2 << " finished before " << op1 << std::endl;
@@ -68,10 +68,10 @@ ExecutionLogger::started_before(const std::string & op1, const std::string & op2
   bool op1_found = false;
   bool op2_found = false;
   for (const auto & action : action_execution_info_log_) {
-    op1_found = op1_found || action.action_full_name == op1 &&
-      action.completion > 0.0000001;
-    op2_found = op2_found || action.action_full_name == op2 &&
-      action.completion > 0.0000001;
+    op1_found = op1_found || (action.action_full_name == op1 &&
+      action.completion > 0.0000001);
+    op2_found = op2_found || (action.action_full_name == op2 &&
+      action.completion > 0.0000001);
 
     if (op2_found && !op1_found) {
       RCLCPP_ERROR_STREAM(get_logger(), op2 << " started before " << op1);
@@ -92,10 +92,10 @@ ExecutionLogger::before(const std::string & op1, const std::string & op2)
   bool op1_found = false;
   bool op2_found = false;
   for (const auto & action : action_execution_info_log_) {
-    op1_found = op1_found || action.action_full_name == op1 &&
-      action.completion > 0.9999999;
-    op2_found = op2_found || action.action_full_name == op2 &&
-      action.completion > 0.0000001;
+    op1_found = op1_found || (action.action_full_name == op1 &&
+      action.completion > 0.9999999);
+    op2_found = op2_found || (action.action_full_name == op2 &&
+      action.completion > 0.0000001);
 
     if (op2_found && !op1_found) {
       RCLCPP_ERROR_STREAM(get_logger(), op2 << " started before " << op1 << " finishes");
@@ -117,8 +117,8 @@ ExecutionLogger::is_executed(const std::string & action_full_name)
   bool exist = false;
   for (const auto & action : action_execution_info_log_) {
     exist = exist || action.action_full_name == action_full_name;
-    executed = executed || action.action_full_name == action_full_name &&
-      action.completion > 0.000001;
+    executed = executed || (action.action_full_name == action_full_name &&
+      action.completion > 0.000001);
   }
 
   if (!exist) {

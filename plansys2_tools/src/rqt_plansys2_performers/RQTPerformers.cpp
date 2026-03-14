@@ -181,8 +181,8 @@ void
 RQTPerformers::restoreSettings(
   const qt_gui_cpp::Settings & plugin_settings, const qt_gui_cpp::Settings & instance_settings)
 {
-  (void)plugin_settings;
   (void)instance_settings;
+  (void)plugin_settings;
 }
 
 

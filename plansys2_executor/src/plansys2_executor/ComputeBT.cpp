@@ -88,14 +88,16 @@ using CallbackReturnT =
 CallbackReturnT
 ComputeBT::on_configure(const rclcpp_lifecycle::State & state)
 {
+  (void)state;
   RCLCPP_INFO(get_logger(), "[%s] Configuring...", get_name());
 
   auto action_bt_xml_filename =
     this->get_parameter("action_bt_xml_filename").as_string();
   if (action_bt_xml_filename.empty()) {
+    std::filesystem::path pkg_path;
+    ament_index_cpp::get_package_share_directory("plansys2_executor", pkg_path);
     action_bt_xml_filename =
-      ament_index_cpp::get_package_share_directory("plansys2_executor") +
-      "/behavior_trees/plansys2_action_bt.xml";
+      (pkg_path / "behavior_trees" / "plansys2_action_bt.xml").string();
   }
 
   std::ifstream action_bt_ifs(action_bt_xml_filename);
@@ -110,9 +112,10 @@ ComputeBT::on_configure(const rclcpp_lifecycle::State & state)
   auto start_action_bt_xml_filename =
     this->get_parameter("start_action_bt_xml_filename").as_string();
   if (start_action_bt_xml_filename.empty()) {
+    std::filesystem::path pkg_path;
+    ament_index_cpp::get_package_share_directory("plansys2_executor", pkg_path);
     start_action_bt_xml_filename =
-      ament_index_cpp::get_package_share_directory("plansys2_executor") +
-      "/behavior_trees/plansys2_start_action_bt.xml";
+      (pkg_path / "behavior_trees" / "plansys2_start_action_bt.xml").string();
   }
 
   std::ifstream start_action_bt_ifs(start_action_bt_xml_filename);
@@ -128,9 +131,10 @@ ComputeBT::on_configure(const rclcpp_lifecycle::State & state)
   auto end_action_bt_xml_filename =
     this->get_parameter("end_action_bt_xml_filename").as_string();
   if (end_action_bt_xml_filename.empty()) {
+    std::filesystem::path pkg_path;
+    ament_index_cpp::get_package_share_directory("plansys2_executor", pkg_path);
     end_action_bt_xml_filename =
-      ament_index_cpp::get_package_share_directory("plansys2_executor") +
-      "/behavior_trees/plansys2_end_action_bt.xml";
+      (pkg_path / "behavior_trees" / "plansys2_end_action_bt.xml").string();
   }
 
   std::ifstream end_action_bt_ifs(end_action_bt_xml_filename);
@@ -160,6 +164,7 @@ ComputeBT::on_configure(const rclcpp_lifecycle::State & state)
 CallbackReturnT
 ComputeBT::on_activate(const rclcpp_lifecycle::State & state)
 {
+  (void)state;
   RCLCPP_INFO(get_logger(), "[%s] Activating...", get_name());
   dotgraph_pub_->on_activate();
   RCLCPP_INFO(get_logger(), "[%s] Activated", get_name());
@@ -169,6 +174,7 @@ ComputeBT::on_activate(const rclcpp_lifecycle::State & state)
 CallbackReturnT
 ComputeBT::on_deactivate(const rclcpp_lifecycle::State & state)
 {
+  (void)state;
   RCLCPP_INFO(get_logger(), "[%s] Deactivating...", get_name());
   dotgraph_pub_->on_deactivate();
   RCLCPP_INFO(get_logger(), "[%s] Deactivated", get_name());
@@ -178,6 +184,7 @@ ComputeBT::on_deactivate(const rclcpp_lifecycle::State & state)
 CallbackReturnT
 ComputeBT::on_cleanup(const rclcpp_lifecycle::State & state)
 {
+  (void)state;
   RCLCPP_INFO(get_logger(), "[%s] Cleaning up...", get_name());
   dotgraph_pub_.reset();
   reset_groot_monitor();
@@ -188,6 +195,7 @@ ComputeBT::on_cleanup(const rclcpp_lifecycle::State & state)
 CallbackReturnT
 ComputeBT::on_shutdown(const rclcpp_lifecycle::State & state)
 {
+  (void)state;
   RCLCPP_INFO(get_logger(), "[%s] Shutting down...", get_name());
   dotgraph_pub_.reset();
   RCLCPP_INFO(get_logger(), "[%s] Shutted down", get_name());
@@ -197,6 +205,7 @@ ComputeBT::on_shutdown(const rclcpp_lifecycle::State & state)
 CallbackReturnT
 ComputeBT::on_error(const rclcpp_lifecycle::State & state)
 {
+  (void)state;
   RCLCPP_ERROR(get_logger(), "[%s] Error transition", get_name());
   return CallbackReturnT::SUCCESS;
 }
@@ -207,6 +216,8 @@ ComputeBT::computeBTCallback(
   const std::shared_ptr<std_srvs::srv::Trigger::Request> request,
   const std::shared_ptr<std_srvs::srv::Trigger::Response> response)
 {
+  (void)request;
+  (void)request_header;
   auto domain_filename = this->get_parameter("domain").as_string();
   const std::filesystem::path domain_path{domain_filename};
   if (!std::filesystem::exists(domain_path)) {

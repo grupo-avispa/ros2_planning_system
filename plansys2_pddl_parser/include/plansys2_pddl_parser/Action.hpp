@@ -71,7 +71,7 @@ public:
 
   void parse(Stringreader & f, TokenStruct<std::string> & ts, Domain & d);
 
-  void addParams(int m, unsigned n) {}
+  void addParams(int, unsigned) {}
 
   void addParams(const IntVec & v)
   {

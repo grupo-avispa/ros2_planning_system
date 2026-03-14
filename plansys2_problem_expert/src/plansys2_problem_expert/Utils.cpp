@@ -213,11 +213,11 @@ std::tuple<bool, bool, double> evaluate(
                 std::string c1_name = (c1_type == p_t) ? c1.parameters[0].name : c1.name;
                 return std::make_tuple(
                   true,
-                  negate ^ ( c1_name == c0_name),
+                  negate ^ (c1_name == c0_name),
                   0);
               }
               if (c0_type == n_t && c1_type == n_t) {
-                return std::make_tuple(true, negate ^ std::get<2>(left) == std::get<2>(right), 0);
+                return std::make_tuple(true, negate ^ (std::get<2>(left) == std::get<2>(right)), 0);
               }
               break;
             }
@@ -328,6 +328,7 @@ std::tuple<bool, bool, double> evaluate(
         {
           return std::make_tuple(true, true, 0);
         }
+        [[fallthrough]];
       }
 
     case plansys2_msgs::msg::Node::EXISTS: {

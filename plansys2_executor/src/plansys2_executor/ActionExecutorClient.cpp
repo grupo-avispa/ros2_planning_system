@@ -64,6 +64,7 @@ ActionExecutorClient::ActionExecutorClient(
 CallbackReturnT
 ActionExecutorClient::on_configure(const rclcpp_lifecycle::State & state)
 {
+  (void)state;
   status_pub_ = create_publisher<plansys2_msgs::msg::ActionPerformerStatus>(
     "performers_status", rclcpp::QoS(100).reliable());
   status_pub_->on_activate();
@@ -110,6 +111,7 @@ ActionExecutorClient::on_configure(const rclcpp_lifecycle::State & state)
 CallbackReturnT
 ActionExecutorClient::on_activate(const rclcpp_lifecycle::State & state)
 {
+  (void)state;
   status_.state = plansys2_msgs::msg::ActionPerformerStatus::RUNNING;
   status_.status_stamp = now();
   start_time_ = now();
@@ -121,6 +123,7 @@ ActionExecutorClient::on_activate(const rclcpp_lifecycle::State & state)
 CallbackReturnT
 ActionExecutorClient::on_deactivate(const rclcpp_lifecycle::State & state)
 {
+  (void)state;
   status_.state = plansys2_msgs::msg::ActionPerformerStatus::READY;
   status_.status_stamp = now();
   timer_ = nullptr;

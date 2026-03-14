@@ -153,7 +153,7 @@ protected:
    * @param[in] current_plan The plan to analyze.
    * @return Shared pointer to the constructed action graph.
    */
-  ActionGraph::Ptr get_graph(const plansys2_msgs::msg::Plan & current_plan);
+  ActionGraph::Ptr build_action_graph(const plansys2_msgs::msg::Plan & current_plan);
 
   /**
    * @brief Extracts action information from a plan.

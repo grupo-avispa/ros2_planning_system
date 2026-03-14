@@ -136,6 +136,7 @@ DomainExpertClient::getTypes()
 std::vector<std::string>
 DomainExpertClient::getConstants(const std::string & type)
 {
+  (void)type;
   std::vector<std::string> ret;
 
   while (!get_constants_client_->wait_for_service(std::chrono::seconds(1))) {
@@ -369,6 +370,7 @@ std::vector<plansys2_msgs::msg::Derived>
 DomainExpertClient::getDerivedPredicate(
   const std::string & predicate, const std::vector<std::string> & params)
 {
+  (void)params;
   while (!get_derived_predicate_details_client_->wait_for_service(std::chrono::seconds(1))) {
     if (!rclcpp::ok()) {
       return {};

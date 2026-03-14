@@ -26,6 +26,8 @@ SequentialBTBuilder::SequentialBTBuilder()
 void SequentialBTBuilder::initialize(
   const std::string & bt_action_1, const std::string & bt_action_2, int precision)
 {
+  (void)bt_action_2;
+  (void)precision;
   if (bt_action_1 != "") {
     bt_action_ = bt_action_1;
   } else {
@@ -98,6 +100,9 @@ std::string SequentialBTBuilder::get_dotgraph(
   std::shared_ptr<std::map<std::string, ActionExecutionInfo>> action_map, bool enable_legend,
   bool enable_print_graph)
 {
+  (void)action_map;
+  (void)enable_legend;
+  (void)enable_print_graph;
   std::string ret;
   return ret;
 }
