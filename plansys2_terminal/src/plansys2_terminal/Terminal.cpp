@@ -895,13 +895,13 @@ Terminal::execute_plan(const plansys2_msgs::msg::Plan & plan)
   } else {
     switch (plan_result.value().result) {
       case plansys2_msgs::action::ExecutePlan::Result::SUCCESS:
-        std::cout << "Successful finished " << std::endl;
+        std::cout << "Successfully finished" << std::endl;
         break;
       case plansys2_msgs::action::ExecutePlan::Result::PREEMPT:
         std::cout << "Preempted " << std::endl;
         break;
       case plansys2_msgs::action::ExecutePlan::Result::FAILURE:
-        std::cout << "Finished with error(s) " << std::endl;
+        std::cout << "Finished with error(s)" << std::endl;
         break;
     }
   }
