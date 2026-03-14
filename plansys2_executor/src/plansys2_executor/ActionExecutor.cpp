@@ -100,18 +100,31 @@ ActionExecutor::action_hub_callback(plansys2_msgs::msg::ActionExecution::SharedP
       if (last_msg_->arguments == action_params_ &&
         last_msg_->action == action_name_ && last_msg_->node_id == current_performer_id_)
       {
-        if (last_msg_->success) {
-          state_ = SUCCESS;
-        } else {
-          state_ = FAILURE;
-        }
-
         feedback_ = last_msg_->status;
         completion_ = last_msg_->completion;
-
         state_time_ = node_->now();
 
-        action_hub_pub_->on_deactivate();
+        if (last_msg_->success) {
+          state_ = SUCCESS;
+          action_hub_pub_->on_deactivate();
+        } else if (last_msg_->completion == 0.0) {
+          // Performer failed before doing any work (likely activation failure) - retry
+          RCLCPP_WARN(
+            node_->get_logger(),
+            "Performer [%s] for action [%s] failed before starting. Retrying.",
+            current_performer_id_.c_str(), action_.c_str());
+          current_performer_id_ = "";
+          state_ = DEALING;
+          state_time_ = node_->now();
+          completion_ = 0.0;
+          feedback_ = "";
+          request_for_performers();
+          waiting_timer_ = node_->create_wall_timer(
+            1s, std::bind(&ActionExecutor::wait_timeout, this));
+        } else {
+          state_ = FAILURE;
+          action_hub_pub_->on_deactivate();
+        }
       }
       break;
     default:
@@ -217,6 +230,25 @@ ActionExecutor::tick(const rclcpp::Time & now)
       break;
 
     case RUNNING:
+      {
+        // If the confirmed performer never sends any feedback within 5 seconds, it likely
+        // failed silently (e.g. activation error not reported). Retry with a new request.
+        auto elapsed_no_feedback = (node_->now() - state_time_).seconds();
+        if (elapsed_no_feedback > 5.0 && completion_ == 0.0) {
+          RCLCPP_WARN(
+            node_->get_logger(),
+            "Performer [%s] for action [%s] never sent feedback after 5s. Retrying.",
+            current_performer_id_.c_str(), action_.c_str());
+          current_performer_id_ = "";
+          state_ = DEALING;
+          state_time_ = node_->now();
+          completion_ = 0.0;
+          feedback_ = "";
+          request_for_performers();
+          waiting_timer_ = node_->create_wall_timer(
+            1s, std::bind(&ActionExecutor::wait_timeout, this));
+        }
+      }
       break;
     case SUCCESS:
     case FAILURE:

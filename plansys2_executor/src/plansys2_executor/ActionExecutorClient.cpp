@@ -147,6 +147,14 @@ ActionExecutorClient::action_hub_callback(const plansys2_msgs::msg::ActionExecut
         current_arguments_ = msg->arguments;
         trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_ACTIVATE);
         committed_ = false;
+        // If activation failed, notify the executor so it can retry with another performer
+        if (get_current_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE) {
+          RCLCPP_ERROR(
+            get_logger(),
+            "Performer [%s] failed to activate for action [%s]. Notifying executor.",
+            get_name(), action_managed_.c_str());
+          finish(false, 0.0, "Activation failed for performer " + std::string(get_name()));
+        }
       }
       break;
     case plansys2_msgs::msg::ActionExecution::REJECT:
