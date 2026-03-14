@@ -28,6 +28,7 @@
 
 #include <map>
 #include <memory>
+#include <mutex>
 
 #include "rclcpp/version.h"
 #if RCLCPP_VERSION_GTE(29, 0, 0)
@@ -74,6 +75,7 @@ private:
 
   plansys2_msgs::msg::Knowledge::UniquePtr last_msg_;
   bool need_repaint_;
+  std::mutex mutex_;
 
   void knowledge_callback(plansys2_msgs::msg::Knowledge::UniquePtr msg);
   rclcpp::Subscription<plansys2_msgs::msg::Knowledge>::SharedPtr knowledge_sub_;

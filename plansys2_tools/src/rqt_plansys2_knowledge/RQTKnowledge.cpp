@@ -82,6 +82,7 @@ void RQTKnowledge::shutdownPlugin()
 void
 RQTKnowledge::knowledge_callback(plansys2_msgs::msg::Knowledge::UniquePtr msg)
 {
+  std::lock_guard<std::mutex> lock(mutex_);
   last_msg_ = std::move(msg);
   need_repaint_ = true;
 }
@@ -97,73 +98,78 @@ RQTKnowledge::saveSettings(
 void
 RQTKnowledge::spin_loop()
 {
-  if (need_repaint_) {
-    knowledge_tree_->clearAllItems();
-
-    // Instances
-    for (const std::string & instance : last_msg_->instances) {
-      auto instance_item = new QTreeWidgetItem();
-      instance_item->setText(0, QString("instance"));
-      instance_item->setText(1, QString(instance.c_str()));
-
-      auto complete_instance = problem_->getInstance(instance);
-      if (complete_instance.has_value()) {
-        instance_item->setText(2, QString(complete_instance.value().type.c_str()));
-      }
-
-      instance_item->setBackground(0, Qt::lightGray);
-      instance_item->setBackground(1, Qt::lightGray);
-      instance_item->setBackground(2, Qt::lightGray);
-      knowledge_tree_->addTopLevelItem(instance_item);
-    }
-
-    // Predicates
-    for (const std::string & predicate : last_msg_->predicates) {
-      auto predicate_item = new QTreeWidgetItem();
-      predicate_item->setText(0, QString("predicate"));
-      predicate_item->setText(1, QString(predicate.c_str()));
-      predicate_item->setBackground(0, Qt::yellow);
-      predicate_item->setBackground(1, Qt::yellow);
-      predicate_item->setBackground(2, Qt::yellow);
-      knowledge_tree_->addTopLevelItem(predicate_item);
-    }
-
-    // Functions (Value?)
-    for (const std::string & function : last_msg_->functions) {
-      auto function_item = new QTreeWidgetItem();
-      function_item->setText(0, QString("function"));
-      function_item->setText(1, QString(function.c_str()));
-
-      auto complete_function = problem_->getFunction(function);
-      if (complete_function.has_value()) {
-        function_item->setText(2, QString::number(complete_function.value().value));
-      }
-
-      function_item->setBackground(0, Qt::blue);
-      function_item->setBackground(1, Qt::blue);
-      function_item->setBackground(2, Qt::blue);
-      knowledge_tree_->addTopLevelItem(function_item);
-    }
-
-    // Goal
-    auto goal_item = new QTreeWidgetItem();
-    goal_item->setText(0, QString("goal"));
-    if (last_msg_->goal == "") {
-      goal_item->setText(1, QString("No goal"));
-      goal_item->setBackground(0, Qt::red);
-      goal_item->setBackground(1, Qt::red);
-      goal_item->setBackground(2, Qt::red);
-    } else {
-      goal_item->setText(1, QString(last_msg_->goal.c_str()));
-      goal_item->setBackground(0, Qt::green);
-      goal_item->setBackground(1, Qt::green);
-      goal_item->setBackground(2, Qt::green);
-    }
-    knowledge_tree_->addTopLevelItem(goal_item);
-
-    knowledge_tree_->parentWidget()->repaint();
-    need_repaint_ = false;
+  std::unique_lock<std::mutex> lock(mutex_);
+  if (!need_repaint_) {
+    return;
   }
+  need_repaint_ = false;
+  auto msg_snapshot = std::move(last_msg_);
+  lock.unlock();
+
+  knowledge_tree_->clearAllItems();
+
+  // Instances
+  for (const std::string & instance : msg_snapshot->instances) {
+    auto instance_item = new QTreeWidgetItem();
+    instance_item->setText(0, QString("instance"));
+    instance_item->setText(1, QString(instance.c_str()));
+
+    auto complete_instance = problem_->getInstance(instance);
+    if (complete_instance.has_value()) {
+      instance_item->setText(2, QString(complete_instance.value().type.c_str()));
+    }
+
+    instance_item->setBackground(0, Qt::lightGray);
+    instance_item->setBackground(1, Qt::lightGray);
+    instance_item->setBackground(2, Qt::lightGray);
+    knowledge_tree_->addTopLevelItem(instance_item);
+  }
+
+  // Predicates
+  for (const std::string & predicate : msg_snapshot->predicates) {
+    auto predicate_item = new QTreeWidgetItem();
+    predicate_item->setText(0, QString("predicate"));
+    predicate_item->setText(1, QString(predicate.c_str()));
+    predicate_item->setBackground(0, Qt::yellow);
+    predicate_item->setBackground(1, Qt::yellow);
+    predicate_item->setBackground(2, Qt::yellow);
+    knowledge_tree_->addTopLevelItem(predicate_item);
+  }
+
+  // Functions (Value?)
+  for (const std::string & function : msg_snapshot->functions) {
+    auto function_item = new QTreeWidgetItem();
+    function_item->setText(0, QString("function"));
+    function_item->setText(1, QString(function.c_str()));
+
+    auto complete_function = problem_->getFunction(function);
+    if (complete_function.has_value()) {
+      function_item->setText(2, QString::number(complete_function.value().value));
+    }
+
+    function_item->setBackground(0, Qt::blue);
+    function_item->setBackground(1, Qt::blue);
+    function_item->setBackground(2, Qt::blue);
+    knowledge_tree_->addTopLevelItem(function_item);
+  }
+
+  // Goal
+  auto goal_item = new QTreeWidgetItem();
+  goal_item->setText(0, QString("goal"));
+  if (msg_snapshot->goal == "") {
+    goal_item->setText(1, QString("No goal"));
+    goal_item->setBackground(0, Qt::red);
+    goal_item->setBackground(1, Qt::red);
+    goal_item->setBackground(2, Qt::red);
+  } else {
+    goal_item->setText(1, QString(msg_snapshot->goal.c_str()));
+    goal_item->setBackground(0, Qt::green);
+    goal_item->setBackground(1, Qt::green);
+    goal_item->setBackground(2, Qt::green);
+  }
+  knowledge_tree_->addTopLevelItem(goal_item);
+
+  knowledge_tree_->parentWidget()->repaint();
 }
 
 void
