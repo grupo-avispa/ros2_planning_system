@@ -15,6 +15,7 @@
 #ifndef PLANSYS2_CORE__PLANSOLVERBASE_HPP_
 #define PLANSYS2_CORE__PLANSOLVERBASE_HPP_
 
+#include <atomic>
 #include <memory>
 #include <optional>
 #include <string>
@@ -94,7 +95,7 @@ protected:
   // Lifecycle node pointer.
   rclcpp_lifecycle::LifecycleNode::SharedPtr lc_node_;
   // Flag indicating if cancellation was requested.
-  bool cancel_requested_;
+  std::atomic<bool> cancel_requested_{false};
 
   /**
    * @brief Tokenize a command string.

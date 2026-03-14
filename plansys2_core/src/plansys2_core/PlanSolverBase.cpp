@@ -21,6 +21,7 @@
 #include <unistd.h>
 
 #include <atomic>
+#include <cerrno>
 #include <csignal>
 #include <cstdio>
 #include <cstdlib>
@@ -63,7 +64,7 @@ bool PlanSolverBase::execute_planner(
   const std::string & plan_path)
 {
   cancel_requested_ = false;
-  bool child_finish = false;
+  std::atomic<bool> child_finish{false};
 
   int pipe_fd[2];
   pipe(pipe_fd);
@@ -78,8 +79,13 @@ bool PlanSolverBase::execute_planner(
     close(pipe_fd[1]);
 
     auto cmd_tokens = tokenize(command);
+    if (cmd_tokens[0] == nullptr) {
+      // Empty or whitespace-only command — cannot exec
+      std::fprintf(stderr, "[PlanSolverBase] Planner command is empty or invalid.\n");
+      exit(EXIT_FAILURE);
+    }
     execvp(cmd_tokens[0], cmd_tokens);
-
+    std::fprintf(stderr, "[PlanSolverBase] execvp failed: %s\n", strerror(errno));
     exit(EXIT_FAILURE);
   } else {
     std::thread monitor_thread([&]() {
