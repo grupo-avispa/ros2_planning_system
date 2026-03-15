@@ -162,7 +162,20 @@ BTAction::on_activate(const rclcpp_lifecycle::State & previous_state)
     }
   }
 
+  // Count leaf action nodes so we can track tree-level completion
+  total_action_nodes_ = 0;
+  tree_.applyVisitor(
+    [this](BT::TreeNode * node) {
+      if (node->type() == BT::NodeType::ACTION) {
+        total_action_nodes_++;
+      }
+    });
+  if (total_action_nodes_ == 0) {
+    total_action_nodes_ = 1;  // avoid division by zero for trivial trees
+  }
+
   finished_ = false;
+  blackboard_->set<float>("completion", 0.0f);  // current node writes its local progress here
   return ActionExecutorClient::on_activate(previous_state);
 }
 
@@ -199,8 +212,28 @@ void BTAction::do_work()
         finished_ = true;
         break;
       case BT::NodeStatus::RUNNING:
-        send_feedback(0.0, "BTAction behavior tree returned RUNNING");
-        break;
+        {
+        // Count how many action nodes have already completed
+          int completed_nodes = 0;
+          tree_.applyVisitor(
+            [&completed_nodes](BT::TreeNode * node) {
+              if (node->type() == BT::NodeType::ACTION &&
+              node->status() == BT::NodeStatus::SUCCESS)
+              {
+                completed_nodes++;
+              }
+          });
+
+        // Read the currently-running node's local progress (0→1), written by each BT node
+          float node_completion = 0.0f;
+          (void)blackboard_->get<float>("completion", node_completion);
+
+        // Overall: (fully-done nodes + fraction of current node) / total nodes
+          float overall = (static_cast<float>(completed_nodes) + node_completion) /
+            static_cast<float>(total_action_nodes_);
+          send_feedback(overall, "BTAction behavior tree returned RUNNING");
+          break;
+        }
       case BT::NodeStatus::FAILURE:
         finish(false, 1.0, "BTAction behavior tree returned FAILURE");
         finished_ = true;
