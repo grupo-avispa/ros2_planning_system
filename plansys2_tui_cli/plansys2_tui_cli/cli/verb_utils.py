@@ -35,13 +35,28 @@ def bbcode_to_ansi(s: str, enable_color: bool) -> str:
         s = _CLOSE_TAG_RE.sub('', s)
         return s
 
-    for tag, code in _TAGS.items():
-        s = re.sub(
-            rf'\[{tag}\](.*?)\[/\s*{tag}\]',
-            lambda m, _code=code: f'\033[{_code}m{m.group(1)}\033[0m',
-            s,
-            flags=re.DOTALL | re.IGNORECASE,
-        )
+    # Handle Rich-style tags, including composite ones like "[bold underline]...[/bold underline]".
+    # We parse space-separated style tokens and, if all are known, emit a single ANSI sequence
+    # combining their codes (e.g., "\033[1;4m...\033[0m").
+    def _replace_tags(match: re.Match) -> str:
+        raw_tags = match.group(1)
+        content = match.group(2)
+        tokens = raw_tags.split()
+        codes = []
+        for token in tokens:
+            key = token.lower()
+            code = _TAGS.get(key)
+            if code is None:
+                # Unknown style in this composite; leave the tag as-is for now so it will be
+                # stripped by the generic cleanup below, preserving current behavior.
+                return match.group(0)
+            codes.append(code)
+        ansi_codes = ';'.join(codes)
+        return f'\033[{ansi_codes}m{content}\033[0m'
+
+    pattern = re.compile(r'\[([a-zA-Z_ ]+)\](.*?)\[/\s*\1\]', re.DOTALL | re.IGNORECASE)
+    s = pattern.sub(_replace_tags, s)
+
     # strip any unmatched / unknown tags
     s = _OPEN_TAG_RE.sub('', s)
     s = _CLOSE_TAG_RE.sub('', s)
