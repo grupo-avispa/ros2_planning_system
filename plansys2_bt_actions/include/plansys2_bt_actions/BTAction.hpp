@@ -141,6 +141,7 @@ private:
   std::string bt_xml_file_;
   std::vector<std::string> plugin_list_;
   bool finished_;
+  int total_action_nodes_;
   std::unique_ptr<BT::FileLogger2> bt_file_logger_;
   std::unique_ptr<BT::MinitraceLogger> bt_minitrace_logger_;
   // Groot2 monitor

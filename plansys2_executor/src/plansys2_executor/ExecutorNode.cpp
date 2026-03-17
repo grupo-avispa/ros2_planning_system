@@ -614,8 +614,15 @@ ExecutorNode::get_feedback_info(
 
   for (const auto & action : *action_map) {
     if (!action.second.action_executor) {
-      RCLCPP_WARN(
-        get_logger(), "Action executor does not exist for %s. Skipping", action.first.c_str());
+      // Executor not yet assigned (BT hasn't reached this action yet).
+      // Still publish so subscribers know the action exists and is NOT_EXECUTED.
+      plansys2_msgs::msg::ActionExecutionInfo info;
+      info.status = plansys2_msgs::msg::ActionExecutionInfo::NOT_EXECUTED;
+      info.action_full_name = action.first;
+      info.action = action.second.plan_item.action;
+      info.duration = rclcpp::Duration::from_seconds(action.second.duration);
+      info.completion = 0.0;
+      ret.push_back(info);
       continue;
     }
 
