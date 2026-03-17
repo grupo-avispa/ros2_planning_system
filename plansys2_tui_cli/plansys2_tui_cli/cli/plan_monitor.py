@@ -40,10 +40,12 @@ class PlanMonitorVerb(VerbExtension):
 
     def _callback(self, plan, info: dict):
         raw = PlanMonitorProcessor.plan2text(plan, info)
-        enable_color = sys.stdout.isatty() and not os.environ.get('NO_COLOR')
+        is_tty = sys.stdout.isatty()
+        enable_color = is_tty and not os.environ.get('NO_COLOR')
         text = bbcode_to_ansi(raw, enable_color)
 
-        sys.stdout.write('\033[1;1H\033[J')
+        if is_tty:
+            sys.stdout.write('\033[1;1H\033[J')
         sys.stdout.write('PlanSys2 Plan Monitor:\n\n')
         sys.stdout.write(text)
         if enable_color:
