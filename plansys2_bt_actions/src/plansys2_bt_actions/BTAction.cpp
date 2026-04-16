@@ -206,9 +206,15 @@ void BTAction::do_work()
       finish(false, 0.0, "BTAction behavior tree threw an unknown exception");
     }
 
+    std::string out_msg;
+    if (!blackboard_->get("out_msg", out_msg)) {
+      out_msg = "";
+    }
+
     switch (result) {
       case BT::NodeStatus::SUCCESS:
-        finish(true, 1.0, "BTAction behavior tree returned SUCCESS");
+        finish(true, 1.0,
+          out_msg.empty() ? "BTAction behavior tree returned SUCCESS" : out_msg);
         finished_ = true;
         break;
       case BT::NodeStatus::RUNNING:
@@ -231,11 +237,13 @@ void BTAction::do_work()
         // Overall: (fully-done nodes + fraction of current node) / total nodes
           float overall = (static_cast<float>(completed_nodes) + node_completion) /
             static_cast<float>(total_action_nodes_);
-          send_feedback(overall, "BTAction behavior tree returned RUNNING");
+          send_feedback(overall,
+            out_msg.empty() ? "BTAction behavior tree returned RUNNING" : out_msg);
           break;
         }
       case BT::NodeStatus::FAILURE:
-        finish(false, 1.0, "BTAction behavior tree returned FAILURE");
+        finish(false, 1.0,
+          out_msg.empty() ? "BTAction behavior tree returned FAILURE" : out_msg);
         finished_ = true;
         break;
       case BT::NodeStatus::IDLE:
