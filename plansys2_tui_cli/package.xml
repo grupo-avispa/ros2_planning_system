@@ -16,6 +16,7 @@
 
   <exec_depend>ros2cli</exec_depend>
   <exec_depend>python3-rich</exec_depend>
+  <exec_depend>python3-platformdirs</exec_depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
