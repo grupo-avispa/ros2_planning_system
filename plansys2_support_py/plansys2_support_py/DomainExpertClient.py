@@ -46,10 +46,7 @@ class DomainExpertClient(Node):
     proper error handling.
     """
 
-    def __init__(
-        self, node_name: str = 'domain_expert_client',
-        namespace: str = ''
-    ):
+    def __init__(self, node_name: str = 'domain_expert_client', namespace: str = '') -> None:
         """
         Initialize the Domain Expert client.
 
@@ -61,7 +58,7 @@ class DomainExpertClient(Node):
             Namespace prefix for services.
 
         """
-        super().__init__(node_name)
+        super().__init__(node_name=node_name, namespace=namespace)
 
         # Setup namespace prefix
         self._namespace_prefix = f'/{namespace}' if namespace else ''
@@ -69,9 +66,7 @@ class DomainExpertClient(Node):
         log_msg = f'Domain Expert Client "{node_name}" initialized'
         self.get_logger().debug(log_msg)
 
-    def _create_and_call_service(
-        self, service_type, service_name: str, request
-    ):
+    def _create_and_call_service(self, service_type, service_name: str, request):
         """
         Create service client, call it and return response.
 
@@ -91,9 +86,7 @@ class DomainExpertClient(Node):
 
         """
         try:
-            client: Client = self.create_client(
-                service_type, service_name
-            )
+            client: Client = self.create_client(service_type, service_name)
 
             if not client.wait_for_service(timeout_sec=5.0):
                 error_msg = f'Service {service_name} not available'
@@ -101,23 +94,17 @@ class DomainExpertClient(Node):
                 return None
 
             future = client.call_async(request)
-            rclpy.spin_until_future_complete(
-                self, future, timeout_sec=10.0
-            )
+            rclpy.spin_until_future_complete(self, future, timeout_sec=10.0)
 
             if future.done():
                 return future.result()
             else:
-                error_msg = (
-                    f'Service call to {service_name} timed out'
-                )
+                error_msg = f'Service call to {service_name} timed out'
                 self.get_logger().error(error_msg)
                 return None
 
         except RuntimeError as e:
-            error_msg = (
-                f'Error calling service {service_name}: {str(e)}'
-            )
+            error_msg = f'Error calling service {service_name}: {str(e)}'
             self.get_logger().error(error_msg)
             return None
 
